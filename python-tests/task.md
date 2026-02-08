@@ -1,4 +1,4 @@
-Get this Python codebase to 75% test coverage.
+Get this Python codebase to {{.Default "COVERAGE_TARGET" "75"}}% test coverage.
 
 Start by running Glob **/*.py AND checking pytest-cov in parallel.
 If pytest-cov available, measure baseline with 'pytest --cov=<pkg> --cov-branch --cov-report=term-missing -q || true'
@@ -7,7 +7,7 @@ Use Glob **/*.py to discover all source files. Filter out __pycache__, .venv, te
 Prioritize modules by impact — most functions/classes first.
 Write tests for each priority module, verify they pass, and iterate.
 
-Target: 75% total coverage.
+Target: {{.Default "COVERAGE_TARGET" "75"}}% total coverage.
 Use @pytest.mark.parametrize for any function with 2+ test cases.
 Only create or modify test_*.py files. Never edit source code.
 TEST FILE LOCATION: ALWAYS place tests in tests/ directory. Create tests/ if it

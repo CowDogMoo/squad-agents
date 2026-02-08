@@ -1,7 +1,7 @@
 ---
 name: python-tests
-version: 0.2.0
-description: Autonomously increase Python test coverage using pytest.
+version: 0.3.0
+description: Autonomously increase Python test coverage using pytest. Supports COVERAGE_TARGET variable.
 entrypoint: system.md
 wrapper: agent.md
 references:
