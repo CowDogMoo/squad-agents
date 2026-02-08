@@ -116,6 +116,17 @@ These override everything else.
     NEVER parse `coverage.out` directly with awk, sed, or by reading the
     raw file. The cover tool already computes the correct weighted
     percentage — manual parsing is wrong and wastes iterations.
+21. **Always analyze gaps — even if target is met.** Do NOT skip Phases 2-3
+    just because current coverage exceeds the target. You MUST:
+    - Enumerate all 0% functions (Phase 1 step 3)
+    - Find packages with `[no test files]` in `go test` output
+    - Report these gaps in Skipped Functions even if you choose not to fix
+    If coverage is already above target, you may write fewer tests, but you
+    MUST still discover and report what is untested. A run that says "target
+    met, no analysis done" is a failure.
+22. **Discover packages without test files.** After running `go test ./...`,
+    check the output for `[no test files]`. These packages have ZERO coverage
+    and are high-priority targets. List them explicitly in Phase 2.
 
 # WORKFLOW
 
@@ -124,29 +135,31 @@ Follow this sequence exactly. Do not skip steps.
 ## Phase 1: Measure
 
 1. Run `go test ./... -coverprofile=coverage.out -count=1` via Bash.
+   **Save the output** — look for lines containing `[no test files]`.
+   These packages have zero test coverage and need test files created.
 2. Run `go tool cover -func=coverage.out | tail -1` to get total coverage.
-3. Analyze coverage gaps. Tool output is capped at 64 KB — always filter
-   with grep/awk/head to avoid truncation. Useful commands:
+3. **MANDATORY gap analysis** — even if coverage exceeds target. Run:
 
    ```bash
-   # Per-package coverage summary
-   go test ./... -cover -count=1
+   # Find packages with NO test files (highest priority)
+   go test ./... 2>&1 | grep '\[no test files\]'
 
    # Count uncovered functions per source file (highest-impact first)
    go tool cover -func=coverage.out | grep '0.0%' \
      | awk -F: '{print $1}' | sort | uniq -c | sort -rn | head -20
 
-   # List all 0% functions in a specific package
-   go tool cover -func=coverage.out | grep 'mypackage/' | grep '0.0%'
-
-   # Per-package statement counts
-   go tool cover -func=coverage.out | grep -v '0.0%' | wc -l
+   # List all 0% functions
+   go tool cover -func=coverage.out | grep '0.0%' | head -30
    ```
 
    From this output, identify:
+   - **Packages with `[no test files]`** — these need new `_test.go` files
    - Packages with the lowest coverage percentages
    - Functions at 0.0% coverage
    - The number of uncovered functions per package
+
+   **Do NOT skip this step.** Even if total coverage is above target, you
+   must enumerate gaps. A report without gap analysis is a failure.
 
 ## Phase 2: Prioritize
 
@@ -193,8 +206,12 @@ are independent of each other.
 7. After writing tests for all priority packages, run the full suite:
    `go test ./... -coverprofile=coverage.out -count=1`
 8. Run `go tool cover -func=coverage.out | tail -1` to get new total.
-9. If below the target and there are still untested packages with
-   meaningful logic, go back to Phase 3 for the next package.
+9. **Decision point:**
+   - If below target: go back to Phase 3 for the next package.
+   - If at or above target but packages with `[no test files]` remain:
+     continue to Phase 3 for at least ONE untested package, then report.
+   - If at or above target and all packages have test files: proceed to
+     Phase 5 (you may still have 0% functions — list them in Skipped).
 
 ## Phase 5: Report
 
@@ -243,6 +260,15 @@ Do NOT create interfaces in source files. Only create mock types inside
 **Before:** [X]% ([S1] statements covered)
 **After:** [Y]% ([S2] statements covered)
 **Delta:** +[D]%
+
+## Discovered Gaps
+
+**Packages with no test files:**
+- [pkg1] — [brief description of what it contains]
+- [pkg2] — ...
+
+**Functions at 0% coverage:** [N] functions across [M] packages
+(List top 10-20 by impact, or "None" if all functions have coverage)
 
 ## Packages Tested
 

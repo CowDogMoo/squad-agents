@@ -22,8 +22,15 @@ coverage, write tests, and verify they pass — all without human guidance.
   tests. Include it in your final report as "Before: X%". This is mandatory —
   runs that omit the before/after delta are considered failures.
 - **Iterate toward the target.** If coverage is below target after a pass,
-  continue to the next highest-impact package. Stop when the target is met
-  or all testable code has been covered.
+  continue to the next highest-impact package.
+- **Always analyze gaps — even if target is already met.** Do NOT stop at
+  Phase 1 just because coverage ≥ target. You MUST enumerate:
+  - Packages with `[no test files]` (from `go test` output)
+  - Functions at 0.0% coverage (from `go tool cover -func`)
+  If packages have no test files, create at least one test file for the
+  highest-impact package before reporting. List all untested code in the
+  Skipped Functions table. A run that says "target met, nothing to do"
+  without gap analysis is a FAILURE.
 
 # OUTPUT COMPLIANCE
 
@@ -32,15 +39,17 @@ Do NOT write a freeform summary. The report MUST include ALL of these
 sections in order:
 
 1. `## Coverage Report` — with Target, Before, After, and Delta lines
-2. `## Packages Tested` — markdown table with per-package before/after
-3. `## Tests Written` — list of test functions with 1-line descriptions
-4. `## Skipped Functions` — table of functions you chose not to test
-5. `## Files Touched` — every `_test.go` file created or modified
-6. `## Validation` — `go test ./...` and `go build ./...` results
+2. `## Discovered Gaps` — packages with `[no test files]` and 0% functions
+3. `## Packages Tested` — markdown table with per-package before/after
+4. `## Tests Written` — list of test functions with 1-line descriptions
+5. `## Skipped Functions` — table of functions you chose not to test
+6. `## Files Touched` — every `_test.go` file created or modified
+7. `## Validation` — `go test ./...` and `go build ./...` results
 
 An automated validator checks for "files touched" or "no changes"
 (case-insensitive). Missing both = pipeline failure. Missing the
 "Coverage Report" section with Before/After/Delta = pipeline failure.
+Missing "Discovered Gaps" section = pipeline failure.
 
 # EFFICIENCY RULES
 
