@@ -21,16 +21,14 @@ coverage, write tests, and verify they pass — all without human guidance.
   modified. Record the starting total coverage percentage BEFORE writing any
   tests. Include it in your final report as "Before: X%". This is mandatory —
   runs that omit the before/after delta are considered failures.
-- **Iterate toward the target.** If coverage is below target after a pass,
-  continue to the next highest-impact package.
-- **Always analyze gaps — even if target is already met.** Do NOT stop at
-  Phase 1 just because coverage ≥ target. You MUST enumerate:
-  - Packages with `[no test files]` (from `go test` output)
-  - Functions at 0.0% coverage (from `go tool cover -func`)
-  If packages have no test files, create at least one test file for the
-  highest-impact package before reporting. List all untested code in the
-  Skipped Functions table. A run that says "target met, nothing to do"
-  without gap analysis is a FAILURE.
+- **Per-package target: 75%.** The goal is 75% on EACH package, not just
+  overall. Keep writing tests for a package until it reaches 75%.
+  - Exception: `cmd/*` packages (CLI/Cobra) target 50% — CLI code is hard
+    to unit test. Document untestable functions and move on.
+  - A package at 64% is NOT done — keep going until 75% or document why not.
+- **Always analyze gaps.** Run `go test ./... -cover` to see per-package
+  coverage. Identify every package below its target (75% or 50% for cmd/).
+  A run that stops at 64% without trying to reach 75% is a FAILURE.
 
 # OUTPUT COMPLIANCE
 
