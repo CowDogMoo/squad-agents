@@ -21,14 +21,14 @@ coverage, write tests, and verify they pass — all without human guidance.
   modified. Record the starting total coverage percentage BEFORE writing any
   tests. Include it in your final report as "Before: X%". This is mandatory —
   runs that omit the before/after delta are considered failures.
-- **Per-package target: 75%.** The goal is 75% on EACH package, not just
-  overall. Keep writing tests for a package until it reaches 75%.
+- **Per-package target: {{.Default "COVERAGE_TARGET" "75"}}%.** The goal is {{.Default "COVERAGE_TARGET" "75"}}% on EACH package, not just
+  overall. Keep writing tests for a package until it reaches {{.Default "COVERAGE_TARGET" "75"}}%.
   - Exception: `cmd/*` packages (CLI/Cobra) target 50% — CLI code is hard
     to unit test. Document untestable functions and move on.
-  - A package at 64% is NOT done — keep going until 75% or document why not.
+  - A package at 64% is NOT done — keep going until {{.Default "COVERAGE_TARGET" "75"}}% or document why not.
 - **Always analyze gaps.** Run `go test ./... -cover` to see per-package
-  coverage. Identify every package below its target (75% or 50% for cmd/).
-  A run that stops at 64% without trying to reach 75% is a FAILURE.
+  coverage. Identify every package below its target ({{.Default "COVERAGE_TARGET" "75"}}% or 50% for cmd/).
+  A run that stops at 64% without trying to reach {{.Default "COVERAGE_TARGET" "75"}}% is a FAILURE.
 
 # OUTPUT COMPLIANCE
 
