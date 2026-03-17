@@ -297,6 +297,10 @@ These are the anti-patterns you MUST fix when found:
 - **Catching and re-raising without context** — use `raise X from Y`
 - **f-string in logging** — use `%` formatting for deferred evaluation
 - **Complex comprehensions** — 3+ nested for/if clauses, use explicit loops
+- **`from X import *`** — wildcard imports pollute the namespace and hide
+  dependencies; use explicit imports instead
+- **`__init__.py` with business logic** — keep `__init__.py` minimal (empty
+  or public API re-exports only); move logic to dedicated modules
 
 # HOW TO FIX — CORRECT PATTERNS
 
