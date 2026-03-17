@@ -12,7 +12,8 @@ A comprehensive guide to Python documentation following PEP 8, PEP 257, and mode
 6. [Magic Comments](#magic-comments)
 7. [Linter Directives](#linter-directives)
 8. [Common Mistakes](#common-mistakes)
-9. [Quality Checklist](#quality-checklist)
+9. [When to Refactor Instead of Document](#when-to-refactor-instead-of-document)
+10. [Quality Checklist](#quality-checklist)
 
 ---
 
@@ -59,6 +60,8 @@ def kos_root():
 - **Imperative mood**: "Return X" not "Returns X"
 - End with a **period**
 - No blank lines before or after
+- **Never restate the function signature** — describe the return value's nature instead
+- Use `r"""raw triple double quotes"""` if backslashes appear in the docstring
 
 ### Multi-Line Docstrings
 
@@ -238,6 +241,10 @@ def function(arg1: int, arg2: str) -> bool:
     """
     pass
 ```
+
+**Important:** Do not mix styles within a project. Choose one and be consistent.
+
+**Sphinx Integration:** For Google or NumPy style docstrings to work with Sphinx documentation, add the `sphinx.ext.napoleon` extension to your `conf.py`.
 
 ---
 
@@ -583,6 +590,36 @@ def get_username(user):
     return user.email  # Actually returns email!
 ```
 
+### Mumbling
+
+Comments where the developer is talking to themselves rather than the reader. These add confusion instead of clarity.
+
+**Bad:**
+
+```python
+# I think this works but not sure
+result = parse(data)
+
+# This probably needs to be changed later
+cache = {}
+```
+
+### Apologetic Comments
+
+Comments that apologize for bad code instead of fixing it.
+
+**Bad:**
+
+```python
+# Sorry, this is a mess
+# I know this is ugly but it works
+# TODO: clean this up someday
+def process(data):
+    ...
+```
+
+**Solution:** Clean up the code. If the code needs explanation, refactor it so it doesn't.
+
 ### Over-Commenting
 
 **Bad:**
@@ -641,6 +678,41 @@ def process_user(user: User) -> bool:
     """Process a user and update the database."""
     pass
 ```
+
+---
+
+## When to Refactor Instead of Document
+
+**Before writing a comment or docstring, ask:** Can I make this clearer through code?
+
+Heavy commenting often signals deeper issues. If you need long explanations to justify confusing code, refactor first.
+
+### Refactoring Alternatives
+
+| Instead of...                    | Try...                                          |
+| -------------------------------- | ----------------------------------------------- |
+| `# Get the third item`          | `category = row[2]` or tuple unpacking          |
+| `# Check if valid`              | `def is_valid_email(email):`                    |
+| `# Magic number for retry`      | `MAX_RETRIES = 3`                               |
+| `# Loop over items`             | Use descriptive variable names                  |
+| `# Convert to uppercase`        | The code is already clear — delete the comment  |
+
+### Five Alternatives to Comments
+
+1. **Use descriptive names** — rename functions or variables to clarify intent
+2. **Extract unnamed code blocks** — create helper functions with meaningful names
+3. **Name embedded values** — create constants for magic numbers and strings
+4. **Apply tuple unpacking** — replace index-based access with named variables
+5. **Add or improve docstrings** — use structured docstrings instead of inline comments
+
+### When Documentation Is Valuable
+
+- **Explaining "why"** — business rules, edge cases, workarounds
+- **Linking to external references** — bug tickets, specs, RFCs
+- **Warning about non-obvious behavior** — side effects, gotchas
+- **TODO/FIXME** — with ticket numbers for tracking
+- **Legal/licensing** — copyright notices, license headers
+- **Complex algorithms** — references to papers or explanations
 
 ---
 
@@ -736,4 +808,4 @@ convention = "google"
 
 ---
 
-_Last updated: 2026-01-11_
+_Last updated: 2026-03-17_
