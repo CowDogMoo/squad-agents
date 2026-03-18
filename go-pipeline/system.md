@@ -101,10 +101,12 @@ Confirm this is a Go codebase and establish baseline:
 - `Read go.mod` -- check for `github.com/spf13/cobra` to determine whether
   to run go-cobra.
 - Record baseline:
+
   ```bash
   go build ./... 2>&1; echo "EXIT:$?"
   go test ./... 2>&1; echo "EXIT:$?"
   ```
+
   Store whether build and tests pass. This is your regression baseline.
 - From the Glob output, build two lists:
   - **SOURCE_FILES**: all `.go` files that are NOT test files (`*_test.go`)
@@ -129,14 +131,17 @@ Task(
 ```
 
 After the agent completes, run the regression gate:
+
 ```bash
 go build ./... 2>&1; echo "EXIT:$?"
 go test ./... 2>&1; echo "EXIT:$?"
 ```
+
 If build or tests regress (were passing, now failing), revert with
 `git checkout -- . && git clean -fd` and mark go-cobra as REVERTED.
 
 Capture the full output. Extract:
+
 - Files touched
 - Issues fixed (count by severity)
 - Issues skipped
@@ -155,6 +160,7 @@ Task(
 Run regression gate after completion. Revert if regressed.
 
 Capture the full output. Extract:
+
 - Files touched
 - Issues fixed (count by severity)
 - Issues skipped
@@ -173,6 +179,7 @@ Task(
 Run regression gate after completion. Revert if regressed.
 
 Capture the full output. Extract:
+
 - Coverage before/after
 - Test files created
 - Packages tested
@@ -191,6 +198,7 @@ Task(
 Run regression gate after completion. Revert if regressed.
 
 Capture the full output. Extract:
+
 - Doc comments added/improved
 - Files touched
 - Declarations skipped

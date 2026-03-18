@@ -1955,4 +1955,4 @@ def find_user(user_id: int) -> User | None:
 
 ---
 
-_Last updated: 2026-02-04_
+*Last updated: 2026-02-04*

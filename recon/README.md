@@ -32,11 +32,13 @@ squad run --agent recon --prompt "Perform reconnaissance on Acme Corp (acme.com)
 ## Requirements
 
 ### Required (always available)
+
 - `curl` — HTTP requests
 - `jq` — JSON parsing
 - `dig` or `host` — DNS queries
 
 ### Optional (enhanced capabilities)
+
 - `subfinder` — Passive subdomain enumeration
 - `httpx` — HTTP probing with tech detection
 - `nmap` — Port scanning (requires authorization)
@@ -44,6 +46,7 @@ squad run --agent recon --prompt "Perform reconnaissance on Acme Corp (acme.com)
 - `nuclei` — Vulnerability pattern matching
 
 Install optional tools for better coverage:
+
 ```bash
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest

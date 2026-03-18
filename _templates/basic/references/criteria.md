@@ -21,21 +21,25 @@ This document defines what issues the agent should look for.
 ## Severity Levels
 
 ### CRITICAL
+
 - Security vulnerabilities (injection, path traversal, etc.)
 - Crashes or panics in normal operation
 - Data corruption or loss
 
 ### HIGH
+
 - Bugs that cause incorrect behavior
 - Resource leaks
 - Missing error handling that could cause failures
 
 ### MEDIUM
+
 - Code quality issues that hurt maintainability
 - Inconsistent patterns within the codebase
 - Dead code or unreachable conditions
 
 ### LOW
+
 - Minor style inconsistencies
 - Opportunities for minor improvements
 - Non-blocking suggestions

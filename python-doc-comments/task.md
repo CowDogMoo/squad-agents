@@ -23,7 +23,7 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
 - If you would not file a bug report about the existing docstring, do NOT change it
 - When adding Args/Returns to an existing docstring, keep the original summary line unchanged
 - Proportional: one-line getter = one-line docstring, complex = multi-paragraph
-- Public declarations only — skip ALL private names (_foo, _bar, _configure_*,
+- Public declarations only — skip ALL private names (_foo,_bar, _configure_*,
   _decode_*, _get_*). Before editing ANY declaration, check if name starts with
   underscore. If yes, SKIP. No exceptions.
 - Match existing style (NumPy/Sphinx if present, else Google style)

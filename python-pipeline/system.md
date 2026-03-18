@@ -91,6 +91,7 @@ Task(
 ```
 
 Capture the full output. Extract:
+
 - Files touched
 - Issues fixed (count by severity)
 - Issues skipped
@@ -107,6 +108,7 @@ Task(
 ```
 
 Capture the full output. Extract:
+
 - Coverage before/after
 - Test files created
 - Modules tested
@@ -123,6 +125,7 @@ Task(
 ```
 
 Capture the full output. Extract:
+
 - Docstrings added/improved
 - Files touched
 - Declarations skipped

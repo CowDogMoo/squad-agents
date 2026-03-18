@@ -279,6 +279,7 @@ Do NOT create interfaces in source files. Only create mock types inside
 ## Discovered Gaps
 
 **Packages with no test files:**
+
 - [pkg1] — [brief description of what it contains]
 - [pkg2] — ...
 

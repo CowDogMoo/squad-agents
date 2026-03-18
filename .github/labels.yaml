@@ -1,0 +1,62 @@
+---
+# Area
+- name: area/agents
+  color: "00ADD8"
+  description: >-
+    Changes made to squad agent definitions
+
+- name: area/templates
+  color: "8fbc8f"
+  description: >-
+    Changes made to agent templates
+
+- name: area/docs
+  color: "8fbc8f"
+  description: >-
+    Changes made to project documentation
+
+- name: area/github
+  color: "72ccf3"
+  description: >-
+    Changes made to GitHub Actions workflows
+
+- name: area/pre-commit
+  color: "BC9BE3"
+  description: >-
+    Changes made to pre-commit hooks
+
+# Renovate
+- name: renovate
+  color: "ffc300"
+- name: renovate/github-action
+  color: "ffc300"
+- name: renovate/github-release
+  color: "ffc300"
+- name: renovate-dashboard
+  color: "ffc300"
+
+# Semantic Type
+- name: type/digest
+  color: "FFEC19"
+- name: type/patch
+  color: "FFEC19"
+- name: type/minor
+  color: "FF9800"
+- name: type/major
+  color: "F6412D"
+- name: type/break
+  color: "F6412D"
+
+# Uncategorized
+- name: bug
+  color: "ee0701"
+- name: do-not-merge
+  color: "ee0701"
+- name: docs
+  color: "F4D1B7"
+- name: enhancement
+  color: "84b6eb"
+- name: question
+  description: >-
+    Clarification and/or additional information required to move forward
+  color: "cc317c"

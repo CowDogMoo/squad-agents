@@ -33,6 +33,7 @@ curl -s "https://api.certspotter.com/v1/issuances?domain=example.com&include_sub
 ```
 
 **What to look for**:
+
 - Wildcard certificates (`*.example.com`)
 - Internal-sounding names (`internal.`, `vpn.`, `dev.`, `staging.`)
 - Old certificates (may reveal deprecated but still-live services)
@@ -61,6 +62,7 @@ dig axfr example.com @ns1.example.com
 ```
 
 **What to look for in TXT records**:
+
 - SPF records reveal allowed mail senders
 - DKIM selectors
 - Domain verification for cloud services (Google, Microsoft, etc.)
@@ -78,6 +80,7 @@ curl -s "https://web.archive.org/cdx/search/cdx?url=*.example.com/*&output=json&
 ```
 
 **What to look for**:
+
 - Old API endpoints
 - Deprecated admin panels
 - Previous site versions with vulnerabilities
@@ -96,6 +99,7 @@ gh search code "example.com secret" --limit 50
 ```
 
 **What to look for**:
+
 - Configuration files with credentials
 - Internal documentation mentioning infrastructure
 - API documentation with endpoint details
@@ -131,12 +135,14 @@ curl -s https://example.com/robots.txt
 ```
 
 **security.txt reveals**:
+
 - Bug bounty program details
 - Contact information
 - Scope boundaries
 - PGP keys for secure communication
 
 **robots.txt reveals**:
+
 - Hidden directories
 - Admin panels
 - API paths
@@ -224,6 +230,7 @@ nuclei -l subdomains.txt -t technologies/
 ```
 
 **Technologies to identify**:
+
 - Web servers (nginx, Apache, IIS, cloudflare)
 - Frameworks (React, Angular, Vue, Django, Rails, Laravel)
 - CMS (WordPress, Drupal, Joomla, Shopify)
@@ -244,6 +251,7 @@ masscan -p1-65535 --rate 1000 -oG masscan-output.txt target-ip
 ```
 
 **High-value ports**:
+
 - 21 (FTP)
 - 22 (SSH)
 - 23 (Telnet)
@@ -461,22 +469,26 @@ npm install -g retire
 #### Identifying High-Value Targets
 
 **Development/Staging environments**:
+
 - `dev.`, `staging.`, `test.`, `uat.`, `qa.`
 - Often have weaker security controls
 - May have debug modes enabled
 - Could have default credentials
 
 **Admin panels**:
+
 - `/admin`, `/administrator`, `/wp-admin`
 - `/dashboard`, `/portal`, `/management`
 - `/console`, `/cpanel`, `/phpmyadmin`
 
 **API endpoints**:
+
 - `/api/`, `/v1/`, `/v2/`, `/graphql`
 - API documentation (`/swagger`, `/docs`, `/api-docs`)
 - May have authentication bypasses
 
 **Forgotten assets**:
+
 - Old marketing sites
 - Acquired company domains
 - Decommissioned services still running
@@ -485,6 +497,7 @@ npm install -g retire
 #### Information Disclosure Patterns
 
 **Common leaks to look for**:
+
 - `.git` directory exposed
 - `.env` files
 - `config.php.bak`, `database.yml.example`
@@ -506,12 +519,14 @@ npm install -g retire
 ## Scope Boundaries
 
 **Typically IN scope**:
+
 - Main domain and all subdomains (unless excluded)
 - Company-owned IP ranges
 - Mobile apps (if listed)
 - APIs documented by the company
 
 **Typically OUT of scope**:
+
 - Third-party services (SaaS tools, CDNs)
 - Shared hosting platforms
 - Customer/user data
@@ -520,6 +535,7 @@ npm install -g retire
 - DoS/DDoS testing
 
 **Always check**:
+
 - `security.txt` for official scope
 - Bug bounty platform program details
 - Terms of service
