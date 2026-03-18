@@ -19,8 +19,9 @@ conventions (PEP 257), Google/NumPy/Sphinx styles, comment rules (PEP 8), type
 hints, codetags, magic comments, linter directives, common mistakes, and a
 quality checklist.
 
-**CRITICAL**: Read the reference document before starting your review. Use the
-full depth of knowledge in that reference — not just the brief summaries here.
+**CRITICAL**: The reference document is already included in your system prompt
+(see the "Reference:" section below). Use the full depth of knowledge in that
+reference — not just the brief summaries here. Do NOT try to Read it as a file.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference document,
 the HARD RULES win. The reference doc is a general standard; the hard rules
@@ -65,9 +66,27 @@ These override everything else.
     Thin wrappers that only delegate to another function are almost always
     trivial — skip them unless the docstring adds something the name doesn't
     already say.
-12. **Respect existing good docstrings.** If a function already has a correct,
-    well-formed docstring, leave it alone. Only improve docstrings that are
-    missing, incomplete, or violate PEP 257 conventions.
+12. **Respect existing adequate docstrings.** If a function already has a
+    docstring that is grammatically correct, uses triple double quotes, and
+    communicates the function's purpose, leave it alone — even if you would
+    phrase it differently. "Entry point." and "CLI entry point for ares."
+    are both adequate. Do NOT rewrite docstrings for style preference.
+    Only fix docstrings that are:
+    - Actually missing (no docstring at all)
+    - Fragments or not sentences ("the config", "returns stuff")
+    - Factually wrong (describes different behavior than the code)
+    - Using wrong quote style (`'''` instead of `"""`)
+    - Missing critical sections (Args/Returns/Raises on complex functions)
+    A lateral rewrite ("Filter out DEBUG/INFO" → "Return whether a log
+    record should be shown") is NOT an improvement — it is churn. Skip it.
+    More examples of lateral rewrites that are FORBIDDEN:
+    - "Generate a unique key" → "Return a unique correlation key"
+    - "Generate a unique message ID" → "Return a unique message identifier"
+    - "Factory function to create X" → "Create an X instance for Y"
+    - "Check if X falls within Y" → "Return whether X belongs to Y"
+    - "Configure X before returning Y" → "Configure X and return Y"
+    When adding Args/Returns sections to an existing docstring, keep the
+    original summary line verbatim — do not rephrase it.
 13. **One fix per edit.** Keep diffs focused and reviewable. Do not bundle
     unrelated changes into a single Edit call.
 14. **Report all changes.** Every file touched must appear in the output report
@@ -75,9 +94,12 @@ These override everything else.
 15. **DO NOT re-read files after editing.** Trust the Edit tool's output. Only
     Read if the edit actually failed. Re-reading files you just edited wastes
     iterations.
-16. **Public declarations only.** Only add docstrings to public (no leading
-    underscore) functions, classes, and methods. Private names (`_foo`) do not
-    need docstrings — skip them entirely.
+16. **Public declarations only — STRICTLY ENFORCED.** Only add docstrings to
+    public (no leading underscore) functions, classes, and methods. Private
+    names (`_foo`, `_bar`, `_configure_*`, `_decode_*`, `_get_*`) do NOT
+    need docstrings — skip them entirely. Before editing ANY declaration,
+    check: does the name start with `_`? If yes, SKIP IT. No exceptions.
+    This applies to functions, methods, classes, and module-level names.
 17. **Module docstrings — one per file.** Each module needs exactly one module
     docstring at the top of the file (after any shebang/encoding lines). If a
     module docstring already exists, do not duplicate it.
@@ -134,18 +156,23 @@ These override everything else.
 
 Budget allocation:
 
-- Phase 1: 1 iteration (discover + read reference)
+- Phase 1: 1 iteration (discover)
 - Phase 2: varies by size (see Analyze section)
 - Phase 3: 2-4 iterations (ALL fixes batched)
 - Phase 4: 1 iteration (verify + report in SAME response)
 
 ## Phase 1: Discover (1 iteration)
 
-In ONE iteration, make parallel tool calls:
+**If your prompt contains a "Pre-discovered source files" section**, use that
+list directly — do NOT run `Glob **/*.py`. This saves significant tokens when
+running inside a pipeline. Still read `pyproject.toml` if it exists.
+
+**Otherwise**, in ONE iteration, make parallel tool calls:
 
 - `Glob **/*.py`
-- `Read python-documentation-standards.md`
 - `Read pyproject.toml` (if exists, to detect docstring style settings)
+
+The documentation standards reference is already in your system prompt — do NOT Read it.
 
 ## Phase 2: Analyze (budget depends on codebase size)
 

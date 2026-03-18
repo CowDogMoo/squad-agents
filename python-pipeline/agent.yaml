@@ -1,0 +1,7 @@
+---
+name: python-pipeline
+version: 0.1.0
+description: Orchestrator agent that runs python-review, python-tests, and python-doc-comments sequentially with context passing to avoid redundant work.
+entrypoint: system.md
+wrapper: agent.md
+task: task.md

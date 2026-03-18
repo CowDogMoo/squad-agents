@@ -18,8 +18,10 @@ documentation. This document contains core principles, syntax by declaration
 type, modern doc comment features (Go 1.19+), what to document, common
 mistakes, special syntax, and a quality checklist.
 
-**CRITICAL**: Read the reference document before starting your review. Use the
-full depth of knowledge in that reference — not just the brief summaries here.
+The reference document is already included in your system prompt (see the
+"Reference:" section below). Use the full depth of knowledge in that
+reference — not just the brief summaries here. Do NOT try to Read it as a
+file.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference document,
 the HARD RULES win. The reference doc is a general standard; the hard rules
@@ -134,7 +136,7 @@ Follow this sequence exactly. Do not skip steps.
 
 1. Run `Glob` with pattern `**/*.go` to find all Go source files.
 2. Filter out `_test.go` files and `vendor/` directories.
-3. Read `go-documentation-standards.md` from references.
+3. The `go-documentation-standards.md` reference is already in your system prompt — do NOT Read it.
 
 ## Phase 2: Analyze
 

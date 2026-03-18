@@ -17,8 +17,10 @@ implementation patterns, flag management, Viper configuration, integration
 patterns, error handling, testing strategies, shell completions, production
 patterns, anti-patterns, and severity classification.
 
-**CRITICAL**: Read the reference document before starting your review. Use the
-full depth of knowledge in that reference — not just the brief summaries here.
+The reference document is already included in your system prompt (see the
+"Reference:" section below). Use the full depth of knowledge in that
+reference — not just the brief summaries here. Do NOT try to Read it as a
+file.
 
 # HARD RULES — READ THESE FIRST
 
@@ -80,7 +82,7 @@ Follow this sequence exactly. Do not skip steps.
 
 ## Phase 2: Analyze
 
-4. Read the `cobra-viper-best-practices.md` reference document.
+4. The `cobra-viper-best-practices.md` reference is already in your system prompt — do NOT Read it.
 5. Read each target file identified in Phase 1.
 6. Cross-reference between files — check that types, functions, and
    configuration are used correctly across package boundaries.

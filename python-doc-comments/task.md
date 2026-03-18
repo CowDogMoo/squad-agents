@@ -17,8 +17,15 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
 - No redundant docstrings ('Process processes the data' = skip)
 - SKIP trivial functions: close, get_value, simple wrappers — they need NO docstring
 - Key test: 'Does this docstring tell the reader something the name does not?' If no → skip
+- Do NOT rewrite adequate existing docstrings in your own words — that is churn, not improvement
+- An existing docstring is adequate if it is grammatical, uses """ quotes, and communicates purpose
+- NEVER change "Generate" to "Return" or similar verb swaps — those are lateral rewrites
+- If you would not file a bug report about the existing docstring, do NOT change it
+- When adding Args/Returns to an existing docstring, keep the original summary line unchanged
 - Proportional: one-line getter = one-line docstring, complex = multi-paragraph
-- Public declarations only — skip private names (_foo)
+- Public declarations only — skip ALL private names (_foo, _bar, _configure_*,
+  _decode_*, _get_*). Before editing ANY declaration, check if name starts with
+  underscore. If yes, SKIP. No exceptions.
 - Match existing style (NumPy/Sphinx if present, else Google style)
 - NEVER add -> None — it's always inferable
 
@@ -30,7 +37,8 @@ ITERATION BUDGET — scales with codebase size (count after Glob):
 
 Phase allocation:
 
-- Phase 1 (1 iter): Glob + Read reference in parallel, COUNT source files
+- Phase 1 (1 iter): Glob + Read pyproject.toml in parallel, COUNT source files
+  (reference is already in your system prompt — do NOT Read it)
 - Phase 2 (varies): Read files with 4-6 parallel Reads per iteration
 - Phase 3 (2-4 iter): ALL Edit calls batched (10 fixes = 10 Edit calls in ONE response)
 - Phase 4 (1 iter): Verify + report in SAME response

@@ -890,7 +890,7 @@ Python's `asyncio` enables concurrent I/O-bound operations without threads.
 | Practice                              | Severity | Rationale                           |
 | ------------------------------------- | -------- | ----------------------------------- |
 | Use `asyncio.run()` as entry point    | HIGH     | Proper event loop management        |
-| Use `TaskGroup` for concurrent tasks  | HIGH     | Structured concurrency (3.11+)      |
+| Use `TaskGroup` for concurrent tasks (but NOT as a replacement for `gather(return_exceptions=True)`) | HIGH | Structured concurrency (3.11+) |
 | Use `async with` for resources        | HIGH     | Proper async cleanup                |
 | Don't block the event loop            | CRITICAL | Defeats purpose of async            |
 
@@ -923,12 +923,37 @@ TaskGroup advantages:
 
 - Automatic task lifecycle management
 - Proper exception handling (cancels remaining on failure)
-- Cleaner than `asyncio.gather()`
+- Cleaner than bare `asyncio.gather()` (without `return_exceptions`)
 
-**Legacy approach (avoid in new code):**
+**CRITICAL: TaskGroup and gather(return_exceptions=True) are NOT equivalent.**
+
+`TaskGroup` cancels all remaining tasks when any task raises. This means
+partial results are lost. `gather(return_exceptions=True)` runs ALL tasks
+to completion and returns both results and exceptions in order.
+
+**When to use each:**
+
+- `TaskGroup` — when all tasks must succeed or you want fail-fast behavior
+- `gather(return_exceptions=True)` — when you need partial results from
+  fan-out patterns (parallel queries, chunk processing, multi-API calls)
+
+**Do NOT replace `gather(return_exceptions=True)` with `TaskGroup`.**
+This is a semantic change that silently drops partial results.
+
+**Legacy (avoid in new code ONLY when return_exceptions is not used):**
 
 ```python
 # Less safe - exceptions can leave tasks running
+results = await asyncio.gather(
+    fetch_user(1),
+    fetch_user(2),
+)
+```
+
+**Still correct (do NOT replace):**
+
+```python
+# Collects ALL results including exceptions - TaskGroup cannot do this
 results = await asyncio.gather(
     fetch_user(1),
     fetch_user(2),
@@ -1777,7 +1802,7 @@ Best practice violations:
 - Complex comprehensions (3+ nested)
 - Magic numbers
 - Legacy type syntax (`List`, `Optional`, `Union`)
-- Using `asyncio.gather()` instead of `TaskGroup` (3.11+)
+- Using bare `asyncio.gather()` (without `return_exceptions`) instead of `TaskGroup` (3.11+)
 
 ### LOW
 

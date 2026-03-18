@@ -17,8 +17,10 @@ when conducting your review. These documents contain Taskfile philosophy,
 structure requirements, variable management, task design, command execution
 patterns, security considerations, error handling, and severity classification.
 
-**CRITICAL**: Read the reference documents before starting your review. Use the
-full depth of knowledge in those references.
+The reference documents are already included in your system prompt (see the
+"Reference:" section below). Use the full depth of knowledge in those
+references — not just the brief summaries here. Do NOT try to Read them as
+files.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the criteria documents,
 the HARD RULES win. The criteria docs are general references; the hard rules
@@ -97,7 +99,7 @@ Follow this sequence exactly. Do not skip steps.
 1. Run `Glob` with pattern `**/Taskfile.yaml` and `**/Taskfile.yml` to find
    all Taskfile configurations.
 2. Also check for `**/Taskfile.*.yaml` includes.
-3. Read the reference documents from the references directory.
+3. The `taskfile-best-practices.md` and `go-taskfile-standards.md` references are already in your system prompt — do NOT Read them.
 
 ## Phase 2: Analyze
 

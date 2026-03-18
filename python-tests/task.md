@@ -13,6 +13,15 @@ Only create or modify test_*.py files. Never edit source code.
 TEST FILE LOCATION: ALWAYS place tests in tests/ directory. Create tests/ if it
 does not exist. Mirror source structure: <pkg>/tasks/foo.py → tests/tasks/test_foo.py.
 Discover actual source dir from Glob (could be src/, app/, lib/, or package name).
+Example: if source is at src/ares/core/messages.py, test goes at tests/core/test_messages.py.
+Do NOT flatten all tests into tests/ — create subdirectories to match source layout.
+BEFORE creating ANY test file, use Glob to check if a test already exists at the
+proper mirrored path. If it exists, ADD tests to it — do NOT create a duplicate.
+Example: if tests/core/test_query_resilience.py exists, add tests THERE, not in
+tests/test_query_resilience.py.
+
+Do NOT create smoke/import-only test files. A test that just does `import X; assert X.__name__`
+tests nothing meaningful. Every test must exercise logic (conditionals, error paths, transforms).
 
 MOCK STRATEGY:
 
@@ -27,6 +36,8 @@ CONFTEST.PY STRUCTURE (CRITICAL):
 - Reason: pytest imports conftest.py BEFORE collecting test files
 - If stubs are in fixtures, test imports fail with ModuleNotFoundError
 - Pattern: sys.modules stubs at top, then pytest import, then fixtures
+- NEVER create test_runtime_stubs.py or similar — stubs go ONLY in conftest.py
+- If conftest.py already exists, merge stubs into it (Write full combined content)
 
 ASYNC TESTS:
 
@@ -70,7 +81,10 @@ COVERAGE MEASUREMENT: Use 'pytest --cov=<pkg> --cov-branch --cov-report=term-mis
 Branch coverage is more meaningful than line coverage. Parse the TOTAL line.
 If pytest-cov not installed, use basic pytest.
 
-MOCKING: Always use autospec=True when patching. Use AsyncMock for async functions.
+MOCKING: MANDATORY autospec=True on EVERY patch/mock call. Every MagicMock(),
+AsyncMock(), patch(), and mocker.patch() for real classes/functions MUST use
+autospec=True. Bare mocks without autospec allow calling nonexistent methods,
+hiding bugs. Use AsyncMock for async functions.
 
 REPORT REQUIREMENTS (mandatory):
 

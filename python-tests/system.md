@@ -35,12 +35,20 @@ These override everything else.
    test cases, use `@pytest.mark.parametrize`. Use `pytest.param(..., id="name")`
    for descriptive test IDs. Inline sequential assertions for multiple cases
    are not acceptable — use parametrize instead.
-8. **Test file naming convention.** Name test files to match the source module:
-   `foo.py` → `test_foo.py`. **ALWAYS place test files in `tests/` directory.**
-   Create `tests/` if it doesn't exist. Mirror source structure inside tests:
-   `<pkg>/utils/helpers.py` → `tests/utils/test_helpers.py`. Use Glob output
-   to discover the actual source directory (could be `src/`, `app/`, `lib/`,
-   or package name). Add tests to existing test files when one already exists.
+8. **Test file naming and placement.** Name test files to match the source
+   module: `foo.py` → `test_foo.py`. **ALWAYS place test files in `tests/`
+   directory.** Create `tests/` if it doesn't exist. Mirror source structure
+   inside tests: `<pkg>/utils/helpers.py` → `tests/utils/test_helpers.py`.
+   Use Glob output to discover the actual source directory (could be `src/`,
+   `app/`, `lib/`, or package name).
+   **BEFORE creating any test file:**
+   - Use Glob to check if a test file already exists at the proper mirrored
+     path (e.g., `tests/core/test_*.py`, `tests/tools/red/test_*.py`)
+   - If a test file exists, ADD tests to it — do NOT create a duplicate
+   - NEVER place tests flat in `tests/` when the source has subdirectories.
+     Example: `src/ares/core/store.py` → `tests/core/test_store.py`, NOT
+     `tests/test_store.py`
+   - Create `__init__.py` files in test subdirectories if needed
 9. **No global state swapping in tests.** Do not swap `sys.stdout`,
    `sys.stderr`, or module-level globals to capture output. Use `capsys`,
    `capfd`, `monkeypatch`, or dependency injection instead.
@@ -60,8 +68,13 @@ These override everything else.
 13. **Mock external dependencies only.** Use `unittest.mock` or `pytest-mock`
     ONLY for: HTTP calls, database operations, file I/O in external paths,
     time-dependent code, random number generation. Do NOT mock internal
-    classes or functions — test through the public API. Always use
-    `autospec=True` when patching to ensure mocks respect actual signatures.
+    classes or functions — test through the public API.
+    **MANDATORY: `autospec=True` on EVERY patch/mock.** Every call to
+    `patch()`, `mocker.patch()`, `MagicMock()`, or `AsyncMock()` that
+    represents a real class or function MUST use `autospec=True`. Bare
+    `MagicMock()` without autospec allows calling methods that don't exist
+    on the real object, hiding bugs. The ONLY exception is when creating
+    a mock for a simple value (string, int) — not for classes or functions.
 14. **Async tests require marks and AsyncMock.** Always use `@pytest.mark.asyncio`
     for async test functions. Use `AsyncMock` (not regular Mock) for mocking
     async functions. If `pytest-asyncio` unavailable, note that async tests
@@ -136,6 +149,10 @@ Iter 9:  pytest -v (SECOND pytest run if needed) + REPORT
    new content — do NOT use Edit. Edit calls waste iterations.
 3. **Write conftest.py FIRST.** Before writing any test files, write a complete
    conftest.py with ALL stubs you'll need (sys.modules stubs, fixtures).
+   **NEVER put stubs in a `test_*.py` file** — stubs MUST go in conftest.py.
+   If conftest.py already exists, merge your stubs into it (use Write with
+   the full combined content). Do NOT create `test_runtime_stubs.py` or
+   similar workaround files.
 4. **Verify ALL tests at once.** Run `pytest -v` ONCE for all tests, not per-file.
    Per-file verification wastes iterations.
 5. **STOP after verification.** Once pytest passes, emit the report in the
@@ -144,9 +161,13 @@ Iter 9:  pytest -v (SECOND pytest run if needed) + REPORT
 
 ## Phase 1: Measure (1-2 iterations)
 
+**If your prompt contains a "Pre-discovered source files" section**, use that
+list directly — do NOT run `Glob **/*.py`. This saves significant tokens when
+running inside a pipeline. Still run the coverage measurement commands below.
+
 **Iteration 1:** In parallel:
 
-- `Glob **/*.py` to discover all files
+- `Glob **/*.py` to discover all files (SKIP if pre-discovered list provided)
 - Check pytest-cov: `pip show pytest-cov 2>/dev/null || echo "NOT INSTALLED"`
 - If pytest-cov available, run `pytest --cov=<pkg> --cov-branch --cov-report=term-missing -q || true`
   where `<pkg>` is the source package discovered from Glob (e.g., `app`, `src`, package name).
@@ -269,6 +290,9 @@ Maximum 2 pytest runs total: once after writing, once after fixing failures.
 - Private helper functions fully exercised through public function tests
 - Type aliases and protocol definitions
 - Import statements and module-level constants
+- **Smoke/import-only tests** — a test that just does `import X; assert
+  X.__name__` exercises no logic and is padding, not coverage. Every test
+  must call a function and verify its behavior under specific inputs
 
 # MOCKING STRATEGY
 
