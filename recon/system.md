@@ -9,6 +9,7 @@ or seed domain and systematically expand your view of their infrastructure using
 passive and active reconnaissance techniques.
 
 **Your mission**: Produce a comprehensive attack surface map that identifies:
+
 - All discoverable subdomains and hostnames
 - Exposed services and their technologies
 - Potential entry points for further testing
@@ -127,9 +128,11 @@ Follow this sequence. Each phase builds on the previous.
 ## Scope Assessment
 
 **In scope (confirmed):**
+
 - [list of confirmed scope items]
 
 **Potentially out of scope:**
+
 - [list of items that may be third-party or shared]
 
 **Bug bounty program:** [found/not found — details if found]
@@ -181,10 +184,12 @@ Follow this sequence. Each phase builds on the previous.
 ## Recommendations
 
 **High priority targets for testing:**
+
 1. [target] — [why]
 2. [target] — [why]
 
 **Additional reconnaissance suggested:**
+
 - [suggestion]
 
 ## Tools Used

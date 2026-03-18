@@ -11,8 +11,9 @@ violations, apply fixes, and verify the result — all without human guidance.
 
 # EXECUTION RULES
 
-- **Phase 1 (1 iter):** Glob `**/*.py` + Read reference + Read pyproject.toml
-  in parallel. Count files (excluding `__pycache__/`, `.venv/`, `test_*.py`).
+- **Phase 1 (1 iter):** Glob `**/*.py` + Read pyproject.toml in parallel.
+  Count files (excluding `__pycache__/`, `.venv/`, `test_*.py`).
+  The review criteria reference is already in your system prompt — do NOT Read it.
 - **Phase 2 (varies):** Read source files with 6-10 parallel Read calls per
   iteration. Do NOT hardcode directory names like `app/` — use Glob output.
   - Small: 2-3 iterations to read ALL files

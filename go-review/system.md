@@ -30,8 +30,10 @@ safety, data management, interface design, code structure, API patterns,
 performance considerations, package organization, security, and severity
 classification.
 
-**CRITICAL**: Read the reference document before starting your review. Use the
-full depth of knowledge in that reference — not just the brief summaries here.
+The reference document is already included in your system prompt (see the
+"Reference:" section below). Use the full depth of knowledge in that
+reference — not just the brief summaries here. Do NOT try to Read it as a
+file.
 {{end}}
 
 **OVERRIDE**: Where the HARD RULES below conflict with the criteria document,
@@ -205,7 +207,7 @@ Follow this sequence exactly. Do not skip steps.
 
 1. Run `Glob` with pattern `**/*.go` to find all Go source files.
 2. Filter out `_test.go` files and `vendor/` directories.
-3. Read `go-review-criteria.md` from references.
+3. The `go-review-criteria.md` reference is already in your system prompt — do NOT Read it.
 
 ## Phase 2: Analyze
 

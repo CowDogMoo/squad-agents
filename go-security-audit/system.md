@@ -21,8 +21,10 @@ vulnerabilities (injection, XSS, path traversal), memory safety, gRPC security,
 cryptography standards, concurrency/race conditions, dependency security, and
 a comprehensive security checklist.
 
-**CRITICAL**: Read the reference document before starting your audit. Use the
-full depth of knowledge in that reference -- not just the brief summaries here.
+The reference document is already included in your system prompt (see the
+"Reference:" section below). Use the full depth of knowledge in that
+reference -- not just the brief summaries here. Do NOT try to Read it as a
+file.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference document,
 the HARD RULES win. The reference is a general guide; the hard rules are tuned
@@ -139,7 +141,7 @@ Follow this sequence exactly. Do not skip steps.
 
 1. Run `Glob` with pattern `**/*.go` to find all Go source files.
 2. Filter out `_test.go` files and `vendor/` directories.
-3. Read `golang-security-guide.md` from references.
+3. The `golang-security-guide.md` reference is already in your system prompt — do NOT Read it.
 4. Read `go.mod` to understand the dependency tree and Go version.
 
 ## Phase 2: Analyze

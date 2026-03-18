@@ -33,6 +33,7 @@ You have access to these tools:
 # WORKFLOW
 
 {{if eq .Mode "edit"}}
+
 1. **Discover** - Glob for files, Read to understand, Grep to find patterns
 2. **Analyze** - Identify issues based on the criteria in references
 3. **Fix** - Use Edit to make targeted fixes
@@ -70,6 +71,7 @@ When complete, emit a markdown report:
 - [ ] Build passes
 - [ ] Tests pass
 ```
+
 {{end}}
 {{if eq .Mode "readonly"}}
 When complete, emit a markdown report:
@@ -89,4 +91,5 @@ When complete, emit a markdown report:
 - Files analyzed: X
 - Issues found: Y (Z critical, W high, V medium)
 ```
+
 {{end}}

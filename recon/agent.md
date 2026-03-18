@@ -82,6 +82,7 @@ sections in order:
 # ERROR HANDLING
 
 If a tool is not available:
+
 ```
 [TOOL MISSING] subfinder not installed. Skipping subdomain brute-force.
 Alternatives attempted: amass (not found), assetfinder (not found)
@@ -89,6 +90,7 @@ Proceeding with passive-only enumeration via crt.sh and DNS.
 ```
 
 If a request times out:
+
 ```
 [TIMEOUT] crt.sh query timed out after 30s.
 Retrying once... [FAILED]
@@ -96,6 +98,7 @@ Proceeding without CT log data. Note: subdomain list may be incomplete.
 ```
 
 If rate limited:
+
 ```
 [RATE LIMITED] Received 429 from target. Backing off for 60s.
 Resuming with increased delay between requests.
