@@ -1,0 +1,9 @@
+---
+name: llm-junk
+version: 0.1.0
+description: Autonomous agent that scans documentation and text files for indicators of LLM-generated content and rewrites flagged sections to sound human-written.
+entrypoint: system.md
+wrapper: agent.md
+references:
+  - references/llm-tells.md
+task: task.md
