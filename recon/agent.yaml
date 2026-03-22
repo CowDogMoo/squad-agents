@@ -1,9 +1,0 @@
----
-name: recon
-version: 0.1.0
-description: Organizational reconnaissance agent for bug bounty attack surface discovery
-entrypoint: system.md
-wrapper: agent.md
-references:
-  - references/recon-guide.md
-task: task.md
