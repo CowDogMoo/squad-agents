@@ -7,3 +7,7 @@ wrapper: agent.md
 references:
   - references/python-testing-patterns.md
 task: task.md
+budget:
+  estimated_iterations: 40
+  scale_factor: files
+  files_per_iteration: 2

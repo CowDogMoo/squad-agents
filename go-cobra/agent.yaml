@@ -7,3 +7,7 @@ wrapper: agent.md
 references:
   - references/cobra-viper-best-practices.md
 task: task.md
+budget:
+  estimated_iterations: 25
+  scale_factor: files
+  files_per_iteration: 3

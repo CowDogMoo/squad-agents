@@ -7,3 +7,7 @@ wrapper: agent.md
 references:
   - references/python-documentation-standards.md
 task: task.md
+budget:
+  estimated_iterations: 30
+  scale_factor: files
+  files_per_iteration: 3
