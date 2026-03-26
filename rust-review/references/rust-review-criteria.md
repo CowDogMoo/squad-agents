@@ -543,6 +543,10 @@ Before approving, check:
 | `String` parameter when `&str` suffices | Change to `&str` |
 | Manual loop where iterator works | Use iterator chain |
 | `as u32` on user input | Use `try_into()` |
+| `(x * 100.0) as u32` without `.round()` | Use `(x * 100.0).round() as u32` |
+| `x.clone()` on `Arc`/`Rc` | Use `Arc::clone(&x)` |
+| `format!("0.0.0.0:{}", port)` for addrs | Use `SocketAddrV4::new(...)` |
+| `eprintln!` in non-script code (HIGH) | Add `log` + `env_logger`, replace all `eprintln!` |
 | `println!` in library code | Use `log` or `tracing` |
 | `std::sync::Mutex` in async | Use `tokio::sync::Mutex` |
 | `Box<dyn Error>` as crate error type | Use `thiserror` or `anyhow` |

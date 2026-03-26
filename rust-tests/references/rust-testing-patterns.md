@@ -63,69 +63,12 @@ mod tests {
 - Unit tests can access `pub(crate)` and `pub(super)` items.
 - Unit tests CANNOT access private items from other modules.
 
-## Table-Driven Tests
+## Parameterized Tests with `rstest`
 
-When testing 2+ cases for the same function, use table-driven tests:
-
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn parse_duration_variants() {
-        struct Case {
-            name: &'static str,
-            input: &'static str,
-            expected: Result<Duration, ParseError>,
-        }
-
-        let cases = vec![
-            Case {
-                name: "seconds",
-                input: "30s",
-                expected: Ok(Duration::from_secs(30)),
-            },
-            Case {
-                name: "minutes",
-                input: "5m",
-                expected: Ok(Duration::from_secs(300)),
-            },
-            Case {
-                name: "invalid",
-                input: "abc",
-                expected: Err(ParseError::InvalidFormat),
-            },
-            Case {
-                name: "empty",
-                input: "",
-                expected: Err(ParseError::Empty),
-            },
-        ];
-
-        for case in cases {
-            let result = parse_duration(case.input);
-            assert_eq!(
-                result, case.expected,
-                "case '{}': parse_duration({:?})",
-                case.name, case.input
-            );
-        }
-    }
-}
-```
-
-### When to Use Tables
-
-- 2+ test cases for the same function
-- Testing different input/output combinations
-- Parameterized error cases
-
-### Alternative: `rstest` Crate
-
-If `rstest` is already in `Cargo.toml`, use `#[rstest]` for parameterized
-tests. Each case generates a separate test function with its own name in
-output:
+When testing 2+ cases for the same function, use `rstest` to generate
+independent tests per case. Add `rstest` to `[dev-dependencies]` if not
+present. Each `#[case]` becomes its own test in `cargo test` output,
+giving granular reporting and allowing all cases to run even if one fails.
 
 ```rust
 use rstest::rstest;
@@ -136,10 +79,30 @@ use rstest::rstest;
 fn parse_duration_valid(#[case] input: &str, #[case] expected: Duration) {
     assert_eq!(parse_duration(input).unwrap(), expected);
 }
+
+#[rstest]
+#[case("abc")]
+#[case("")]
+fn parse_duration_invalid(#[case] input: &str) {
+    assert!(parse_duration(input).is_err());
+}
 ```
 
-Prefer manual table-driven tests for zero-dependency projects; use `rstest`
-when the project already depends on it.
+Do NOT use loop-based table tests (iterating over a `Vec<Case>`). Loop
+cases are invisible to `cargo test` output and a failure in one case
+stops remaining cases from running.
+
+### When to Use `rstest`
+
+- 2+ test cases for the same function
+- Testing different input/output combinations
+- Parameterized error cases
+
+### When NOT to Use Parameterized Tests
+
+- Single test case
+- Tests requiring different setup/teardown per case
+- Tests with complex assertions that vary per case
 
 ### When NOT to Use Tables
 
@@ -507,7 +470,10 @@ fn builder_missing_required_field() {
 
 ### Naming Conventions
 
-- Unit test functions: `test_<function>_<scenario>`
+- Unit test functions: `<function>_<behavior>` (NO `test_` prefix —
+  `#[test]` already marks it. Clippy's `redundant_test_prefix` lint
+  flags the prefix.)
+  Examples: `parse_db_string_valid`, `spl_to_atomic_negative_clamped`
 - Integration test files: `tests/<feature>.rs`
 - Test helper module: `tests/common/mod.rs`
 - Mock types: `Mock<TraitName>`
@@ -523,6 +489,20 @@ assert!(result.is_ok());                   // Result OK
 assert!(result.is_err());                  // Result Err
 assert!(option.is_some());                // Option Some
 assert!(option.is_none());                // Option None
+```
+
+### Float Comparisons
+
+Use the `approx` crate for float comparisons — add it to
+`[dev-dependencies]`. Do NOT use raw epsilon comparisons like
+`assert!((a - b).abs() < 1e-9)` — hardcoded epsilons are arbitrary
+and don't communicate intent.
+
+```rust
+use approx::assert_abs_diff_eq;
+
+assert_abs_diff_eq!(actual, expected, epsilon = 0.01);
+assert_relative_eq!(actual, expected, max_relative = 1e-6);
 ```
 
 ### Test Attributes

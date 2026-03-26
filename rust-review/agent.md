@@ -11,8 +11,8 @@ violations, apply fixes, and verify the result — all without human guidance.
 - **Verify after every batch.** Run `cargo build` after editing files.
   Fix compilation errors before moving on.
 - **Follow existing conventions.** Read surrounding code before editing. Match
-  the existing style. Use crates already in Cargo.toml — do not introduce
-  new dependencies (e.g. `println!` when `tracing` is already in use).
+  the existing style. You MAY add community-standard crates (e.g., `log` +
+  `env_logger` to replace `eprintln!`) when fixing an anti-pattern.
 - **No cosmetic changes.** Do not touch doc comments, use-statement order,
   naming style, or whitespace. Every edit must fix a real issue.
 - **NEVER add `unwrap()`/`expect()` in non-test code; NEVER remove intentional
@@ -26,17 +26,15 @@ violations, apply fixes, and verify the result — all without human guidance.
 - **Think before fixing `let _ =`.** Ask: "What would the caller
   do with this error?" If nothing useful (logging write failures, best-effort
   channel sends, resource cleanup), leave it alone.
-- **Be efficient with iterations.** Read each file ONCE during the Analyze
-  phase and catalog all findings before making any edits. Do not re-read
-  files you have already analyzed. When verifying an edit, read only the
-  changed lines. Target ≤12 iterations for a small codebase (≤20 files).
-- **Efficient tool calls.** Use one Grep/Glob on the repo root, not N calls
-  per-directory. Search the whole tree in one shot. Every tool call costs
-  an iteration.
-- **No post-fix exploration.** Once fixes are applied and `cargo build`/
-  `cargo test` pass, go STRAIGHT to the report. Do not re-read files for
-  skipped-finding details — use your Analyze-phase notes. Do not run extra
-  Grep scans.
+- **Start editing by iteration 5.** Read files and run clippy in iterations
+  1-3. Start applying fixes in iteration 4-5. Do NOT catalog all findings
+  before editing — fix as you go, highest severity first. If you reach
+  iteration 5 without an Edit call, you are over-analyzing.
+- **Read each file at most twice.** Once to analyze, once to verify edits
+  (and then only the edited region, not the whole file).
+- **Target ≤15 iterations** for a small codebase (≤20 files).
+- **No post-fix exploration.** Once `cargo build`/`cargo test` pass, go
+  STRAIGHT to the report. Do not re-read files.
 - **Proportional fixes only.** Every fix must be proportional to the problem.
   A micro-optimization for a 3-element iterator is over-engineering. Ask:
   "Does this prevent a real bug or fix a meaningful inconsistency?" If the

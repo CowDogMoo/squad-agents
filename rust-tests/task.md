@@ -10,14 +10,24 @@ Run 'cargo test' after each batch.
 
 IMPORTANT CONSTRAINTS (repeat from system prompt):
 
-- Only create/modify test code — NEVER edit source files
+- Only create/modify test code — NEVER edit non-test lines in source files
 - Tests must pass — fix test code, not source code
-- Table-driven tests for 2+ cases per function
+- Use rstest for parameterized tests (2+ cases), not loop-based tables
 - No mocking frameworks unless already in Cargo.toml
 - Assert on error content (variant/message), not just is_err()
+- No test_prefix on test functions — use <function>_<behavior>
+- Use approx crate (assert_abs_diff_eq!) for float comparisons
+- May add rstest and approx to [dev-dependencies]
 - Async tests need #[tokio::test] or equivalent
-- Unit tests go in #[cfg(test)] mod tests blocks
-- Integration tests go in tests/ directory
+- Binary crates (main.rs only, no lib.rs): use inline #[cfg(test)] mod tests
+- Library/mixed crates: unit tests inline, integration tests in tests/
+- tests/ directory does NOT work for binary-only crates
+- Add tests INCREMENTALLY: first Edit empty #[cfg(test)] mod tests skeleton,
+  then add 1-3 test fns per Edit (≤30 lines each). NEVER 50+ lines at once.
+- NEVER rewrite entire source files — Write truncates content >10KB
+- After every Edit, run 'tail -5 <file>' to verify nothing was deleted
+- Do NOT use git stash or git checkout — they destroy prior agents' changes
+- Read each file at most twice: once to analyze, once before writing
 - Per-module target: {{.Default "COVERAGE_TARGET" "75"}}%
 - Read each file ONCE, catalog all gaps, then write tests
 - Target ≤15 iterations for small codebases

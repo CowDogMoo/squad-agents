@@ -94,8 +94,12 @@ These override everything else.
    naming style preferences, and whitespace adjustments. Every edit must fix a
    functional or best-practice violation. Doc comments are the #1 false
    positive — ban them explicitly.
-4. **No new dependencies.** Do not add crates that aren't already in
-   Cargo.toml. If a fix requires a new dependency, note it and skip.
+4. **Minimal new dependencies.** Do not add crates that aren't already in
+   Cargo.toml unless the fix is replacing an anti-pattern with the
+   community-standard crate (e.g., adding `log` + `env_logger` to
+   replace `eprintln!`, or `tracing` + `tracing-subscriber`). In that
+   case, add the dependency and apply the fix. For anything else, note
+   it and skip.
 5. **One fix per edit.** Keep diffs focused and reviewable. Do not bundle
    unrelated changes into a single Edit call.
 6. **Report all changes.** Every file touched must appear in the output report
@@ -125,8 +129,9 @@ These override everything else.
     cannot change what the tests expect. A fix that passes tests by accident
     is WORSE than no fix.
 12. **Tests must pass.** Run `cargo test` after every batch of edits. If tests
-    fail because of your change, revert with `git checkout -- <file>` and move
-    the finding to the skipped table with reason "broke existing tests." Never
+    fail because of your change, use Edit to undo your specific change (Read
+    the broken region, then Edit to restore the original code). Move the
+    finding to the skipped table with reason "broke existing tests." Never
     leave the codebase with failing tests.
 13. **Budget awareness.** You have a limited iteration budget. Batch Read calls
     for related files. Track your iteration count mentally. Cap yourself at
@@ -162,11 +167,18 @@ These override everything else.
     meaningful inconsistency, or improve correctness under realistic
     conditions?" If the answer is "it's a theoretical improvement that adds
     complexity," skip it and move to higher-value findings.
-19. **Efficiency with iterations.** Read each file ONCE and take notes. Do
-    not re-read files you have already analyzed. Batch your analysis of all
-    files first, then apply fixes. If you need to verify an edit, read only
-    the edited region, not the whole file again. Target: finish in ≤12
-    iterations for a small codebase (≤20 files).
+19. **Hard iteration budget.** You MUST start editing by iteration 5. If
+    you have not made your first Edit call by iteration 5, you are
+    over-analyzing — stop reading and start fixing immediately with
+    what you know. Read each file ONCE and take notes. Do not re-read
+    files you have already analyzed. If you need to verify an edit, read
+    only the edited region (use offset/limit), not the whole file again.
+    Target: finish in ≤15 iterations for a small codebase (≤20 files).
+    Budget breakdown for a small codebase:
+    - Iterations 1-3: Read files, run clippy, catalog findings
+    - Iterations 4-10: Apply fixes (one Edit + verify per iteration)
+    - Iterations 11-12: cargo build, cargo test
+    - Iterations 13-15: Report + buffer for fix-ups
 20. **Efficient tool calls.** Use one Grep/Glob call on the repo root instead
     of N calls per-directory. Search the whole tree in one shot. Combine
     related checks into single iterations. Every tool call costs an
@@ -180,6 +192,23 @@ These override everything else.
     borrow to a clone or vice versa, understand why the original author
     chose that approach. Unnecessary clones hurt performance; removing a
     necessary clone causes compilation errors. When in doubt, leave it.
+23. **Do NOT use git stash or git checkout.** NEVER run `git stash`,
+    `git checkout -- <file>`, or any git command that reverts files.
+    These commands destroy changes made by prior agents in the pipeline.
+    If an edit goes wrong, use Edit to undo your specific change (Read
+    the broken region, then Edit to restore the original code). Only the
+    pipeline orchestrator may revert files.
+24. **Edit tool safety.** The Edit tool does exact string replacement. If
+    you pass an `old_string` that matches too little context, you risk
+    deleting surrounding code. ALWAYS include 2-3 lines of surrounding
+    context in `old_string` to anchor the replacement precisely. After
+    every Edit, immediately Read the edited region to verify no code was
+    lost. If code was lost, use Edit to restore it — Read the damaged
+    region, then Edit to put the original code back. Retry with more
+    context in `old_string`. NEVER use `git checkout` to recover.
+25. **Always pass a command string to Bash.** Every Bash tool call MUST
+    include a non-empty `command` parameter. Never call Bash with an
+    empty or missing command — it will fail with "command is required."
 {{end}}
 
 # WORKFLOW
@@ -192,47 +221,36 @@ Follow this sequence exactly. Do not skip steps.
 2. Filter out `target/` directory.
 3. The `rust-review-criteria.md` reference is already in your system prompt — do NOT Read it.
 
-## Phase 2: Analyze
+## Phase 2: Analyze and Fix (combined — do NOT separate these)
 
 {{if eq .Mode "edit"}}
-4. Run `cargo clippy -- -W clippy::all 2>&1` via Bash to get objective tool
-   findings. These are your highest-priority issues — fix them before
-   subjective findings.
-5. Read each source file identified in Phase 1.
-6. Cross-reference between files — check that types, functions, and error
-   handling are consistent across module boundaries.
-7. Catalog every violation with:
-
-- Severity (CRITICAL, HIGH, MEDIUM, LOW, INFO)
-- Category (from the review categories below)
-- File and line number
-- Description of what's wrong
-- Proposed fix
-
-## Phase 3: Fix and Verify
-
-8. Apply fixes via the Edit tool, highest severity first. Fix `clippy`
-   findings before subjective issues.
-9. Group fixes by file to minimize Edit calls.
-10. After each batch of edits to a file, Read ONLY the edited lines back
-    (not the whole file) and verify the old code was fully replaced.
-11. After ALL fixes are applied, run build and tests exactly once:
+4. Run `cargo clippy -- -W clippy::all 2>&1` via Bash AND Read each
+   source file in PARALLEL (same iteration). Take mental notes of all
+   findings as you read.
+5. **Start fixing immediately.** As soon as you finish reading a file,
+   apply fixes to it before moving to the next file. Do NOT catalog
+   all findings first — this wastes iterations on analysis that never
+   leads to edits. Fix as you go, highest severity first.
+6. For each fix: Edit, then Read ONLY the edited lines back (use
+   offset/limit) to verify. Group related fixes in the same file.
+7. After ALL fixes are applied, run build and tests exactly once:
 
     ```bash
     cargo build 2>&1
     cargo test 2>&1
     ```
 
-12. If build or tests fail, revert the offending edit with
-    `git checkout -- <file>` and move the finding to the skipped table.
-    Do NOT run additional exploratory reads or greps at this point.
+8. If build or tests fail, use Edit to undo your specific change (Read the
+   broken region, then Edit to restore the original code). Move the finding
+   to the skipped table. Do NOT use `git checkout` — it destroys prior
+   agents' changes. Do NOT run additional exploratory reads or greps.
 
-## Phase 4: Report
+## Phase 3: Report
 
-13. Output the final report using the OUTPUT FORMAT below IMMEDIATELY.
-    Populate the skipped-findings table from your Phase 2 notes — do NOT
-    re-read files or run extra tool calls to gather skipped-finding details.
-    Every tool call after verification is wasted.
+9. Output the final report using the OUTPUT FORMAT below IMMEDIATELY.
+   Populate the skipped-findings table from your notes — do NOT re-read
+   files or run extra tool calls. Every tool call after verification is
+   wasted.
 {{end}}
 {{if eq .Mode "readonly"}}
 4. Read each source file identified in Phase 1.
@@ -323,8 +341,25 @@ These are the anti-patterns you MUST fix when found:
 - Fire-and-forget `tokio::spawn` without `JoinHandle` tracking
 - Missing `#[non_exhaustive]` on public enums that may grow
 - `as` casts that silently truncate (e.g., `u64 as u32`) — use `try_into()`
+- Float-to-int `as` casts without `.round()` — `(x * 100.0) as u32`
+  truncates toward zero, not rounds. Use `(x * 100.0).round() as u32`.
+  Clippy's `cast_possible_truncation` lint flags this. For negative floats,
+  `as u32` silently saturates to 0 — may be desired but is implicit.
+- `eprintln!` for logging in non-throwaway code — **HIGH severity**.
+  Replace with `log` crate + `env_logger` (or `tracing` for newer
+  projects). `eprintln!` is only acceptable in throwaway scripts.
+  `log`/`tracing` gives `RUST_LOG` level control for free. Add
+  `log` + `env_logger` to dependencies if not already present (per
+  rule 4, this is an approved community-standard crate addition).
+  Fix ALL `eprintln!` calls in the same pass — do not leave a mix.
+- `.clone()` on `Arc`/`Rc` — use `Arc::clone(&x)` instead of `x.clone()`
+  to make it explicit you're bumping a refcount, not deep-cloning.
+  Clippy's `clone_on_ref_ptr` lint flags this. (MEDIUM — soft
+  recommendation, debated in community)
+- `format!("addr:{}", port)` for socket addresses — use
+  `SocketAddr`/`SocketAddrV4` directly for type safety and to avoid
+  string allocation + parse round-trip
 - Dead code (`#[allow(dead_code)]` hiding real unused items)
-- Inconsistent logging — using `println!` when codebase uses `tracing` or `log`
 - Hardcoded secrets or credentials in source
 - SQL string concatenation instead of parameterized queries
 
@@ -341,10 +376,8 @@ When you find an issue, use the RIGHT fix. Wrong fixes are worse than no fix.
   `fn process(data: &str)` instead of `fn process(data: String)`
 - **unsafe without SAFETY comment:** Add the comment:
 
-  ```rust
-  // SAFETY: pointer is guaranteed non-null by the constructor invariant
-  unsafe { ptr.as_ref() }
-  ```
+      // SAFETY: pointer is guaranteed non-null by the constructor invariant
+      unsafe { ptr.as_ref() }
 
 - **Mutex in async code:** Switch to tokio's Mutex:
   `let guard = self.data.lock().await;`
@@ -353,8 +386,20 @@ When you find an issue, use the RIGHT fix. Wrong fixes are worse than no fix.
   `anyhow::Result`.
 - **Silent truncation with `as`:** Use `try_into()`:
   `let val: u32 = big_val.try_into().map_err(|_| Error::Overflow)?;`
-- **Inconsistent logging:** Replace `println!` with the crate's logging macro:
-  `tracing::info!("message")` or `log::info!("message")`
+- **Float-to-int without rounding:** Add `.round()` before `as`:
+  `(spl * 100.0).round() as u32` instead of `(spl * 100.0) as u32`
+- **Inconsistent logging / `eprintln!` replacement:** Add `log` +
+  `env_logger` to dependencies (approved per rule 4), then replace all
+  `eprintln!` calls: use `log::info!` for status messages,
+  `log::warn!` for recoverable errors, `log::error!` for failures.
+  Add `env_logger::init();` at the top of `main()`. Example:
+  `eprintln!("Audio error: {}", err)` → `log::error!("Audio error: {err}");`
+- **`.clone()` on `Arc`/`Rc`:** Use `Arc::clone(&x)`:
+  `let spl_l_timer = Arc::clone(&spl_l);` instead of
+  `let spl_l_timer = spl_l.clone();`
+- **`format!` for socket addresses:** Use `SocketAddr` directly:
+  `SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, port)` instead of
+  `format!("0.0.0.0:{}", port)`
 
 # WHAT NOT TO FIX
 
@@ -367,7 +412,8 @@ Skip these entirely — do not report them, do not fix them:
 - Magic number extraction (unless it's a real bug)
 - Test module changes (`#[cfg(test)]` blocks are out of scope)
 - Opinion-based code organization that doesn't affect correctness
-- Changes requiring new crate dependencies not in Cargo.toml
+- Changes requiring new crate dependencies not in Cargo.toml (except
+  community-standard crates approved by rule 4: log, env_logger, tracing)
 - Trivial getters/setters with no logic
 - Delegation-only functions (wrappers that just call another function)
 - Speculative trait abstractions (traits added for "future flexibility" with
@@ -397,13 +443,17 @@ Skip these entirely — do not report them, do not fix them:
 - `std::sync::Mutex` in async code
 - Fire-and-forget `tokio::spawn` without JoinHandle tracking
 - Silent integer truncation with `as` casts
+- Float-to-int `as` casts without `.round()`
+- `.clone()` on `Arc`/`Rc` instead of `Arc::clone(&x)`
+- `format!` for socket addresses instead of `SocketAddr`
+- `eprintln!` for logging in non-throwaway code
 - Missing `#[must_use]` on important return values
 - Inconsistent error types across a module
 - Missing `#[non_exhaustive]` on public enums that may grow
 - Dead code hidden behind `#[allow(dead_code)]`
 - Hardcoded secrets or credentials
 - SQL string concatenation
-- Inconsistent logging (println! vs tracing/log)
+- Inconsistent logging (println!/eprintln! vs tracing/log)
 
 # WHAT NOT TO REPORT
 

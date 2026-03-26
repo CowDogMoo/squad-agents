@@ -21,10 +21,11 @@ Apply all relevant patterns from that document when generating tests.
 
 These override everything else.
 
-1. **Only create or modify test code.** You MUST NOT edit non-test source code.
-   Tests live in `#[cfg(test)] mod tests` blocks within source files, or as
-   integration tests in `tests/`. If a function is untestable without changing
-   its signature, skip it and note why.
+1. **Only create or modify test code.** You MUST NOT edit non-test lines in
+   source files. Adding a `#[cfg(test)] mod tests` block at the end of a
+   source file is allowed — that is test code. But never modify, move, or
+   delete existing non-test lines. If a function is untestable without
+   changing its signature, skip it and note why.
 2. **Tests must pass.** Run `cargo test` after writing tests. If tests fail,
    fix the test code — never the source code.
 3. **Tests must compile.** Run `cargo build --tests` if you suspect import or
@@ -32,14 +33,41 @@ These override everything else.
 4. **No test-only traits or types in source.** Do not add traits, types, or
    `#[cfg(test)]` helper functions to non-test source files. Work with what
    exists.
-5. **Use `#[cfg(test)] mod tests` for unit tests.** Place unit tests in the
-   same file as the code they test, inside a `#[cfg(test)] mod tests { ... }`
-   block. This is idiomatic Rust.
-6. **Use `tests/` directory for integration tests.** Integration tests that
-   exercise the public API belong in `tests/*.rs`.
-7. **Table-driven tests where appropriate.** When a function has 2+ test cases,
-   use a vector/array of test structs with descriptive names and iterate over
-   them. Single-case tests don't need tables.
+5. **Unit test placement depends on crate type.**
+   - **Library crates (`src/lib.rs`):** Place unit tests in a
+     `#[cfg(test)] mod tests { ... }` block at the bottom of each source
+     file. This is idiomatic Rust and lets tests access private items via
+     `use super::*`.
+   - **Binary crates (`src/main.rs` only, no `lib.rs`):** You CANNOT write
+     integration tests in `tests/` for a binary crate — Cargo cannot
+     `use`-import from a binary. Place unit tests in an inline
+     `#[cfg(test)] mod tests` block inside `main.rs`. For CLI/subprocess
+     testing, use `assert_cmd` + `predicates` crates if available.
+   - **Mixed crates (`main.rs` + `lib.rs`):** Put testable logic in
+     `lib.rs`, keep `main.rs` thin. Write integration tests against the
+     library in `tests/`. This is the standard Rust pattern for testability.
+6. **Use `tests/` directory for integration tests (library crates only).**
+   Integration tests that exercise the public API of a library crate belong
+   in `tests/*.rs`. Each file compiles as its own crate — no `#[cfg(test)]`
+   needed. Shared test helpers go in `tests/common/mod.rs` (not
+   `tests/common.rs`, which Cargo treats as its own test crate). Remember:
+   `tests/` does NOT work for binary-only crates.
+7. **Parameterized tests with `rstest` or `test-case`.** When a function
+   has 2+ test cases, use `rstest` or `test-case` crates to generate
+   independent tests per case. Do NOT use loop-based table tests — loop
+   cases are invisible to `cargo test` output and a failure stops
+   remaining cases from running. If neither crate is in Cargo.toml, add
+   `rstest` to `[dev-dependencies]`. Example:
+
+   ```rust
+   #[rstest]
+   #[case("−12.3 dB", -12.3)]
+   #[case("0.0 dB", 0.0)]
+   fn parse_db_string_valid(#[case] input: &str, #[case] expected: f64) {
+       assert_abs_diff_eq!(parse_db_string(input), expected, epsilon = 0.01);
+   }
+   ```
+
 8. **Report coverage delta.** Record starting coverage in Phase 1 BEFORE
    writing any tests. Report both before and after numbers in the final output.
 9. **80-character comment lines.** Keep all comment lines under 80 chars.
@@ -80,6 +108,76 @@ These override everything else.
     Don't try to test private functions from integration tests.
 20. **Use `temp_dir` for filesystem tests.** Use `tempfile::tempdir()` if
     the crate is available, or `std::env::temp_dir()` with unique names.
+21. **Do NOT use git stash or git checkout.** NEVER run `git stash`,
+    `git checkout -- <file>`, or any git command that reverts files.
+    These commands destroy changes made by prior agents in the pipeline.
+    If an edit goes wrong, use Edit to undo your specific change (Read
+    the broken region, then Edit to restore the original code). Only the
+    pipeline orchestrator may revert files.
+22. **How to add tests — INCREMENTAL approach (MANDATORY).**
+    Large tool call parameters get truncated, producing empty files.
+    You MUST write tests incrementally in small batches:
+
+    **Step 1: Create the empty test skeleton** using Edit. Match the
+    last 3 lines of the file and append the skeleton:
+
+    ```
+    old_string: "    app.run();\n}"
+    new_string: "    app.run();\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n}"
+    ```
+
+    Run `cargo test` to verify the skeleton compiles.
+
+    **Step 2: Add tests ONE function at a time** using Edit. Each Edit
+    inserts 1-3 test functions (max ~30 lines) before the closing `}`
+    of the `mod tests` block:
+
+    ```
+    old_string (2+ context lines including closing brace):
+        "    // end of previous test\n    }\n}"
+    new_string:
+        "    // end of previous test\n    }\n\n    #[test]\n    fn test_new_thing() {\n        ...\n    }\n}"
+    ```
+
+    **Step 3:** After each batch, run `cargo test` to catch errors
+    early. Fix broken tests immediately before adding more.
+
+    **CRITICAL:** Each Edit call must be ≤30 lines of new code. If you
+    need more tests, make multiple Edit calls. NEVER try to generate
+    50+ lines of test code in a single tool call — the parameters WILL
+    be truncated to empty, wasting an iteration.
+
+23. **Never rewrite entire source files.** Do not use Write to replace
+    a source file with its full contents plus additions. The content
+    parameter silently truncates for files >10KB. Only use Write for
+    brand-new files you create from scratch.
+24. **Read each file at most twice.** Once during analysis (Phase 1-2),
+    once before writing if needed. A third read means you are looping.
+25. **Do NOT use git stash or git checkout.** NEVER run `git stash`,
+    `git checkout -- <file>`, or any git command that reverts files.
+    These commands destroy changes made by prior agents in the pipeline.
+    If an edit goes wrong, use Edit to undo your specific change (Read
+    the broken region, then Edit to restore the original code). Only the
+    pipeline orchestrator may revert files.
+26. **If Edit deletes code, restore immediately.** After every Edit,
+    run `tail -5 <file>` to verify the file still ends correctly
+    (e.g., with `}`). If code is missing, use Edit to restore it —
+    Read the damaged region, then Edit to put the original code back.
+    Retry with more context lines in `old_string`.
+27. **No `test_` prefix on test functions.** The `#[test]` attribute
+    already marks it as a test. The `test_` prefix is redundant and
+    flagged by Clippy's `redundant_test_prefix` lint. Use
+    `fn parse_db_string()` not `fn test_parse_db_string()`. Name tests
+    as `<function>_<behavior>`, e.g. `spl_to_atomic_negative_clamped`.
+28. **Use `approx` for float comparisons.** Use `assert_abs_diff_eq!`
+    or `assert_relative_eq!` from the `approx` crate instead of raw
+    epsilon comparisons like `assert!((a - b).abs() < 1e-9)`. Add
+    `approx` to `[dev-dependencies]` if not present. Hardcoded epsilons
+    are arbitrary and don't communicate intent.
+29. **Add test crates to `[dev-dependencies]`.** You MAY add `rstest`,
+    `test-case`, and `approx` to `[dev-dependencies]` in Cargo.toml —
+    these are test-only dependencies and do not affect the binary.
+    Use `cargo add --dev rstest approx` or edit Cargo.toml directly.
 
 # WORKFLOW
 

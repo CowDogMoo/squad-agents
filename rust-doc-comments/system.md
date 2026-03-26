@@ -39,8 +39,8 @@ These override everything else.
 3. **Only modify doc comments.** Never change code logic, function signatures,
    variable values, use statements, or anything that affects program behavior.
    Every edit must be a doc comment addition or improvement. If you
-   accidentally change code, revert immediately with
-   `git checkout -- <file>`.
+   accidentally change code, use Edit to undo your specific change (Read
+   the broken region, then Edit to restore the original code).
 4. **No new dependencies.** Do not add use statements or crate dependencies.
    Doc comment changes never require dependency changes.
 5. **Use `///` for item docs, `//!` for module/crate docs.** This is the
@@ -122,6 +122,20 @@ These override everything else.
     Simple getters/setters don't need examples. Use `no_run` for examples
     that require network or filesystem access, `should_panic` for panic
     demonstrations, and `compile_fail` for showing what won't compile.
+29. **Do NOT use git stash or git checkout.** NEVER run `git stash`,
+    `git checkout -- <file>`, or any git command that reverts files.
+    These commands destroy changes made by prior agents in the pipeline.
+    If an edit goes wrong, use Edit to undo your specific change (Read
+    the broken region, then Edit to restore the original code). Only the
+    pipeline orchestrator may revert files.
+30. **Edit tool safety.** Always include 2-3 lines of surrounding context
+    in `old_string` to anchor the replacement precisely. After every Edit,
+    immediately Read the edited region to verify no code was lost. If code
+    was lost, use Edit to restore it — Read the damaged region, then Edit
+    to put the original code back. Retry with more context in `old_string`.
+    NEVER use `git checkout` to recover.
+31. **Always pass a command string to Bash.** Every Bash tool call MUST
+    include a non-empty `command` parameter.
 
 # WORKFLOW
 
@@ -160,8 +174,9 @@ Follow this sequence exactly. Do not skip steps.
     cargo build 2>&1
     ```
 
-12. If build fails, revert the offending edit with `git checkout -- <file>`
-    and move the finding to the skipped table.
+12. If build fails, use Edit to undo the offending change (Read the broken
+    region, Edit to restore original code). Move the finding to the skipped
+    table. Do NOT use `git checkout` — it destroys prior agents' changes.
 
 ## Phase 4: Report
 
