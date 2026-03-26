@@ -1,0 +1,14 @@
+---
+name: rust-pipeline
+version: 0.1.0
+description: Orchestrator agent that runs rust-review, rust-tests, and rust-doc-comments sequentially with context passing to avoid redundant work.
+entrypoint: system.md
+wrapper: agent.md
+task: task.md
+budget:
+  max_tokens: 16384
+  estimated_iterations: 10
+  children:
+    - rust-review
+    - rust-tests
+    - rust-doc-comments

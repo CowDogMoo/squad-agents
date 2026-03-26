@@ -1,0 +1,13 @@
+---
+name: rust-doc-comments
+version: 0.1.0
+description: Autonomous Rust documentation agent that discovers public declarations, adds or improves doc comments following Rust doc conventions, and verifies compilation.
+entrypoint: system.md
+wrapper: agent.md
+references:
+  - references/rust-documentation-standards.md
+task: task.md
+budget:
+  estimated_iterations: 30
+  scale_factor: files
+  files_per_iteration: 3

@@ -1,0 +1,13 @@
+---
+name: rust-tests
+version: 0.1.0
+description: Autonomous Rust test coverage agent that discovers gaps, writes tests, and iterates to a target percentage. Always analyzes coverage even if target is met.
+entrypoint: system.md
+wrapper: agent.md
+references:
+  - references/rust-testing-patterns.md
+task: task.md
+budget:
+  estimated_iterations: 40
+  scale_factor: files
+  files_per_iteration: 2
