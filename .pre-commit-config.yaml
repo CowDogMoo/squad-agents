@@ -19,10 +19,19 @@ repos:
         entry: yamllint --strict -c .hooks/linters/yamllint.yaml
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         entry: codespell -q 3 -f -S ".git,.github,README.md"
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 3.0.0
+    hooks:
+      - id: script-must-have-extension
+        name: Ensure shell scripts end with .sh
+        types: [shell]
+      - id: shellcheck
+      - id: shfmt
 
   # Github actions
   - repo: https://github.com/rhysd/actionlint
@@ -32,7 +41,7 @@ repos:
         name: Check Github Actions
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.47.0
+    rev: v0.48.0
     hooks:
       - id: markdownlint
         args: ["--fix", "--config", ".hooks/linters/markdownlint.json"]

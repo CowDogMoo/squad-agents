@@ -5,7 +5,8 @@ area/agents:
           - "go-*/**/*"
           - "python-*/**/*"
           - "ansible-*/**/*"
-          - "recon/**/*"
+          - "rust-*/**/*"
+          - "degpt/**/*"
 
 area/templates:
   - changed-files:

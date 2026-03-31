@@ -1,0 +1,306 @@
+---
+name: Validate Agents
+on:
+  merge_group:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - '**/agent.yaml'
+      - '**/system.md'
+      - '**/agent.md'
+      - '**/task.md'
+      - '**/references/**'
+      - '_templates/**'
+      - '.github/workflows/validate-agents.yaml'
+  push:
+    branches:
+      - main
+    paths:
+      - '**/agent.yaml'
+      - '**/system.md'
+      - '**/agent.md'
+      - '**/task.md'
+      - '**/references/**'
+      - '_templates/**'
+      - '.github/workflows/validate-agents.yaml'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.13.7"
+
+jobs:
+  validate:
+    name: Validate Agent Configurations
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Find all agents
+        id: find-agents
+        run: |
+          agents=$(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+          echo "Found agents:"
+          echo "$agents"
+          {
+            echo "agents<<EOF"
+            echo "$agents"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Check required files
+        run: |
+          failed=0
+          while IFS= read -r agent_yaml; do
+            if [ -z "$agent_yaml" ]; then
+              continue
+            fi
+            agent_dir=$(dirname "$agent_yaml")
+            agent_name=$(basename "$agent_dir")
+            echo "::group::Checking $agent_name"
+
+            for required_file in agent.yaml agent.md system.md task.md; do
+              if [ ! -f "${agent_dir}/${required_file}" ]; then
+                echo "::error file=${agent_yaml}::Missing required file ${required_file} in ${agent_name}"
+                failed=1
+              else
+                echo "  ✓ ${required_file}"
+              fi
+            done
+
+            echo "::endgroup::"
+          done < <(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+
+          if [ $failed -eq 1 ]; then
+            echo "::error::One or more agents are missing required files"
+            exit 1
+          fi
+          echo "✓ All agents have required files"
+
+      - name: Validate YAML syntax
+        run: |
+          pip install yamllint
+          find . -name 'agent.yaml' -not -path './_templates/*' | while read -r file; do
+            echo "Checking YAML syntax: $file"
+            yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" "$file"
+          done
+
+  metadata-check:
+    name: Check Agent Metadata
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Check metadata completeness
+        run: |
+          python << 'EOF'
+          import yaml
+          import sys
+          from pathlib import Path
+
+          required_fields = ['name', 'version', 'description', 'entrypoint', 'wrapper', 'task']
+          failed = False
+
+          agent_files = sorted(
+              p for p in Path('.').rglob('agent.yaml')
+              if '_templates' not in p.parts
+          )
+
+          for agent_file in agent_files:
+              agent_name = agent_file.parent.name
+              print(f"\n{'='*60}")
+              print(f"Checking metadata in: {agent_file} ({agent_name})")
+              print('='*60)
+
+              with open(agent_file) as f:
+                  data = yaml.safe_load(f)
+
+              for field in required_fields:
+                  if field not in data or not data[field]:
+                      print(f"  ✗ Missing required field: {field}")
+                      failed = True
+                  else:
+                      print(f"  ✓ {field}: {data[field]}")
+
+              # Validate version follows semver pattern
+              version = data.get('version', '')
+              if version:
+                  import re
+                  if not re.match(r'^\d+\.\d+\.\d+$', version):
+                      print(f"  ✗ Version '{version}' does not follow semver (X.Y.Z)")
+                      failed = True
+
+              # Validate name matches directory
+              name = data.get('name', '')
+              if name and name != agent_name:
+                  print(f"  ✗ Name '{name}' does not match directory '{agent_name}'")
+                  failed = True
+
+              # Validate budget fields if present
+              budget = data.get('budget', {})
+              if budget:
+                  print(f"  ✓ budget: {list(budget.keys())}")
+                  if 'estimated_iterations' in budget:
+                      if not isinstance(budget['estimated_iterations'], int):
+                          print(f"  ✗ estimated_iterations must be an integer")
+                          failed = True
+                  if 'max_tokens' in budget:
+                      if not isinstance(budget['max_tokens'], int):
+                          print(f"  ✗ max_tokens must be an integer")
+                          failed = True
+
+          if failed:
+              print(f"\n::error::One or more agents have incomplete or invalid metadata")
+              sys.exit(1)
+          else:
+              print(f"\n✓ All agents have complete and valid metadata")
+          EOF
+
+  reference-check:
+    name: Check Agent References
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Validate referenced files exist
+        run: |
+          python << 'EOF'
+          import yaml
+          import sys
+          from pathlib import Path
+
+          failed = False
+
+          agent_files = sorted(
+              p for p in Path('.').rglob('agent.yaml')
+              if '_templates' not in p.parts
+          )
+
+          for agent_file in agent_files:
+              agent_dir = agent_file.parent
+              agent_name = agent_dir.name
+              print(f"\n{'='*60}")
+              print(f"Checking references in: {agent_name}")
+              print('='*60)
+
+              with open(agent_file) as f:
+                  data = yaml.safe_load(f)
+
+              # Check entrypoint file exists
+              entrypoint = data.get('entrypoint', '')
+              if entrypoint:
+                  path = agent_dir / entrypoint
+                  if path.exists():
+                      print(f"  ✓ entrypoint: {entrypoint}")
+                  else:
+                      print(f"  ✗ entrypoint not found: {path}")
+                      failed = True
+
+              # Check wrapper file exists
+              wrapper = data.get('wrapper', '')
+              if wrapper:
+                  path = agent_dir / wrapper
+                  if path.exists():
+                      print(f"  ✓ wrapper: {wrapper}")
+                  else:
+                      print(f"  ✗ wrapper not found: {path}")
+                      failed = True
+
+              # Check task file exists
+              task = data.get('task', '')
+              if task:
+                  path = agent_dir / task
+                  if path.exists():
+                      print(f"  ✓ task: {task}")
+                  else:
+                      print(f"  ✗ task not found: {path}")
+                      failed = True
+
+              # Check all reference files exist
+              references = data.get('references', [])
+              if references:
+                  for ref in references:
+                      path = agent_dir / ref
+                      if path.exists():
+                          print(f"  ✓ reference: {ref}")
+                      else:
+                          print(f"  ✗ reference not found: {path}")
+                          failed = True
+              else:
+                  print(f"  ⚠ No references defined")
+
+              # Check for orchestrator children
+              budget = data.get('budget', {})
+              children = budget.get('children', [])
+              if children:
+                  print(f"\n  Orchestrator children:")
+                  for child in children:
+                      child_dir = agent_dir.parent / child
+                      if child_dir.exists() and (child_dir / 'agent.yaml').exists():
+                          print(f"    ✓ child agent: {child}")
+                      else:
+                          print(f"    ✗ child agent not found: {child}")
+                          failed = True
+
+          if failed:
+              print(f"\n::error::One or more agents have missing referenced files")
+              sys.exit(1)
+          else:
+              print(f"\n✓ All agent references are valid")
+          EOF
+
+  summary:
+    name: Validation Summary
+    runs-on: ubuntu-latest
+    needs: [validate, metadata-check, reference-check]
+    if: always()
+
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.validate.result }}" != "success" ] || \
+             [ "${{ needs.metadata-check.result }}" != "success" ] || \
+             [ "${{ needs.reference-check.result }}" != "success" ]; then
+            echo "::error::Agent validation failed"
+            echo ""
+            echo "Job Results:"
+            echo "  validate: ${{ needs.validate.result }}"
+            echo "  metadata-check: ${{ needs.metadata-check.result }}"
+            echo "  reference-check: ${{ needs.reference-check.result }}"
+            exit 1
+          fi
+          echo "✓ All agent validations passed"
