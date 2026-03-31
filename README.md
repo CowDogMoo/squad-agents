@@ -1,17 +1,36 @@
 # Squad Agents
 
-**Official agent repository for [Squad](https://github.com/cowdogmoo/squad) -
-autonomous code review and analysis agents.**
+**Production-ready autonomous agents for code review, testing, and
+documentation across Go, Python, Rust, and Ansible.**
 
 [![License](https://img.shields.io/github/license/CowDogMoo/squad-agents?label=License&style=flat&color=blue&logo=github)](https://github.com/CowDogMoo/squad-agents/blob/main/LICENSE)
+[![Pre-Commit](https://github.com/CowDogMoo/squad-agents/actions/workflows/pre-commit.yaml/badge.svg)](https://github.com/CowDogMoo/squad-agents/actions/workflows/pre-commit.yaml)
+[![Validate Agents](https://github.com/CowDogMoo/squad-agents/actions/workflows/validate-agents.yaml/badge.svg)](https://github.com/CowDogMoo/squad-agents/actions/workflows/validate-agents.yaml)
 
 ---
 
 ## Overview
 
-This repository contains production-ready agents for the Squad CLI. Each agent
-is a self-contained prompt bundle that can autonomously review code, fix
-issues, and verify results.
+Official agent repository for
+[Squad](https://github.com/cowdogmoo/squad) - an autonomous code review
+and analysis CLI tool.
+
+This repository provides production-ready agents that enable:
+
+- **Autonomous code review** - Language-specific agents that discover issues,
+  fix them, and verify compilation
+- **Test coverage** - Agents that identify coverage gaps, write tests, and
+  iterate to a target percentage
+- **Documentation** - Agents that discover public declarations and add or
+  improve doc comments
+- **Security audits** - Vulnerability detection with CWE IDs and automated
+  fixes
+- **Pipeline orchestration** - Multi-agent pipelines that chain review, tests,
+  and documentation with context passing
+
+All agents use declarative YAML manifests and modular prompt architecture
+following
+[Anthropic's context engineering best practices](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents).
 
 ## Quick Start
 
@@ -35,33 +54,64 @@ squad run --agent go-review
 
 | Agent | Description |
 |-------|-------------|
-| [go-review](./go-review) | Autonomous Go code review - discovers issues, fixes them, verifies compilation |
+| [go-review](./go-review) | Code quality review - discovers issues, fixes violations, verifies compilation |
 | [go-security-audit](./go-security-audit) | Security vulnerability detection with CWE IDs |
 | [go-cobra](./go-cobra) | Cobra/Viper CLI best practices |
-| [go-doc-comments](./go-doc-comments) | Go documentation comments |
+| [go-doc-comments](./go-doc-comments) | Go Doc Comments spec compliance |
 | [go-taskfile](./go-taskfile) | Taskfile.yaml best practices |
-| [go-tests](./go-tests) | Go test coverage and quality |
+| [go-tests](./go-tests) | Test coverage analysis and gap filling |
 
 ### Python Agents
 
 | Agent | Description |
 |-------|-------------|
-| [python-review](./python-review) | Python code quality and best practices |
-| [python-doc-comments](./python-doc-comments) | Python docstring quality |
-| [python-tests](./python-tests) | Python test coverage |
+| [python-review](./python-review) | Code quality and best practices |
+| [python-doc-comments](./python-doc-comments) | PEP 257 and Google Style docstrings |
+| [python-tests](./python-tests) | pytest coverage with configurable targets |
+
+### Rust Agents
+
+| Agent | Description |
+|-------|-------------|
+| [rust-review](./rust-review) | Code quality review and best-practice fixes |
+| [rust-doc-comments](./rust-doc-comments) | Rust doc comment conventions |
+| [rust-tests](./rust-tests) | Test coverage analysis and gap filling |
 
 ### Ansible Agents
 
 | Agent | Description |
 |-------|-------------|
-| [ansible-review](./ansible-review) | Ansible playbook/role best practices |
+| [ansible-review](./ansible-review) | Playbook/role best practices and security |
 | [ansible-molecule](./ansible-molecule) | Molecule test verification depth |
+
+### Pipeline Agents
+
+Orchestrators that chain multiple agents sequentially with context passing:
+
+| Agent | Description | Children |
+|-------|-------------|----------|
+| [go-pipeline](./go-pipeline) | Full Go review pipeline | go-review, go-tests, go-doc-comments, go-cobra |
+| [python-pipeline](./python-pipeline) | Full Python review pipeline | python-review, python-tests, python-doc-comments |
+| [rust-pipeline](./rust-pipeline) | Full Rust review pipeline | rust-review, rust-tests, rust-doc-comments |
 
 ### Specialized Agents
 
 | Agent | Description |
 |-------|-------------|
-| [recon](./recon) | Codebase reconnaissance and analysis |
+| [degpt](./degpt) | Detects and rewrites LLM-generated prose to sound human-written |
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| **Multi-Language** | Go, Python, Rust, and Ansible agents |
+| **Autonomous Fixing** | Agents discover, fix, and verify in a single run |
+| **Mode Support** | Edit mode (autonomous fixes) and readonly mode (analysis only) |
+| **Pipeline Orchestration** | Chain agents with context passing to avoid redundant work |
+| **Modular Prompts** | Composable system/agent/task prompt architecture |
+| **Budget Controls** | Iteration limits, scale factors, and token budgets |
+| **CI/CD Validation** | Automated agent structure and metadata validation |
+| **Template System** | Scaffold new agents from built-in templates |
 
 ## Agent Structure
 
@@ -69,11 +119,11 @@ Each agent directory contains:
 
 ```text
 agent-name/
-├── agent.yaml      # Manifest with metadata and references
-├── agent.md        # Agent-mode wrapper instructions
-├── system.md       # Core system prompt (identity, rules)
-├── task.md         # Task instructions (always included)
-└── references/     # Knowledge base documents
+├── agent.yaml      # Manifest with metadata, references, and budget
+├── agent.md        # Agent-mode wrapper with execution rules
+├── system.md       # Core system prompt (identity, hard rules, capabilities)
+├── task.md         # Task instructions and constraints
+└── references/     # Knowledge base documents (criteria, patterns, guides)
 ```
 
 ### Agent Manifest (agent.yaml)
@@ -87,14 +137,18 @@ wrapper: agent.md
 references:
   - references/go-review-criteria.md
 task: task.md
+budget:
+  estimated_iterations: 30
+  scale_factor: files
+  files_per_iteration: 3
 ```
 
 ## Prompt Architecture
 
-Following [Anthropic's context engineering best practices](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents),
-prompts are modular:
+Prompts are modular, following
+[Anthropic's context engineering best practices](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents):
 
-```
+```text
 System Bundle (always included):
 ├── agent.md     - wrapper with execution rules
 ├── system.md    - core identity and capabilities
@@ -107,7 +161,7 @@ User Message:
 
 ## Mode Support
 
-Agents support multiple execution modes via conditional blocks:
+Agents support multiple execution modes via Go `text/template` conditionals:
 
 ```bash
 # Default edit mode - agent can make changes
@@ -118,8 +172,6 @@ squad run --agent go-review --mode readonly
 ```
 
 ### Conditional Block Syntax
-
-Use Go `text/template` conditionals in prompt files:
 
 ```markdown
 {{if eq .Mode "edit"}}
@@ -149,8 +201,8 @@ squad run --agent go-review "Focus only on error handling in cmd/"
 # Run security audit in readonly mode
 squad run --agent go-security-audit --mode readonly
 
-# Run Python review
-squad run --agent python-review
+# Run a full pipeline
+squad run --agent rust-pipeline
 ```
 
 ### How Prompts Work
@@ -207,22 +259,93 @@ Or scaffold a new agent:
 squad init agent my-agent --from go-review
 ```
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
+## Repository Structure
+
+```text
+squad-agents/
+├── go-review/              # Go code review agent
+├── go-security-audit/      # Go security audit agent
+├── go-cobra/               # Cobra/Viper CLI agent
+├── go-doc-comments/        # Go documentation agent
+├── go-taskfile/            # Taskfile best practices agent
+├── go-tests/               # Go test coverage agent
+├── go-pipeline/            # Go orchestrator pipeline
+├── python-review/          # Python code review agent
+├── python-doc-comments/    # Python documentation agent
+├── python-tests/           # Python test coverage agent
+├── python-pipeline/        # Python orchestrator pipeline
+├── rust-review/            # Rust code review agent
+├── rust-doc-comments/      # Rust documentation agent
+├── rust-tests/             # Rust test coverage agent
+├── rust-pipeline/          # Rust orchestrator pipeline
+├── ansible-review/         # Ansible code review agent
+├── ansible-molecule/       # Ansible Molecule testing agent
+├── degpt/                  # LLM-generated prose rewriter
+├── _templates/             # Agent scaffolding templates
+│   ├── basic/              # Minimal agent scaffold
+│   ├── hard-rules/         # Universal and efficiency rules
+│   ├── output/             # Output format specifications
+│   └── severity/           # Severity classification
+├── .github/
+│   └── workflows/          # CI/CD for validation and linting
+├── README.md
+├── CONTRIBUTING.md
+└── LICENSE
+```
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for:
+We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for
+guidelines on:
 
 - Creating new agents
 - Improving existing agents
 - Prompt engineering best practices
 - Testing guidelines
 
+### Agent Validation
+
+Before submitting an agent, ensure it passes validation:
+
+```bash
+# Validate locally with pre-commit
+pre-commit run --all-files
+```
+
+The CI pipeline automatically validates:
+
+- Required files exist (agent.yaml, agent.md, system.md, task.md)
+- Metadata completeness (name, version, description, entrypoint, wrapper, task)
+- Semantic version format
+- Agent name matches directory name
+- All referenced files exist
+- Orchestrator children point to valid agents
+
 ## License
 
-MIT License - see [LICENSE](./LICENSE) for details.
+This repository is licensed under the MIT License - see [LICENSE](./LICENSE)
+for details.
+
+## Documentation
+
+- **[Squad CLI](https://github.com/cowdogmoo/squad)** - Install and use the
+  Squad CLI
+- **[Contributing Guide](./CONTRIBUTING.md)** - How to create and submit agents
+
+## Support
+
+- **Issues**: [Report bugs or request features](https://github.com/cowdogmoo/squad-agents/issues)
+- **Main Project**: [Squad Repository](https://github.com/cowdogmoo/squad)
+
+## Related Projects
+
+- **[Squad](https://github.com/cowdogmoo/squad)** - Core CLI and agent runtime
+- **[Warp Gate](https://github.com/cowdogmoo/warpgate)** - Multi-arch image
+  build engine
+- **[Warp Gate Templates](https://github.com/cowdogmoo/warpgate-templates)**
+  \- Security lab and golden image templates
 
 ---
 
 **Maintained by [CowDogMoo](https://github.com/CowDogMoo)** |
-**Main Project: [Squad](https://github.com/cowdogmoo/squad)**
+**License: [MIT](./LICENSE)**
