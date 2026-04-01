@@ -33,7 +33,7 @@ Every agent must have:
 
 | File | Purpose |
 |------|---------|
-| `agent.yaml` | Manifest with name, version, description, and file references |
+| `agent.yaml` | Manifest with name, version, description, file references, and budget |
 | `system.md` | Core system prompt (identity, rules, capabilities) |
 | `agent.md` | Agent-mode wrapper with execution rules |
 | `task.md` | Task instructions included in every run |
@@ -57,6 +57,28 @@ wrapper: agent.md
 references:
   - references/my-criteria.md
 task: task.md
+budget:
+  estimated_iterations: 30
+  scale_factor: files
+  files_per_iteration: 3
+```
+
+For pipeline/orchestrator agents, use `children` instead of `references`:
+
+```yaml
+name: my-pipeline
+version: 0.1.0
+description: Orchestrator that chains multiple agents
+entrypoint: system.md
+wrapper: agent.md
+task: task.md
+budget:
+  max_tokens: 16384
+  estimated_iterations: 10
+  children:
+    - my-review
+    - my-tests
+    - my-doc-comments
 ```
 
 ### system.md

@@ -271,13 +271,8 @@ The CI pipeline automatically validates:
 - All referenced files exist
 - Orchestrator children point to valid agents
 
-## License
-
-This repository is licensed under the MIT License - see [LICENSE](./LICENSE)
-for details.
-
 ---
 
-**Maintained by [CowDogMoo](https://github.com/CowDogMoo)** |
+**Maintained by [Jayson Grace](https://github.com/CowDogMoo)** |
 [Issues](https://github.com/cowdogmoo/squad-agents/issues) |
 [Squad CLI](https://github.com/cowdogmoo/squad)
