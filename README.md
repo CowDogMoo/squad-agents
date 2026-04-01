@@ -52,66 +52,66 @@ squad run --agent go-review
 
 ### Go Agents
 
-| Agent | Description |
-|-------|-------------|
-| [go-review](./go-review) | Code quality review - discovers issues, fixes violations, verifies compilation |
-| [go-security-audit](./go-security-audit) | Security vulnerability detection with CWE IDs |
-| [go-cobra](./go-cobra) | Cobra/Viper CLI best practices |
-| [go-doc-comments](./go-doc-comments) | Go Doc Comments spec compliance |
-| [go-taskfile](./go-taskfile) | Taskfile.yaml best practices |
-| [go-tests](./go-tests) | Test coverage analysis and gap filling |
+| Agent                                    | Description                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| [go-review](./go-review)                 | Code quality review - discovers issues, fixes violations, verifies compilation |
+| [go-security-audit](./go-security-audit) | Security vulnerability detection with CWE IDs                                  |
+| [go-cobra](./go-cobra)                   | Cobra/Viper CLI best practices                                                 |
+| [go-doc-comments](./go-doc-comments)     | Go Doc Comments spec compliance                                                |
+| [go-taskfile](./go-taskfile)             | Taskfile.yaml best practices                                                   |
+| [go-tests](./go-tests)                   | Test coverage analysis and gap filling                                         |
 
 ### Python Agents
 
-| Agent | Description |
-|-------|-------------|
-| [python-review](./python-review) | Code quality and best practices |
-| [python-doc-comments](./python-doc-comments) | PEP 257 and Google Style docstrings |
-| [python-tests](./python-tests) | pytest coverage with configurable targets |
+| Agent                                        | Description                               |
+| -------------------------------------------- | ----------------------------------------- |
+| [python-review](./python-review)             | Code quality and best practices           |
+| [python-doc-comments](./python-doc-comments) | PEP 257 and Google Style docstrings       |
+| [python-tests](./python-tests)               | pytest coverage with configurable targets |
 
 ### Rust Agents
 
-| Agent | Description |
-|-------|-------------|
-| [rust-review](./rust-review) | Code quality review and best-practice fixes |
-| [rust-doc-comments](./rust-doc-comments) | Rust doc comment conventions |
-| [rust-tests](./rust-tests) | Test coverage analysis and gap filling |
+| Agent                                    | Description                                 |
+| ---------------------------------------- | ------------------------------------------- |
+| [rust-review](./rust-review)             | Code quality review and best-practice fixes |
+| [rust-doc-comments](./rust-doc-comments) | Rust doc comment conventions                |
+| [rust-tests](./rust-tests)               | Test coverage analysis and gap filling      |
 
 ### Ansible Agents
 
-| Agent | Description |
-|-------|-------------|
-| [ansible-review](./ansible-review) | Playbook/role best practices and security |
-| [ansible-molecule](./ansible-molecule) | Molecule test verification depth |
+| Agent                                  | Description                               |
+| -------------------------------------- | ----------------------------------------- |
+| [ansible-review](./ansible-review)     | Playbook/role best practices and security |
+| [ansible-molecule](./ansible-molecule) | Molecule test verification depth          |
 
 ### Pipeline Agents
 
 Orchestrators that chain multiple agents sequentially with context passing:
 
-| Agent | Description | Children |
-|-------|-------------|----------|
-| [go-pipeline](./go-pipeline) | Full Go review pipeline | go-review, go-tests, go-doc-comments, go-cobra |
+| Agent                                | Description                 | Children                                         |
+| ------------------------------------ | --------------------------- | ------------------------------------------------ |
+| [go-pipeline](./go-pipeline)         | Full Go review pipeline     | go-review, go-tests, go-doc-comments, go-cobra   |
 | [python-pipeline](./python-pipeline) | Full Python review pipeline | python-review, python-tests, python-doc-comments |
-| [rust-pipeline](./rust-pipeline) | Full Rust review pipeline | rust-review, rust-tests, rust-doc-comments |
+| [rust-pipeline](./rust-pipeline)     | Full Rust review pipeline   | rust-review, rust-tests, rust-doc-comments       |
 
 ### Specialized Agents
 
-| Agent | Description |
-|-------|-------------|
+| Agent            | Description                                                     |
+| ---------------- | --------------------------------------------------------------- |
 | [degpt](./degpt) | Detects and rewrites LLM-generated prose to sound human-written |
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Multi-Language** | Go, Python, Rust, and Ansible agents |
-| **Autonomous Fixing** | Agents discover, fix, and verify in a single run |
-| **Mode Support** | Edit mode (autonomous fixes) and readonly mode (analysis only) |
-| **Pipeline Orchestration** | Chain agents with context passing to avoid redundant work |
-| **Modular Prompts** | Composable system/agent/task prompt architecture |
-| **Budget Controls** | Iteration limits, scale factors, and token budgets |
-| **CI/CD Validation** | Automated agent structure and metadata validation |
-| **Template System** | Scaffold new agents from built-in templates |
+| Feature                    | Description                                                    |
+| -------------------------- | -------------------------------------------------------------- |
+| **Multi-Language**         | Go, Python, Rust, and Ansible agents                           |
+| **Autonomous Fixing**      | Agents discover, fix, and verify in a single run               |
+| **Mode Support**           | Edit mode (autonomous fixes) and readonly mode (analysis only) |
+| **Pipeline Orchestration** | Chain agents with context passing to avoid redundant work      |
+| **Modular Prompts**        | Composable system/agent/task prompt architecture               |
+| **Budget Controls**        | Iteration limits, scale factors, and token budgets             |
+| **CI/CD Validation**       | Automated agent structure and metadata validation              |
+| **Template System**        | Scaffold new agents from built-in templates                    |
 
 ## Agent Structure
 
@@ -141,22 +141,6 @@ budget:
   estimated_iterations: 30
   scale_factor: files
   files_per_iteration: 3
-```
-
-## Prompt Architecture
-
-Prompts are modular, following
-[Anthropic's context engineering best practices](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents):
-
-```text
-System Bundle (always included):
-├── agent.md     - wrapper with execution rules
-├── system.md    - core identity and capabilities
-├── references/  - knowledge base
-└── task.md      - task instructions
-
-User Message:
-└── CLI prompt   - additional instructions (default: "Begin.")
 ```
 
 ## Mode Support
@@ -210,9 +194,9 @@ squad run --agent rust-pipeline
 The agent always receives its `task.md` instructions in the system bundle.
 The CLI prompt (if any) becomes the user message:
 
-| Command | System Bundle | User Message |
-|---------|---------------|--------------|
-| `squad run --agent go-review` | system.md + task.md + refs | "Begin." |
+| Command                                       | System Bundle              | User Message    |
+| --------------------------------------------- | -------------------------- | --------------- |
+| `squad run --agent go-review`                 | system.md + task.md + refs | "Begin."        |
 | `squad run --agent go-review "Focus on cmd/"` | system.md + task.md + refs | "Focus on cmd/" |
 
 ## Agent Sources
@@ -259,40 +243,6 @@ Or scaffold a new agent:
 squad init agent my-agent --from go-review
 ```
 
-## Repository Structure
-
-```text
-squad-agents/
-├── go-review/              # Go code review agent
-├── go-security-audit/      # Go security audit agent
-├── go-cobra/               # Cobra/Viper CLI agent
-├── go-doc-comments/        # Go documentation agent
-├── go-taskfile/            # Taskfile best practices agent
-├── go-tests/               # Go test coverage agent
-├── go-pipeline/            # Go orchestrator pipeline
-├── python-review/          # Python code review agent
-├── python-doc-comments/    # Python documentation agent
-├── python-tests/           # Python test coverage agent
-├── python-pipeline/        # Python orchestrator pipeline
-├── rust-review/            # Rust code review agent
-├── rust-doc-comments/      # Rust documentation agent
-├── rust-tests/             # Rust test coverage agent
-├── rust-pipeline/          # Rust orchestrator pipeline
-├── ansible-review/         # Ansible code review agent
-├── ansible-molecule/       # Ansible Molecule testing agent
-├── degpt/                  # LLM-generated prose rewriter
-├── _templates/             # Agent scaffolding templates
-│   ├── basic/              # Minimal agent scaffold
-│   ├── hard-rules/         # Universal and efficiency rules
-│   ├── output/             # Output format specifications
-│   └── severity/           # Severity classification
-├── .github/
-│   └── workflows/          # CI/CD for validation and linting
-├── README.md
-├── CONTRIBUTING.md
-└── LICENSE
-```
-
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](./CONTRIBUTING.md) for
@@ -326,26 +276,8 @@ The CI pipeline automatically validates:
 This repository is licensed under the MIT License - see [LICENSE](./LICENSE)
 for details.
 
-## Documentation
-
-- **[Squad CLI](https://github.com/cowdogmoo/squad)** - Install and use the
-  Squad CLI
-- **[Contributing Guide](./CONTRIBUTING.md)** - How to create and submit agents
-
-## Support
-
-- **Issues**: [Report bugs or request features](https://github.com/cowdogmoo/squad-agents/issues)
-- **Main Project**: [Squad Repository](https://github.com/cowdogmoo/squad)
-
-## Related Projects
-
-- **[Squad](https://github.com/cowdogmoo/squad)** - Core CLI and agent runtime
-- **[Warp Gate](https://github.com/cowdogmoo/warpgate)** - Multi-arch image
-  build engine
-- **[Warp Gate Templates](https://github.com/cowdogmoo/warpgate-templates)**
-  \- Security lab and golden image templates
-
 ---
 
 **Maintained by [CowDogMoo](https://github.com/CowDogMoo)** |
-**License: [MIT](./LICENSE)**
+[Issues](https://github.com/cowdogmoo/squad-agents/issues) |
+[Squad CLI](https://github.com/cowdogmoo/squad)
