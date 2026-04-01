@@ -61,6 +61,77 @@ squad run --agent rust-tests --print-bundle --dry-run
 - Functions requiring live external services
 - Generated code
 
+## Example
+
+### Input
+
+```rust
+pub fn clamp(value: f64, min: f64, max: f64) -> f64 {
+    if value < min {
+        min
+    } else if value > max {
+        max
+    } else {
+        value
+    }
+}
+
+pub fn parse_hex_color(s: &str) -> Result<(u8, u8, u8), ColorError> {
+    let s = s.strip_prefix('#').unwrap_or(s);
+    if s.len() != 6 {
+        return Err(ColorError::InvalidLength);
+    }
+    let r = u8::from_str_radix(&s[0..2], 16).map_err(|_| ColorError::InvalidHex)?;
+    let g = u8::from_str_radix(&s[2..4], 16).map_err(|_| ColorError::InvalidHex)?;
+    let b = u8::from_str_radix(&s[4..6], 16).map_err(|_| ColorError::InvalidHex)?;
+    Ok((r, g, b))
+}
+```
+
+### Output
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rstest::rstest;
+
+    #[rstest]
+    #[case(5.0, 0.0, 10.0, 5.0)]
+    #[case(-1.0, 0.0, 10.0, 0.0)]
+    #[case(15.0, 0.0, 10.0, 10.0)]
+    #[case(0.0, 0.0, 10.0, 0.0)]
+    #[case(10.0, 0.0, 10.0, 10.0)]
+    fn clamp_returns_expected(
+        #[case] value: f64,
+        #[case] min: f64,
+        #[case] max: f64,
+        #[case] expected: f64,
+    ) {
+        approx::assert_relative_eq!(clamp(value, min, max), expected);
+    }
+
+    #[rstest]
+    #[case("#ff8000", (255, 128, 0))]
+    #[case("00ff00", (0, 255, 0))]
+    #[case("#000000", (0, 0, 0))]
+    fn parse_hex_color_valid(
+        #[case] input: &str,
+        #[case] expected: (u8, u8, u8),
+    ) {
+        assert_eq!(parse_hex_color(input).unwrap(), expected);
+    }
+
+    #[rstest]
+    #[case("")]
+    #[case("#fff")]
+    #[case("#zzzzzz")]
+    fn parse_hex_color_invalid(#[case] input: &str) {
+        assert!(parse_hex_color(input).is_err());
+    }
+}
+```
+
 ## Version
 
 0.1.0

@@ -63,6 +63,57 @@ squad run --agent llm-junk --print-bundle --dry-run
 | `task.md` | Default task instructions |
 | `references/llm-tells.md` | Full tell catalog with tiered word lists and thresholds |
 
+## Example
+
+### Input (README.md excerpt)
+
+```markdown
+## Overview
+
+This library provides a comprehensive and robust solution for managing
+network connections. It leverages cutting-edge technology to deliver
+a seamless experience. Moreover, the architecture is designed to be
+both scalable and maintainable, ensuring that your application can
+grow with your needs. Additionally, the extensive documentation
+makes it straightforward to get started.
+```
+
+### Edit-Mode Output
+
+The paragraph is rewritten in place:
+
+```markdown
+## Overview
+
+This library manages network connections with support for automatic
+reconnection and connection pooling. See the quickstart guide below
+for setup instructions.
+```
+
+### Readonly-Mode Output
+
+```markdown
+## Analysis Summary
+**Files analyzed:** 3
+**Paragraphs flagged:** 1
+**Paragraphs clean:** 42
+
+## Findings
+
+### LLM-Generated Paragraph in README.md
+**Confidence:** HIGH (5/7 categories triggered)
+**File:** README.md:5-10
+**Categories triggered:**
+- Vocabulary: "comprehensive," "robust," "leverages," "cutting-edge," "seamless"
+- Structure: false range ("scalable and maintainable")
+- Tone: overemphasis ("both scalable and maintainable, ensuring")
+- Transitions: "Moreover," "Additionally"
+- Tech-doc: correct-but-useless ("designed to be scalable"), missing "why"
+
+**Suggested rewrite:** Describe what the library concretely does and how to
+get started, rather than making abstract claims about its qualities.
+```
+
 ## Related
 
 - [Agent Quality Rubric](../docs/agent-quality.md)

@@ -129,6 +129,84 @@ def function(arg1: int, arg2: str) -> bool:
     pass
 ```
 
+## Example
+
+### Input
+
+```python
+class TokenBucket:
+    def __init__(self, rate: float, capacity: int):
+        self.rate = rate
+        self.capacity = capacity
+        self._tokens = capacity
+        self._last_refill = time.monotonic()
+
+    def consume(self, tokens: int = 1) -> bool:
+        self._refill()
+        if self._tokens >= tokens:
+            self._tokens -= tokens
+            return True
+        return False
+
+    def _refill(self):
+        now = time.monotonic()
+        elapsed = now - self._last_refill
+        self._tokens = min(self.capacity, self._tokens + elapsed * self.rate)
+        self._last_refill = now
+```
+
+### Output
+
+```python
+class TokenBucket:
+    """Fixed-capacity token bucket for rate limiting.
+
+    Tokens are added at a constant rate up to a maximum capacity.
+    Callers consume tokens before performing rate-limited operations.
+
+    Attributes:
+        rate: Tokens added per second.
+        capacity: Maximum number of tokens the bucket can hold.
+    """
+
+    def __init__(self, rate: float, capacity: int):
+        """Create a bucket that refills at ``rate`` tokens per second.
+
+        Args:
+            rate: Tokens added per second.
+            capacity: Maximum tokens the bucket can hold. The bucket
+                starts full.
+        """
+        self.rate = rate
+        self.capacity = capacity
+        self._tokens = capacity
+        self._last_refill = time.monotonic()
+
+    def consume(self, tokens: int = 1) -> bool:
+        """Attempt to consume tokens from the bucket.
+
+        The bucket is refilled based on elapsed time before checking
+        availability.
+
+        Args:
+            tokens: Number of tokens to consume.
+
+        Returns:
+            True if enough tokens were available, False otherwise.
+        """
+        self._refill()
+        if self._tokens >= tokens:
+            self._tokens -= tokens
+            return True
+        return False
+
+    def _refill(self):
+        now = time.monotonic()
+        elapsed = now - self._last_refill
+        self._tokens = min(self.capacity, self._tokens + elapsed * self.rate)
+        self._last_refill = now
+```
+
 ## Reference
 
 See [references/python-documentation-standards.md](references/python-documentation-standards.md)

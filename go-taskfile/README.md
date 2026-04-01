@@ -10,7 +10,7 @@ best-practice violations, and verifies the result parses correctly.
 Review and fix all Taskfile issues:
 
 ```bash
-task run:go-taskfile MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$(op item get 'OpenAI' --reveal --fields personal-api-key)"
+task run:go-taskfile MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_API_KEY"
 ```
 
 ### Analyze Mode (readonly)
@@ -18,7 +18,7 @@ task run:go-taskfile MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$(op item get 
 Analyze without applying fixes:
 
 ```bash
-task run:go-taskfile-analyze MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$(op item get 'OpenAI' --reveal --fields personal-api-key)"
+task run:go-taskfile-analyze MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_API_KEY"
 ```
 
 ## What It Reviews
@@ -47,6 +47,70 @@ task run:go-taskfile-analyze MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$(op i
 
 - Fix mode: Applies fixes and produces a report to `/tmp/squad-go-taskfile.txt`
 - Analyze mode: Produces a report to `/tmp/squad-go-taskfile-analysis.txt`
+
+## Example
+
+### Input (Taskfile.yaml)
+
+```yaml
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - go build -o bin/app .
+
+  test:
+    cmds:
+      - go test ./...
+
+  deploy:
+    cmds:
+      - scp bin/app admin:password123@prod-server:/opt/app
+      - ssh admin@prod-server "systemctl restart app"
+
+  lint:
+    cmds:
+      - golangci-lint run
+```
+
+### Example Output
+
+```markdown
+## Changes Summary
+
+Fixed 3 issues in Taskfile.yaml: added missing task descriptions, replaced
+hardcoded credentials with variable reference, and added dependency ordering.
+
+## Issues Found and Fixed
+
+### Hardcoded Credentials in Deploy Task
+**Severity:** CRITICAL
+**Category:** Security
+**File:** Taskfile.yaml
+**Line:** 12
+**What was changed:** Replaced inline password with a variable reference and
+added a precondition to verify the variable is set.
+**Why:** Credentials must never appear in plain text in task definitions.
+
+### Missing Task Descriptions
+**Severity:** MEDIUM
+**Category:** Task Design
+**File:** Taskfile.yaml
+**What was changed:** Added `desc` fields to build, test, deploy, and lint tasks.
+**Why:** Descriptions are required for `task --list` output and discoverability.
+
+### No Dependency Between Build and Deploy
+**Severity:** HIGH
+**Category:** Dependencies
+**File:** Taskfile.yaml
+**Line:** 11
+**What was changed:** Added `deps: [build]` to the deploy task.
+**Why:** Deploying without building first can ship stale binaries.
+
+## Validation
+- `task --list`: PASS
+```
 
 ## References
 

@@ -89,6 +89,71 @@ Key constraints that prevent common failure modes:
 - Priority Order (ranked by impact)
 - Recommendations
 
+## Example
+
+### Input
+
+```go
+package storage
+
+import "io"
+
+type BlobStore struct {
+    BasePath string
+    MaxSize  int64
+}
+
+func NewBlobStore(path string, maxSize int64) *BlobStore {
+    return &BlobStore{BasePath: path, MaxSize: maxSize}
+}
+
+func (b *BlobStore) Upload(name string, r io.Reader) error {
+    // ...
+    return nil
+}
+
+func (b *BlobStore) Delete(name string) error {
+    // ...
+    return nil
+}
+```
+
+### Output
+
+```go
+package storage
+
+import "io"
+
+// BlobStore is a file-backed object store rooted at BasePath.
+// Each blob is limited to MaxSize bytes.
+type BlobStore struct {
+    BasePath string
+    MaxSize  int64
+}
+
+// NewBlobStore returns a BlobStore that writes to the given path
+// and rejects uploads larger than maxSize bytes.
+func NewBlobStore(path string, maxSize int64) *BlobStore {
+    return &BlobStore{BasePath: path, MaxSize: maxSize}
+}
+
+// Upload writes the contents of r to the store under the given
+// name. It returns an error if the blob exceeds MaxSize or the
+// underlying write fails.
+func (b *BlobStore) Upload(name string, r io.Reader) error {
+    // ...
+    return nil
+}
+
+// Delete removes the named blob from the store. It returns an
+// error if the blob does not exist or cannot be removed.
+func (b *BlobStore) Delete(name string) error {
+    // ...
+    return nil
+}
+```
+
 ## Reference
 
 See [references/go-documentation-standards.md](references/go-documentation-standards.md)

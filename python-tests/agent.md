@@ -25,7 +25,7 @@ coverage, write tests, and verify they pass — all without human guidance.
   continue to the next highest-impact module. Stop when the target is met
   or all testable code has been covered.
 - **Stub unfamiliar imports, don't skip.** If a module imports `ray`, `fastapi`,
-  `dreadnode`, `pythonnet`, etc., stub those packages via `sys.modules` before
+  `pythonnet`, etc., stub those packages via `sys.modules` before
   importing the module under test. Unfamiliar imports are NOT a reason to skip —
   see system.md MOCKING STRATEGY for the pattern.
 

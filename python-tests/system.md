@@ -189,7 +189,7 @@ running inside a pipeline. Still run the coverage measurement commands below.
 
 - Functions to test (public, has logic)
 - Dependencies to mock (HTTP, DB, file I/O)
-- Import stubs needed (ray, fastapi, dreadnode → sys.modules)
+- Import stubs needed (ray, fastapi → sys.modules)
 
 **When writing tests:**
 
@@ -301,7 +301,7 @@ Maximum 2 pytest runs total: once after writing, once after fixing failures.
 **CRITICAL DISTINCTION:**
 
 - **Import-time dependencies** = packages the module imports (`ray`, `fastapi`,
-  `dreadnode`, `pythonnet`, etc.). These are ALWAYS stubbable via `sys.modules`.
+  `pythonnet`, etc.). These are ALWAYS stubbable via `sys.modules`.
 - **Runtime dependencies** = live network calls, database queries, file I/O to
   external paths. These need mocking at call time.
 

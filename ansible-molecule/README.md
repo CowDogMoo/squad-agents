@@ -88,6 +88,73 @@ The agent references `ansible-molecule-guide.md` which covers:
 - CI/CD integration (GitHub Actions, GitLab CI)
 - Common anti-patterns to avoid
 
+## Example
+
+```bash
+squad run --agent ansible-molecule --working-dir ./roles/nginx
+```
+
+### Input (roles/nginx/tasks/main.yml)
+
+```yaml
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Copy nginx config
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: Restart nginx
+
+- name: Start nginx
+  ansible.builtin.service:
+    name: nginx
+    state: started
+    enabled: true
+```
+
+### Generated (molecule/default/verify.yml)
+
+```yaml
+- name: Verify nginx role
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Verify nginx is installed
+      ansible.builtin.apt:
+        name: nginx
+        state: present
+      check_mode: true
+      register: nginx_pkg
+      failed_when: nginx_pkg.changed
+
+    - name: Verify nginx config exists
+      ansible.builtin.stat:
+        path: /etc/nginx/nginx.conf
+      register: nginx_conf
+
+    - name: Assert nginx config is present
+      ansible.builtin.assert:
+        that:
+          - nginx_conf.stat.exists
+          - nginx_conf.stat.size > 0
+
+    - name: Verify nginx is running
+      ansible.builtin.service:
+        name: nginx
+        state: started
+      check_mode: true
+      register: nginx_svc
+      failed_when: nginx_svc.changed
+
+    - name: Verify nginx responds on port 80
+      ansible.builtin.wait_for:
+        port: 80
+        timeout: 10
+```
+
 ## Constraints
 
 - Only modifies files in `molecule/` directories

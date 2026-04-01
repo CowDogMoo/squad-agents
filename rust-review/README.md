@@ -81,6 +81,80 @@ squad run --agent rust-review --print-bundle --dry-run
 - **LOW** — minor improvements, non-idiomatic but correct code
 - **INFO** — optimization suggestions, modernization opportunities
 
+## Example Output
+
+```markdown
+## Summary
+
+The crate has a critical error-handling gap in the network client and an unsafe
+block missing a safety comment. Overall structure is sound with good use of
+enums for domain modeling.
+
+## Critical Issues
+
+### Silently Discarded Error in Connection Retry
+**Severity:** CRITICAL
+**Category:** Error Handling
+**File:** src/client.rs:47
+**Impact:** Failed reconnections go unnoticed, leading to silent data loss
+
+**Problem:**
+​```rust
+fn reconnect(&mut self) {
+    let _ = self.stream.shutdown(Shutdown::Both);
+    self.stream = TcpStream::connect(&self.addr).unwrap();
+}
+​```
+
+**Solution:**
+​```rust
+fn reconnect(&mut self) -> io::Result<()> {
+    let _ = self.stream.shutdown(Shutdown::Both);
+    self.stream = TcpStream::connect(&self.addr)?;
+    Ok(())
+}
+​```
+
+**Explanation:** Discarding the `Result` from `connect` and calling `unwrap`
+means a transient DNS failure crashes the process. Propagate the error so the
+caller can decide whether to retry or alert.
+
+---
+
+## Improvements
+
+### Missing Safety Comment on Unsafe Block
+**Severity:** HIGH
+**Category:** Security
+**File:** src/ffi.rs:23
+
+**Current:**
+​```rust
+unsafe { libc::mmap(ptr::null_mut(), len, PROT_READ, MAP_PRIVATE, fd, 0) }
+​```
+
+**Suggested:**
+​```rust
+// SAFETY: `fd` is a valid file descriptor obtained from `File::as_raw_fd()`
+// and `len` is bounded by the file size checked on the preceding line.
+unsafe { libc::mmap(ptr::null_mut(), len, PROT_READ, MAP_PRIVATE, fd, 0) }
+​```
+
+**Why:** Every `unsafe` block must document why the invariants hold, per the
+Rust API Guidelines.
+
+---
+
+## Positive Observations
+
+- Good use of `thiserror` for structured error types
+- Consistent `#[must_use]` on builder methods
+
+## Recommendations
+
+- Run `cargo clippy -- -W clippy::unwrap_used` in CI to catch future `unwrap` calls
+```
+
 ## Version
 
 0.1.0
