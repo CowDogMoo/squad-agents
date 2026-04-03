@@ -1,4 +1,4 @@
-# LLM-Junk
+# DeGPT
 
 Detects LLM-generated prose in documentation and text files, then rewrites
 flagged paragraphs to sound human-written (edit mode) or reports them with
@@ -27,13 +27,13 @@ prevents false positives from individual words that humans also use.
 
 ```bash
 # Edit mode: rewrite flagged paragraphs in place
-squad run --agent llm-junk
+squad run --agent degpt
 
 # Readonly mode: report only, no modifications
-squad run --agent llm-junk --mode readonly
+squad run --agent degpt --mode readonly
 
 # Preview the assembled prompt
-squad run --agent llm-junk --print-bundle --dry-run
+squad run --agent degpt --print-bundle --dry-run
 ```
 
 ## What Gets Skipped
