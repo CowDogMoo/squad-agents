@@ -91,6 +91,21 @@ All modifications happen through your specialist agents.
     error messages — unless you can verify the change does not break
     existing tests. If unsure, skip the fix."
 
+# PROMPT CONSTRUCTION
+
+Building the `prompt` parameter for each Task call is your most critical job.
+An empty or malformed prompt causes immediate failure. Follow these rules:
+
+1. **Never pass an empty prompt.** Every Task call must have a non-empty `prompt`.
+2. **Assemble in parts.** Each Phase below shows labeled template blocks.
+   Substitute all `{...}` placeholders with real values from Phase 1, then
+   concatenate the blocks (separated by blank lines) into one string.
+3. **Use JSON format.** Call the Task tool as:
+   `{"agent": "agent-name", "prompt": "<your assembled string>"}`.
+4. **Cap file lists.** If SOURCE_FILES exceeds 80 entries, include the first 80
+   and append: `... and {remaining} more files. Run Glob **/*.go for the full list.`
+5. **No leftover placeholders.** Replace every `{...}` before calling Task.
+
 # WORKFLOW
 
 ## Phase 1: Validate and Discover (1 iteration)
@@ -121,13 +136,42 @@ they do NOT need to re-Glob the codebase. This avoids tripling token costs.
 
 **Only if `go.mod` contains `github.com/spf13/cobra`.**
 
-Invoke go-cobra with the pre-discovered file list:
+Invoke go-cobra. Assemble the prompt from these blocks (substitute `{...}`
+with real values, then concatenate with blank lines between blocks):
 
-```
-Task(
-  agent = "go-cobra",
-  prompt = "<user instructions if any>\n\nContext: This is a Go CLI project using Cobra with <N> source files.\nBaseline: build=<PASS/FAIL>, tests=<PASS/FAIL>\n\nHARD CONSTRAINTS (override agent defaults):\n- Do NOT make cosmetic-only changes (variable renames, import reordering, whitespace).\n- Do NOT change observable CLI behavior (argument handling, flag defaults, output format) unless you verify existing tests still pass.\n- Do NOT remove or simplify custom Args validators — they often handle edge cases like piped stdin or optional arguments.\n- Every edit must fix a real functional or best-practice violation.\n- After all edits, `go build ./...` and `go test ./...` MUST still pass.\n\n## Pre-discovered source files (DO NOT re-Glob)\n\n<SOURCE_FILES, one per line>\n\n## Pre-discovered test files\n\n<TEST_FILES, one per line>\n\nIMPORTANT: Use the file lists above instead of running Glob **/*.go. Read files directly from these lists."
-)
+**Block A — Context:**
+
+> {user instructions, or omit if none given}
+>
+> Context: This is a Go CLI project using Cobra with {N} source files.
+> Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block B — Constraints (include verbatim):**
+
+> HARD CONSTRAINTS (override agent defaults):
+>
+> - Do NOT make cosmetic-only changes (variable renames, import reordering, whitespace).
+> - Do NOT change observable CLI behavior (argument handling, flag defaults, output format) unless existing tests still pass.
+> - Do NOT remove or simplify custom Args validators — they often handle edge cases.
+> - Every edit must fix a real functional or best-practice violation.
+> - After all edits, go build ./... and go test ./... MUST still pass.
+
+**Block C — File lists:**
+
+> \## Pre-discovered source files (DO NOT re-Glob)
+>
+> {SOURCE_FILES, one per line, capped at 80}
+>
+> \## Pre-discovered test files
+>
+> {TEST_FILES, one per line}
+>
+> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+
+**Tool call** (prompt = Block A + Block B + Block C):
+
+```json
+{"agent": "go-cobra", "prompt": "<assembled prompt>"}
 ```
 
 After the agent completes, run the regression gate:
@@ -148,13 +192,45 @@ Capture the full output. Extract:
 
 ## Phase 3: Code Review (1 iteration)
 
-Invoke go-review with the pre-discovered file list and any cobra context:
+Invoke go-review, passing prior context AND file lists. Assemble the prompt:
 
-```
-Task(
-  agent = "go-review",
-  prompt = "<user instructions if any>\n\nContext from prior passes:\n- go-cobra: <ran/skipped/reverted>, modified: <files>\n- Key changes: <summary>\nBaseline: build=<PASS/FAIL>, tests=<PASS/FAIL>\n\nHARD CONSTRAINTS (override agent defaults):\n- Do NOT make cosmetic-only changes (variable renames, import reordering, whitespace).\n- Do NOT change observable behavior unless you verify existing tests still pass.\n- Every edit must fix a real functional issue.\n- After all edits, `go build ./...` and `go test ./...` MUST still pass.\n\n## Pre-discovered source files (DO NOT re-Glob)\n\n<SOURCE_FILES, one per line>\n\n## Pre-discovered test files\n\n<TEST_FILES, one per line>\n\nIMPORTANT: Use the file lists above instead of running Glob **/*.go. Read files directly from these lists.\n\nDo not re-review Cobra/Viper patterns already fixed. Focus on general Go code quality."
-)
+**Block A — Context:**
+
+> {user instructions, or omit if none given}
+>
+> Context from prior passes:
+>
+> - go-cobra: {ran/skipped/reverted}, modified: {files}
+> - Key changes: {summary}
+> Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block B — Constraints:**
+
+> HARD CONSTRAINTS (override agent defaults):
+>
+> - Do NOT make cosmetic-only changes (variable renames, import reordering, whitespace).
+> - Do NOT change observable behavior unless existing tests still pass.
+> - Every edit must fix a real functional issue.
+> - After all edits, go build ./... and go test ./... MUST still pass.
+
+**Block C — File lists:**
+
+> \## Pre-discovered source files (DO NOT re-Glob)
+>
+> {SOURCE_FILES, one per line, capped at 80}
+>
+> \## Pre-discovered test files
+>
+> {TEST_FILES, one per line}
+>
+> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+>
+> Do not re-review Cobra/Viper patterns already fixed. Focus on general Go code quality.
+
+**Tool call** (prompt = Block A + Block B + Block C):
+
+```json
+{"agent": "go-review", "prompt": "<assembled prompt>"}
 ```
 
 Run regression gate after completion. Revert if regressed.
@@ -167,13 +243,46 @@ Capture the full output. Extract:
 
 ## Phase 4: Test Coverage (1 iteration)
 
-Invoke go-tests, passing prior context AND file list:
+Invoke go-tests, passing prior context AND file lists. Assemble the prompt:
 
-```
-Task(
-  agent = "go-tests",
-  prompt = "<user instructions if any>\n\nContext from prior passes:\n- go-cobra modified: <files>\n- go-review modified: <files>\n- Key changes: <summary>\nBaseline: build=<PASS/FAIL>, tests=<PASS/FAIL>\n\nHARD CONSTRAINTS (override agent defaults):\n- Every test you write MUST compile and pass. Run `go test ./...` before finishing.\n- Do NOT write tests that depend on unexported internals unless you are in the same package.\n- If a function requires context setup (e.g., values stored in context), read the existing test files first to understand the test patterns used in this project.\n- Read existing `*_test.go` files in the same package BEFORE writing new tests so you use the correct patterns, helpers, and setup.\n- After all edits, `go build ./...` and `go test ./...` MUST pass with zero failures.\n\n## Pre-discovered source files (DO NOT re-Glob)\n\n<SOURCE_FILES, one per line>\n\n## Pre-discovered test files\n\n<TEST_FILES, one per line>\n\nIMPORTANT: Use the file lists above instead of running Glob **/*.go. Read files directly from these lists.\n\nDo not re-review code quality. Focus only on test coverage."
-)
+**Block A — Context:**
+
+> {user instructions, or omit if none given}
+>
+> Context from prior passes:
+>
+> - go-cobra modified: {files}
+> - go-review modified: {files}
+> - Key changes: {summary}
+> Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block B — Constraints:**
+
+> HARD CONSTRAINTS (override agent defaults):
+>
+> - Every test you write MUST compile and pass. Run go test ./... before finishing.
+> - Do NOT write tests that depend on unexported internals unless in the same package.
+> - Read existing \*\_test.go files in the same package BEFORE writing new tests.
+> - After all edits, go build ./... and go test ./... MUST pass with zero failures.
+
+**Block C — File lists:**
+
+> \## Pre-discovered source files (DO NOT re-Glob)
+>
+> {SOURCE_FILES, one per line, capped at 80}
+>
+> \## Pre-discovered test files
+>
+> {TEST_FILES, one per line}
+>
+> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+>
+> Do not re-review code quality. Focus only on test coverage.
+
+**Tool call** (prompt = Block A + Block B + Block C):
+
+```json
+{"agent": "go-tests", "prompt": "<assembled prompt>"}
 ```
 
 Run regression gate after completion. Revert if regressed.
@@ -186,13 +295,46 @@ Capture the full output. Extract:
 
 ## Phase 5: Documentation (1 iteration)
 
-Invoke go-doc-comments, passing all prior contexts AND file list:
+Invoke go-doc-comments, passing all prior contexts AND file lists. Assemble
+the prompt:
 
-```
-Task(
-  agent = "go-doc-comments",
-  prompt = "<user instructions if any>\n\nContext from prior passes:\n- go-cobra modified: <files>\n- go-review modified: <files>\n- go-tests created: <test files>\nBaseline: build=<PASS/FAIL>, tests=<PASS/FAIL>\n\nHARD CONSTRAINTS (override agent defaults):\n- Do NOT add duplicate comments. After every Edit, Read the file back and verify the comment appears exactly once.\n- Do NOT make cosmetic-only changes to existing comments — only add missing doc comments or fix incorrect ones.\n- After all edits, `go build ./...` MUST still pass.\n\n## Pre-discovered source files (DO NOT re-Glob)\n\n<SOURCE_FILES, one per line>\n\n## Pre-discovered test files\n\n<TEST_FILES, one per line>\n\nIMPORTANT: Use the file lists above instead of running Glob **/*.go. Read files directly from these lists.\n\nFocus on source files. Do not document test files."
-)
+**Block A — Context:**
+
+> {user instructions, or omit if none given}
+>
+> Context from prior passes:
+>
+> - go-cobra modified: {files}
+> - go-review modified: {files}
+> - go-tests created: {test files}
+> Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block B — Constraints:**
+
+> HARD CONSTRAINTS (override agent defaults):
+>
+> - Do NOT add duplicate comments. After every Edit, Read the file back to verify.
+> - Do NOT make cosmetic-only changes to existing comments — only add missing or fix incorrect ones.
+> - After all edits, go build ./... MUST still pass.
+
+**Block C — File lists:**
+
+> \## Pre-discovered source files (DO NOT re-Glob)
+>
+> {SOURCE_FILES, one per line, capped at 80}
+>
+> \## Pre-discovered test files
+>
+> {TEST_FILES, one per line}
+>
+> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+>
+> Focus on source files. Do not document test files.
+
+**Tool call** (prompt = Block A + Block B + Block C):
+
+```json
+{"agent": "go-doc-comments", "prompt": "<assembled prompt>"}
 ```
 
 Run regression gate after completion. Revert if regressed.

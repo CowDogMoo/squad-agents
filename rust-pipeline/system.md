@@ -79,6 +79,21 @@ All modifications happen through your specialist agents.
     behavior unless you can verify the change does not break existing
     tests. If unsure, skip the fix."
 
+# PROMPT CONSTRUCTION
+
+Building the `prompt` parameter for each Task call is your most critical job.
+An empty or malformed prompt causes immediate failure. Follow these rules:
+
+1. **Never pass an empty prompt.** Every Task call must have a non-empty `prompt`.
+2. **Assemble in parts.** Each Phase below shows labeled template blocks.
+   Substitute all `{...}` placeholders with real values from Phase 1, then
+   concatenate the blocks (separated by blank lines) into one string.
+3. **Use JSON format.** Call the Task tool as:
+   `{"agent": "agent-name", "prompt": "<your assembled string>"}`.
+4. **Cap file lists.** If SOURCE_FILES exceeds 80 entries, include the first 80
+   and append: `... and {remaining} more files. Run Glob **/*.rs for the full list.`
+5. **No leftover placeholders.** Replace every `{...}` before calling Task.
+
 # WORKFLOW
 
 ## Phase 1: Validate and Discover (1 iteration)
@@ -108,13 +123,41 @@ they do NOT need to re-Glob the codebase. This avoids tripling token costs.
 
 ## Phase 2: Code Review (1 iteration)
 
-Invoke rust-review with the pre-discovered file list:
+Invoke rust-review. Assemble the prompt from these blocks (substitute `{...}`
+with real values, then concatenate with blank lines between blocks):
 
-```
-Task(
-  agent = "rust-review",
-  prompt = "<user instructions if any>\n\nContext: This is a Rust project with <N> source files.\nBaseline: build=<PASS/FAIL>, tests=<PASS/FAIL>\n\nHARD CONSTRAINTS (override agent defaults):\n- Do NOT make cosmetic-only changes (variable renames, use-statement reordering, whitespace).\n- Do NOT change observable behavior unless you verify existing tests still pass.\n- Every edit must fix a real functional or best-practice violation.\n- After all edits, `cargo build` and `cargo test` MUST still pass.\n- ITERATION DISCIPLINE: You MUST make your first Edit call by iteration 5. Read files and run clippy in iterations 1-3, then start fixing immediately. Do NOT catalog all findings before editing — fix as you go. Target ≤15 total iterations.\n- You MAY add community-standard crates (e.g., `log` + `env_logger` to replace `eprintln!`) when fixing an anti-pattern.\n- TOOL RULES: Never call Bash with an empty command. Include 2-3 lines of context in Edit old_string. After every Edit, Read only the modified region to verify.\n- NEVER run `git stash`, `git checkout`, or any git command that reverts files — they destroy prior agents' changes. If an edit goes wrong, use Edit to undo it (Read the broken region, Edit to restore).\n\n## Pre-discovered source files (DO NOT re-Glob)\n\n<SOURCE_FILES, one per line>\n\nIMPORTANT: Use the file list above instead of running Glob **/*.rs. Read files directly from this list."
-)
+**Block A — Context:**
+
+> {user instructions, or omit if none given}
+>
+> Context: This is a Rust project with {N} source files.
+> Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block B — Constraints (include verbatim after substituting baseline):**
+
+> HARD CONSTRAINTS (override agent defaults):
+>
+> - Do NOT make cosmetic-only changes (variable renames, use-statement reordering, whitespace).
+> - Do NOT change observable behavior unless existing tests still pass.
+> - Every edit must fix a real functional or best-practice violation.
+> - After all edits, cargo build and cargo test MUST still pass.
+> - Make your first Edit by iteration 5. Fix as you go. Target ≤15 iterations.
+> - You MAY add community-standard crates when fixing an anti-pattern.
+> - TOOL RULES: Never call Bash with an empty command. Include 2-3 lines of context in Edit old_string.
+> - NEVER run git stash, git checkout, or any git command that reverts files.
+
+**Block C — File list:**
+
+> \## Pre-discovered source files (DO NOT re-Glob)
+>
+> {SOURCE_FILES, one per line, capped at 80}
+>
+> IMPORTANT: Use the file list above instead of running Glob **/*.rs.
+
+**Tool call** (prompt = Block A + Block B + Block C):
+
+```json
+{"agent": "rust-review", "prompt": "<assembled prompt>"}
 ```
 
 Run regression gate after completion. Revert if regressed.
@@ -127,13 +170,44 @@ Capture the full output. Extract:
 
 ## Phase 3: Test Coverage (1 iteration)
 
-Invoke rust-tests, passing prior context AND file list:
+Invoke rust-tests, passing prior context AND file list. Assemble the prompt
+from these blocks:
 
-```
-Task(
-  agent = "rust-tests",
-  prompt = "<user instructions if any>\n\nContext from prior passes:\n- rust-review: <ran/skipped/reverted>, modified: <files>\n- Key changes: <summary>\nBaseline: build=<PASS/FAIL>, tests=<PASS/FAIL>\n\nHARD CONSTRAINTS (override agent defaults):\n- Every test you write MUST compile and pass. Run `cargo test` before finishing.\n- Read existing test modules BEFORE writing new tests so you use the correct patterns and helpers.\n- After all edits, `cargo build` and `cargo test` MUST pass with zero failures.\n- TOOL RULES: Add tests INCREMENTALLY. First Edit to append empty #[cfg(test)] mod tests skeleton, then add 1-3 test functions at a time (≤30 lines per Edit call) before the closing }. NEVER generate 50+ lines of code in a single tool call — parameters get truncated to empty. After every Edit, run tail -5 to verify file integrity. NEVER call Bash with an empty command.\n- Read each source file at most twice: once to analyze, once before writing.\n- NEVER run `git stash`, `git checkout`, or any git command that reverts files — they destroy prior agents' changes. If an edit goes wrong, use Edit to undo it (Read the broken region, Edit to restore).\n\n## Pre-discovered source files (DO NOT re-Glob)\n\n<SOURCE_FILES, one per line>\n\nIMPORTANT: Use the file list above instead of running Glob **/*.rs.\n\nDo not re-review code quality. Focus only on test coverage."
-)
+**Block A — Context:**
+
+> {user instructions, or omit if none given}
+>
+> Context from prior passes:
+>
+> - rust-review: {ran/skipped/reverted}, modified: {files}
+> - Key changes: {summary}
+> Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block B — Constraints:**
+
+> HARD CONSTRAINTS (override agent defaults):
+>
+> - Every test you write MUST compile and pass. Run cargo test before finishing.
+> - Read existing test modules BEFORE writing new tests to match patterns and helpers.
+> - After all edits, cargo build and cargo test MUST pass with zero failures.
+> - Add tests INCREMENTALLY: ≤30 lines per Edit call. Never generate 50+ lines in one call.
+> - Read each source file at most twice: once to analyze, once before writing.
+> - NEVER run git stash, git checkout, or any git command that reverts files.
+
+**Block C — File list:**
+
+> \## Pre-discovered source files (DO NOT re-Glob)
+>
+> {SOURCE_FILES, one per line, capped at 80}
+>
+> IMPORTANT: Use the file list above instead of running Glob **/*.rs.
+>
+> Do not re-review code quality. Focus only on test coverage.
+
+**Tool call** (prompt = Block A + Block B + Block C):
+
+```json
+{"agent": "rust-tests", "prompt": "<assembled prompt>"}
 ```
 
 Run regression gate after completion. Revert if regressed.
@@ -146,13 +220,43 @@ Capture the full output. Extract:
 
 ## Phase 4: Documentation (1 iteration)
 
-Invoke rust-doc-comments, passing all prior contexts AND file list:
+Invoke rust-doc-comments, passing all prior contexts AND file list. Assemble
+the prompt from these blocks:
 
-```
-Task(
-  agent = "rust-doc-comments",
-  prompt = "<user instructions if any>\n\nContext from prior passes:\n- rust-review modified: <files>\n- rust-tests created: <test files>\nBaseline: build=<PASS/FAIL>, tests=<PASS/FAIL>\n\nHARD CONSTRAINTS (override agent defaults):\n- Do NOT add duplicate comments. After every Edit, Read the file back and verify the comment appears exactly once.\n- Do NOT make cosmetic-only changes to existing comments — only add missing doc comments or fix incorrect ones.\n- After all edits, `cargo build` MUST still pass.\n- TOOL RULES: Never call Bash with an empty command. Never use Bash heredocs/cat to write code. Include 2-3 lines of context in Edit old_string to avoid accidental deletions. After every Edit, Read the modified region to verify no code was lost.\n- NEVER run `git stash`, `git checkout`, or any git command that reverts files — they destroy prior agents' changes. If an edit goes wrong, use Edit to undo it (Read the broken region, Edit to restore).\n\n## Pre-discovered source files (DO NOT re-Glob)\n\n<SOURCE_FILES, one per line>\n\nIMPORTANT: Use the file list above instead of running Glob **/*.rs.\n\nFocus on source files. Do not document test modules."
-)
+**Block A — Context:**
+
+> {user instructions, or omit if none given}
+>
+> Context from prior passes:
+>
+> - rust-review modified: {files}
+> - rust-tests created: {test files}
+> Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block B — Constraints:**
+
+> HARD CONSTRAINTS (override agent defaults):
+>
+> - Do NOT add duplicate comments. After every Edit, Read the file back to verify.
+> - Do NOT make cosmetic-only changes to existing comments — only add missing or fix incorrect ones.
+> - After all edits, cargo build MUST still pass.
+> - TOOL RULES: Never call Bash with an empty command. Include 2-3 lines of context in Edit old_string.
+> - NEVER run git stash, git checkout, or any git command that reverts files.
+
+**Block C — File list:**
+
+> \## Pre-discovered source files (DO NOT re-Glob)
+>
+> {SOURCE_FILES, one per line, capped at 80}
+>
+> IMPORTANT: Use the file list above instead of running Glob **/*.rs.
+>
+> Focus on source files. Do not document test modules.
+
+**Tool call** (prompt = Block A + Block B + Block C):
+
+```json
+{"agent": "rust-doc-comments", "prompt": "<assembled prompt>"}
 ```
 
 Run regression gate after completion. Revert if regressed.
