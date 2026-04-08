@@ -2,8 +2,13 @@
 name: degpt
 version: 0.1.0
 description: Autonomous agent that scans documentation and text files for indicators of LLM-generated content and rewrites flagged sections to sound human-written.
-model: claude-sonnet-4-6
-provider: anthropic
+models:
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+  - model: claude-sonnet-4-6
+    provider: anthropic
 entrypoint: system.md
 wrapper: agent.md
 references:
