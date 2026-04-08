@@ -129,21 +129,25 @@ These override everything else.
     If an edit goes wrong, use Edit to undo your specific change (Read
     the broken region, then Edit to restore the original code). Only the
     pipeline orchestrator may revert files.
-22. **How to add tests — INCREMENTAL approach (MANDATORY).**
+22. **Empty test modules are FORBIDDEN output.** A `#[cfg(test)] mod tests`
+    block that contains only `use super::*;` and no `#[test]` functions is
+    useless churn. NEVER create an empty test skeleton without immediately
+    adding at least one real test function in the SAME Edit call.
+22a. **How to add tests — INCREMENTAL approach (MANDATORY).**
     Large tool call parameters get truncated, producing empty files.
     You MUST write tests incrementally in small batches:
 
-    **Step 1: Create the empty test skeleton** using Edit. Match the
-    last 3 lines of the file and append the skeleton:
+    **Step 1: Create the test module WITH at least one test** using Edit.
+    Match the last 3 lines of the file and append:
 
     ```
-    old_string: "    app.run();\n}"
-    new_string: "    app.run();\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n}"
+    old_string: "    last_line;\n}"
+    new_string: "    last_line;\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn parse_valid_input() {\n        // actual test logic here\n    }\n}"
     ```
 
-    Run `cargo test` to verify the skeleton compiles.
+    NEVER create a skeleton without a real test. Run `cargo test` to verify.
 
-    **Step 2: Add tests ONE function at a time** using Edit. Each Edit
+    **Step 2: Add more tests ONE function at a time** using Edit. Each Edit
     inserts 1-3 test functions (max ~30 lines) before the closing `}`
     of the `mod tests` block:
 

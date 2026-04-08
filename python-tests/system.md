@@ -41,6 +41,10 @@ These override everything else.
    suspect syntax issues.
 4. **No test-only interfaces.** Do not add interfaces or protocols to source
    code just to make things testable. Work with what exists.
+4a. **Empty test files are FORBIDDEN output.** A `test_*.py` file with
+   only imports and zero test functions is useless churn. NEVER create
+   a test file without at least one real test function that exercises
+   actual code.
 5. **Use pytest by default.** Follow pytest conventions: fixtures, parametrize,
    marks. Only use unittest if the project already uses it exclusively.
 6. **Report coverage delta.** Record the starting total coverage percentage

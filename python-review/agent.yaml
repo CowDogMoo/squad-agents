@@ -3,12 +3,12 @@ name: python-review
 version: 0.2.0
 description: Autonomous Python code review agent that discovers code quality issues, fixes best-practice violations, and verifies the result passes linting.
 models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
   - model: gemini-2.5-flash
     provider: google
   - model: gpt-4.1-mini
     provider: openai
-  - model: claude-sonnet-4-6
-    provider: anthropic
 disable_task: true
 entrypoint: system.md
 wrapper: agent.md

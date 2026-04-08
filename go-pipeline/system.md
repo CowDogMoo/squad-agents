@@ -109,8 +109,8 @@ An empty or malformed prompt causes immediate failure. Follow these rules:
    concatenate the blocks (separated by blank lines) into one string.
 3. **Use JSON format.** Call the Task tool as:
    `{"agent": "agent-name", "prompt": "<your assembled string>"}`.
-4. **Cap file lists.** If SOURCE_FILES exceeds 80 entries, include the first 80
-   and append: `... and {remaining} more files. Run Glob **/*.go for the full list.`
+4. **Scope-limit file lists.** Do NOT pass all SOURCE_FILES to child agents.
+   Select 10-15 high-priority files per agent based on lint warnings or REPO_MAP complexity.
 5. **No leftover placeholders.** Replace every `{...}` before calling Task.
 
 # WORKFLOW
@@ -198,18 +198,20 @@ with real values, then concatenate with blank lines between blocks):
 > - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
 > - If the linter has no warnings, limit your reads to the 5-10 most complex files based on the repo map. Do NOT read all files.
 
-**Block C — File lists:**
+**Block C — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block C, YOU (the orchestrator) must select the files
+to review. If the linter produced warnings, include ONLY files mentioned
+in warnings. If no warnings, select the 10-15 most complex files from
+the REPO_MAP. Do NOT pass all source files.
+
+> \## Files assigned for review (REVIEW ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> \## Pre-discovered test files
->
-> {TEST_FILES, one per line}
->
-> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
-> Read ONLY files that appear in lint warnings or that you need based on the repo map. Do NOT read every file.
+> You MUST review ONLY the files listed above. Do NOT read any other files.
+> Do NOT run Glob. If you finish reviewing all listed files and find no
+> issues, produce your report immediately.
 
 **Tool call** (prompt = Block A + Block D + Block B + Block C):
 
@@ -269,18 +271,20 @@ Invoke go-review, passing prior context AND file lists. Assemble the prompt:
 > - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
 > - If the linter has no warnings, limit your reads to the 5-10 most complex files based on the repo map. Do NOT read all files.
 
-**Block C — File lists:**
+**Block C — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block C, YOU (the orchestrator) must select the files
+to review. If the linter produced warnings, include ONLY files mentioned
+in warnings. If no warnings, select the 10-15 most complex files from
+the REPO_MAP. Do NOT pass all source files.
+
+> \## Files assigned for review (REVIEW ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> \## Pre-discovered test files
->
-> {TEST_FILES, one per line}
->
-> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
-> Read ONLY files that appear in lint warnings or that you need based on the repo map. Do NOT read every file.
+> You MUST review ONLY the files listed above. Do NOT read any other files.
+> Do NOT run Glob. If you finish reviewing all listed files and find no
+> issues, produce your report immediately.
 >
 > Do not re-review Cobra/Viper patterns already fixed. Focus on general Go code quality.
 
@@ -321,21 +325,24 @@ Invoke go-tests, passing prior context AND file lists. Assemble the prompt:
 > - Do NOT write tests that depend on unexported internals unless in the same package.
 > - Read existing \*\_test.go files in the same package BEFORE writing new tests.
 > - After all edits, go build ./... and go test ./... MUST pass with zero failures.
+> - NEVER create empty test files. A `_test.go` file with only a package declaration and zero `Test*` functions is FORBIDDEN. Every test file MUST contain at least one real test function that exercises actual code.
 > - Do NOT run go test as a baseline — it was already run and tests {PASS/FAIL}. Go straight to reading and writing tests.
 > - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
 > - Start writing tests by iteration 8 at latest. Do NOT read every file before starting — read a module, write its tests, move on.
 
-**Block C — File lists:**
+**Block C — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block C, YOU (the orchestrator) must select the
+10-15 highest-priority packages to test. Select packages that have the
+most business logic and NO existing tests.
+
+> \## Modules assigned for testing (TEST ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> \## Pre-discovered test files
->
-> {TEST_FILES, one per line}
->
-> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+> You MUST test ONLY the modules listed above. Do NOT read any other files.
+> Do NOT run Glob. Read a module, write tests for it, verify they pass,
+> then move to the next module.
 >
 > Do not re-review code quality. Focus only on test coverage.
 
@@ -375,19 +382,20 @@ the prompt:
 >
 > - Do NOT add duplicate comments. After every Edit, Read the file back to verify.
 > - Do NOT make cosmetic-only changes to existing comments — only add missing or fix incorrect ones.
+> - Do NOT add trivial struct field docs. `Username string` does NOT need `// Username is the account name.` — the field name is the doc. Only add field docs when the name is genuinely ambiguous or has non-obvious semantics (units, encoding, invariants).
 > - After all edits, go build ./... MUST still pass.
 
-**Block C — File lists:**
+**Block C — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block C, YOU (the orchestrator) must select the
+10-15 highest-priority files to document.
+
+> \## Files assigned for documentation (DOCUMENT ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> \## Pre-discovered test files
->
-> {TEST_FILES, one per line}
->
-> IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+> You MUST document ONLY the files listed above. Do NOT read any other files.
+> Do NOT run Glob.
 >
 > Focus on source files. Do not document test files.
 

@@ -93,6 +93,13 @@ These override everything else.
 15. **Exported declarations only.** Only add doc comments to exported
     (capitalized) names. Unexported names do not need doc comments — skip
     them entirely.
+15a. **No trivial struct field docs.** Do NOT add doc comments to struct
+    fields that have self-documenting names. `Username string` does NOT
+    need `// Username is the account name.` — the field name already
+    communicates this. Only add field docs when the name is genuinely
+    ambiguous or the semantics are non-obvious (e.g., units, encoding,
+    invariants like "must be positive"). Struct-level docs are valuable;
+    per-field docs on obvious fields are churn.
 16. **Package comments — one per package.** Each package needs exactly one
     package comment, starting with "Package [name]". Place it in the file
     that shares the package name (e.g., `foo.go` for package `foo`), or in

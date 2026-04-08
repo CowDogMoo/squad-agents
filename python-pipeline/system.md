@@ -73,8 +73,8 @@ An empty or malformed prompt causes immediate failure. Follow these rules:
    concatenate the blocks (separated by blank lines) into one string.
 3. **Use JSON format.** Call the Task tool as:
    `{"agent": "agent-name", "prompt": "<your assembled string>"}`.
-4. **Cap file lists.** If SOURCE_FILES exceeds 80 entries, include the first 80
-   and append: `... and {remaining} more files. Run Glob **/*.py for the full list.`
+4. **Scope-limit file lists.** Do NOT pass all SOURCE_FILES to child agents.
+   Select 10-15 high-priority files per agent based on lint warnings or REPO_MAP complexity.
 5. **No leftover placeholders.** Replace every `{...}` before calling Task.
 
 # WORKFLOW
@@ -137,21 +137,22 @@ with real values, then concatenate with blank lines between blocks):
 >
 > {REPO_MAP}
 
-**Block B — File lists:**
+**Block B — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block B, YOU (the orchestrator) must select the files
+to review. If the linter produced warnings, include ONLY files mentioned
+in warnings. If no warnings, select the 10-15 most complex files from
+the REPO_MAP. Do NOT pass all source files.
+
+> \## Files assigned for review (REVIEW ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> \## Pre-discovered test files
->
-> {TEST_FILES, one per line}
->
-> IMPORTANT: Use the file lists above instead of running Glob **/*.py.
-> Read ONLY files that appear in lint warnings or that you need based on the repo map. Do NOT read every file.
+> You MUST review ONLY the files listed above. Do NOT read any other files.
+> Do NOT run Glob. If you finish reviewing all listed files and find no
+> issues, produce your report immediately.
 > Do NOT re-run ruff or any linter — the LINT_WARNINGS above are pre-collected. Use them to direct your work.
 > Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
-> If the linter has no warnings, limit your reads to the 5-10 most complex files based on the repo map.
 
 **Tool call** (prompt = Block A + Block D + Block B):
 
@@ -178,19 +179,20 @@ Invoke python-tests, passing review context AND file lists. Assemble the prompt:
 > - Files modified by python-review: {list}
 > - Key changes: {summary}
 
-**Block B — File lists:**
+**Block B — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block B, YOU (the orchestrator) must select the
+10-15 highest-priority modules to test. Select modules that have the
+most business logic and NO existing tests.
+
+> \## Modules assigned for testing (TEST ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> \## Pre-discovered test files
->
-> {TEST_FILES, one per line}
->
-> IMPORTANT: Use the file lists above instead of running Glob **/*.py.
-> Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
-> Start writing tests by iteration 8 at latest. Read a module, write its tests, move on.
+> You MUST test ONLY the modules listed above. Do NOT read any other files.
+> Do NOT run Glob. Read a module, write tests for it, verify they pass,
+> then move to the next module.
+> NEVER create empty test files. A `test_*.py` file with only imports and zero test functions is FORBIDDEN. Every test file MUST contain at least one real test function that exercises actual code.
 >
 > Do not re-review code quality. Focus only on test coverage.
 
@@ -220,19 +222,18 @@ Assemble the prompt:
 > - python-review modified: {files}
 > - python-tests created: {test files}
 
-**Block B — File lists:**
+**Block B — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block B, YOU (the orchestrator) must select the
+10-15 highest-priority files to document.
+
+> \## Files assigned for documentation (DOCUMENT ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> \## Pre-discovered test files
->
-> {TEST_FILES, one per line}
->
-> IMPORTANT: Use the file lists above instead of running Glob **/*.py.
-> Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
-> Start editing by iteration 5. Do NOT read all files before starting — read a batch, add docstrings, move on.
+> You MUST document ONLY the files listed above. Do NOT read any other files.
+> Do NOT run Glob.
+> Do NOT add trivial attribute/field docstrings that just restate the attribute name. Only add attribute docs when the name is genuinely ambiguous or has non-obvious semantics.
 >
 > Focus on source files. Do not document test files.
 

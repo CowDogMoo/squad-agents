@@ -3,12 +3,12 @@ name: ansible-review
 version: 0.2.0
 description: Autonomous Ansible code review agent that discovers quality issues, security anti-patterns, and best-practice violations in playbooks, roles, and collections.
 models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
   - model: gemini-2.5-flash
     provider: google
   - model: gpt-4.1-mini
     provider: openai
-  - model: claude-sonnet-4-6
-    provider: anthropic
 entrypoint: system.md
 wrapper: agent.md
 references:

@@ -3,6 +3,8 @@ name: rust-doc-comments
 version: 0.2.0
 description: Autonomous Rust documentation agent that discovers public declarations, adds or improves doc comments following Rust doc conventions, and verifies compilation.
 models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
   - model: gpt-4.1-nano
     provider: openai
   - model: gpt-4.1-mini

@@ -90,6 +90,19 @@ These override everything else.
 15. **Public declarations only.** Only add doc comments to `pub` and
     `pub(crate)` items. Private items do not need doc comments — skip
     them entirely.
+15a. **No trivial struct field docs.** Do NOT add doc comments to struct
+    fields that have self-documenting names. `pub username: String` does
+    NOT need `/// Account name extracted from the hash line.` — the
+    field name already communicates this. Only add field docs when the
+    field name is genuinely ambiguous or the semantics are non-obvious
+    (e.g., units, encoding, invariants). Examples of fields that do NOT
+    need docs: `username`, `domain`, `ip`, `hostname`, `os`, `hash_value`,
+    `input_tokens`, `output_tokens`, `total_tokens`, `model`, `title`,
+    `name`, `permissions`, `comment`. Examples that DO need docs:
+    `rid` (what is a RID?), `lm_hash` (vs nt_hash — what's the
+    difference?), `hash_type` only if the enum variants aren't clear.
+    Struct-level `///` docs are valuable; per-field `///` docs on
+    obvious fields are churn.
 16. **Module-level docs — one per module.** Each module needs a module-level
     doc comment using `//!` at the top of the file. Place it in `lib.rs` for
     the crate root, or at the top of each module file. If a module doc
@@ -239,6 +252,10 @@ Skip these entirely — do not report them, do not fix them:
 - Test modules (`#[cfg(test)]`)
 - Trivial public declarations where a meaningful comment would just
   restate the signature (list in Declarations Skipped with "trivial")
+- Struct fields with self-documenting names — `pub username: String`
+  does NOT need `/// The username`. Only add field docs when the name
+  is genuinely ambiguous or has non-obvious semantics (units, encoding,
+  invariants). Struct-level docs are valuable; obvious field docs are churn.
 - `impl` blocks for standard traits (`Debug`, `Display`, `Clone`, etc.)
   where the trait contract is the documentation
 - Generated code files

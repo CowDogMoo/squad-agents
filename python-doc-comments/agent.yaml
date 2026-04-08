@@ -3,6 +3,8 @@ name: python-doc-comments
 version: 0.2.0
 description: Autonomous Python documentation agent that discovers public declarations, adds or improves docstrings following PEP 257 and Google Style, and verifies linting passes.
 models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
   - model: gpt-4.1-nano
     provider: openai
   - model: gpt-4.1-mini

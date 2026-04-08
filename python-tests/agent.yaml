@@ -3,12 +3,12 @@ name: python-tests
 version: 0.3.0
 description: Autonomously increase Python test coverage using pytest. Supports COVERAGE_TARGET variable.
 models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
   - model: gpt-4.1-mini
     provider: openai
   - model: gemini-2.5-flash
     provider: google
-  - model: claude-sonnet-4-6
-    provider: anthropic
 disable_task: true
 entrypoint: system.md
 wrapper: agent.md

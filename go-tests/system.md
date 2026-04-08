@@ -45,6 +45,10 @@ These override everything else.
    type issues.
 4. **No test-only interfaces.** Do not add interfaces to source code just
    to make things testable. Work with what exists.
+4a. **Empty test files are FORBIDDEN output.** A `_test.go` file that
+   contains only a package declaration and imports with zero `Test*`
+   functions is useless churn. NEVER create a test file without at
+   least one real `func Test*(t *testing.T)` that exercises actual code.
 5. **Use `package foo_test` (black-box) by default.** Use `package foo`
    (white-box) only when you must test unexported symbols that cannot be
    exercised through the public API. Do not use white-box just to call

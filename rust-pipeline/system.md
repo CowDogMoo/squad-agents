@@ -100,8 +100,8 @@ An empty or malformed prompt causes immediate failure. Follow these rules:
    concatenate the blocks (separated by blank lines) into one string.
 3. **Use JSON format.** Call the Task tool as:
    `{"agent": "agent-name", "prompt": "<your assembled string>"}`.
-4. **Cap file lists.** If SOURCE_FILES exceeds 80 entries, include the first 80
-   and append: `... and {remaining} more files. Run Glob **/*.rs for the full list.`
+4. **Scope-limit file lists.** Do NOT pass all SOURCE_FILES to child agents.
+   Select 10-15 high-priority files per agent based on clippy warnings or REPO_MAP complexity.
 5. **No leftover placeholders.** Replace every `{...}` before calling Task.
 
 # WORKFLOW
@@ -193,14 +193,25 @@ with real values, then concatenate with blank lines between blocks):
 > - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
 > - If clippy has no warnings, limit your reads to the 5-10 most complex files based on the repo map. Do NOT read all files.
 
-**Block C — File list:**
+**Block C — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block C, YOU (the orchestrator) must select the files
+to review. Do NOT pass all source files. Select files as follows:
+
+- If clippy produced warnings: include ONLY files mentioned in warnings
+  (typically 5-15 files).
+- If clippy produced NO warnings: select the 10-15 most complex files
+  from the REPO_MAP (files with the most `pub fn` signatures, error
+  handling, unsafe blocks, or concurrency patterns). Exclude trivial
+  files (< 3 pub signatures).
+
+> \## Files assigned for review (REVIEW ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> IMPORTANT: Use the file list above instead of running Glob **/*.rs.
-> Read ONLY files that appear in clippy warnings or that you need based on the repo map. Do NOT read every file.
+> You MUST review ONLY the files listed above. Do NOT read any other files.
+> Do NOT run Glob. If you finish reviewing all listed files and find no
+> issues, produce your report immediately.
 
 **Tool call** (prompt = Block A + Block D + Block B + Block C):
 
@@ -239,6 +250,7 @@ from these blocks:
 > - Read existing test modules BEFORE writing new tests to match patterns and helpers.
 > - After all edits, cargo build and cargo test MUST pass with zero failures.
 > - Add tests INCREMENTALLY: ≤30 lines per Edit call. Never generate 50+ lines in one call.
+> - NEVER create empty test modules. A `#[cfg(test)] mod tests` block with only `use super::*;` and zero `#[test]` functions is FORBIDDEN. Every test module you create MUST contain at least one real `#[test]` function that exercises actual code.
 > - Read each source file at most twice: once to analyze, once before writing.
 > - NEVER run git stash, git checkout, or any git command that reverts files.
 > - Do NOT run cargo test as a baseline — it was already run and tests {PASS/FAIL}. Go straight to reading and writing tests.
@@ -246,13 +258,25 @@ from these blocks:
 > - Start writing tests by iteration 8 at latest. Do NOT read every file before starting — read a module, write its tests, move on.
 > - Do NOT cat Cargo.toml via Bash — use the Read tool, or better yet, use the crate structure from Block A.
 
-**Block C — File list:**
+**Block C — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block C, YOU (the orchestrator) must select the
+10-15 highest-priority modules to test. Select modules that:
+
+- Have the most business logic (parsing, state management, error handling)
+- Have NO existing test modules (check for `#[cfg(test)]` in REPO_MAP)
+- Were modified by rust-review (if it ran)
+
+Do NOT pass all 80+ source files. Passing too many files causes the agent
+to read endlessly without writing tests.
+
+> \## Modules assigned for testing (TEST ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> IMPORTANT: Use the file list above instead of running Glob **/*.rs.
+> You MUST test ONLY the modules listed above. Do NOT read any other files.
+> Do NOT run Glob. Read a module, write tests for it, verify they pass,
+> then move to the next module.
 >
 > Do not re-review code quality. Focus only on test coverage.
 
@@ -291,21 +315,28 @@ the prompt from these blocks:
 >
 > - Do NOT add duplicate comments. After every Edit, Read the file back to verify.
 > - Do NOT make cosmetic-only changes to existing comments — only add missing or fix incorrect ones.
+> - Do NOT add trivial struct field docs. `pub username: String` does NOT need `/// The username.` — the field name is the doc. Only add field docs when the name is genuinely ambiguous or has non-obvious semantics (units, encoding, invariants). Struct-level docs ARE valuable; obvious field docs are churn.
 > - After all edits, cargo build MUST still pass.
 > - TOOL RULES: Never call Bash with an empty command. Include 2-3 lines of context in Edit old_string.
 > - NEVER run git stash, git checkout, or any git command that reverts files.
 > - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
 > - Start editing by iteration 5. Do NOT read all files before starting — read a batch, add comments, move on.
 
-**Block C — File list:**
+**Block C — File list (SCOPE-LIMITED):**
 
-> \## Pre-discovered source files (DO NOT re-Glob)
+Before constructing Block C, YOU (the orchestrator) must select the
+10-15 highest-priority files to document. Select files that:
+
+- Have the most public declarations lacking doc comments
+- Are core API modules (not helpers or internal plumbing)
+- Were modified by rust-review or rust-tests
+
+> \## Files assigned for documentation (DOCUMENT ONLY THESE FILES)
 >
-> {SOURCE_FILES, one per line, capped at 80}
+> {SELECTED_FILES, one per line, 10-15 files max}
 >
-> IMPORTANT: Use the file list above instead of running Glob **/*.rs.
->
-> Focus on source files. Do not document test modules.
+> You MUST document ONLY the files listed above. Do NOT read any other files.
+> Do NOT run Glob. Focus on source files. Do not document test modules.
 
 **Tool call** (prompt = Block A + Block B + Block C):
 

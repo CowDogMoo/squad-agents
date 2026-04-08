@@ -3,12 +3,12 @@ name: rust-tests
 version: 0.2.0
 description: Autonomous Rust test coverage agent that discovers gaps, writes tests, and iterates to a target percentage. Always analyzes coverage even if target is met.
 models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
   - model: gpt-4.1-mini
     provider: openai
   - model: gemini-2.5-flash
     provider: google
-  - model: claude-sonnet-4-6
-    provider: anthropic
 disable_task: true
 entrypoint: system.md
 wrapper: agent.md
