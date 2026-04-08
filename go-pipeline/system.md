@@ -139,18 +139,23 @@ From the Glob output, build two lists:
 Run ALL of the following in ONE Bash call:
 
 ```bash
-go build ./... 2>&1; echo "BUILD_EXIT:$?"
-go test ./... 2>&1 | tail -30; echo "TEST_EXIT:$?"
+go build ./... 2>&1 | tail -5; echo "BUILD_EXIT:$?"
+go test ./... 2>&1 | tail -20; echo "TEST_EXIT:$?"
 golangci-lint run --out-format json 2>&1 | head -100; echo "LINT_DONE"
 echo "---REPO_MAP---"
 grep -rn 'func \|type \|const \|var ' --include='*.go' . | grep -v _test.go | grep -v vendor/ | head -80
 ```
 
+Tail all outputs to keep token usage low.
+
 If golangci-lint is not installed, fall back to `go vet ./... 2>&1`.
 Store the lint output as LINT_WARNINGS. Store grep output as REPO_MAP.
 
-Do NOT run separate commands for file counts — use the Glob output from
-iteration 1.
+Do NOT run separate `find`, `wc -l`, or additional lint commands.
+Phase 1 is DONE after this iteration. Proceed immediately to Phase 2.
+
+**HARD RULE: Phase 1 is exactly 2 iterations. After the Glob + Read and
+the Bash call above, move to Phase 2. Do NOT run any more discovery.**
 
 **CRITICAL**: You will pass SOURCE_FILES, LINT_WARNINGS, and REPO_MAP to
 every child agent so they do NOT need to re-discover or re-lint the codebase.

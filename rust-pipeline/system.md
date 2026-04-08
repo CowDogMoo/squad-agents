@@ -127,24 +127,29 @@ and NOT test modules.
 Run ALL of the following in ONE Bash call (ordered for artifact reuse):
 
 ```bash
-cargo build 2>&1; echo "BUILD_EXIT:$?"
-cargo clippy --message-format=json 2>&1 | grep '^{' | head -50; echo "CLIPPY_DONE"
-cargo test 2>&1 | tail -30; echo "TEST_EXIT:$?"
+cargo build 2>&1 | tail -5; echo "BUILD_EXIT:$?"
+cargo clippy --message-format=json 2>&1 | grep '^{' | jq -r 'select(.reason == "compiler-message") | .message.rendered' 2>/dev/null | head -30; echo "CLIPPY_DONE"
+cargo test 2>&1 | tail -20; echo "TEST_EXIT:$?"
 echo "---REPO_MAP---"
 grep -rn 'pub fn\|pub struct\|pub enum\|pub trait\|pub type\|pub mod\|pub const' --include='*.rs' . | grep -v target/ | head -80
 ```
 
+Tail all outputs to keep token usage low. Do NOT pipe full build output.
+
 Store:
 
 - Whether build and test pass — these are the regression baseline.
-- Clippy JSON output as CLIPPY_WARNINGS (to direct the review agent).
+- Clippy output as CLIPPY_WARNINGS (to direct the review agent).
 - Grep output as REPO_MAP.
 
 Do NOT run `cargo fmt --check` or `cargo clippy -- -D warnings` — pre-commit
 hooks already enforce formatting and lint.
 
-Do NOT run separate `find` or `wc -l` commands for file counts — use the
-Glob output from iteration 1.
+Do NOT run separate `find`, `wc -l`, or additional `cargo clippy` commands.
+Phase 1 is DONE after this iteration. Proceed immediately to Phase 2.
+
+**HARD RULE: Phase 1 is exactly 2 iterations. After the Glob + Read and
+the Bash call above, move to Phase 2. Do NOT run any more discovery.**
 
 **CRITICAL**: You will pass SOURCE_FILES, CLIPPY_WARNINGS, and REPO_MAP to
 every child agent so they do NOT need to re-discover or re-lint the codebase.
