@@ -79,29 +79,42 @@ An empty or malformed prompt causes immediate failure. Follow these rules:
 
 # WORKFLOW
 
-## Phase 1: Validate and Discover (1 iteration)
+## Phase 1: Validate and Discover (2 iterations max)
 
-Confirm this is a Python codebase and build the file inventory:
+Confirm this is a Python codebase and build the file inventory. You MUST
+complete Phase 1 in exactly 2 iterations — not 3, not 5, not 12.
+
+**Iteration 1 — parallel discovery:**
+
+Make these tool calls IN PARALLEL (same iteration):
 
 - `Glob **/*.py` -- if zero results, report "No Python files found" and stop.
-- From the Glob output, build two lists:
-  - **SOURCE_FILES**: all `.py` files that are NOT test files (`test_*.py`,
-    `*_test.py`, `conftest.py`) and NOT in excluded directories
-    (`__pycache__/`, `.venv/`, `venv/`, `.tox/`).
-  - **TEST_FILES**: all `test_*.py`, `*_test.py`, and `conftest.py` files.
-- Note the source file count; you will reference it in agent prompts.
-- **Linter output collection:** Run
-  `ruff check --output-format json 2>&1 | head -100` to capture structured
-  lint warnings. If ruff is not installed, fall back to
-  `python -m py_compile` on each source file. Store the output as
-  LINT_WARNINGS. If the linter produces no warnings, note "No lint warnings
-  found."
-- **Repo map generation:** Run
-  `grep -rn 'def \|class \|^[A-Z_].*=' --include='*.py' . | grep -v __pycache__ | grep -v test_ | head -80`
-  to generate a lightweight API map. Store as REPO_MAP.
 
-**CRITICAL**: You will pass the SOURCE_FILES list to every child agent so
-they do NOT need to re-Glob the codebase. This avoids tripling token costs.
+From the Glob output, build two lists:
+
+- **SOURCE_FILES**: all `.py` files that are NOT test files (`test_*.py`,
+  `*_test.py`, `conftest.py`) and NOT in excluded directories
+  (`__pycache__/`, `.venv/`, `venv/`, `.tox/`).
+- **TEST_FILES**: all `test_*.py`, `*_test.py`, and `conftest.py` files.
+
+**Iteration 2 — single Bash call for lint + repo map:**
+
+Run ALL of the following in ONE Bash call:
+
+```bash
+ruff check --output-format json 2>&1 | head -100; echo "LINT_DONE"
+echo "---REPO_MAP---"
+grep -rn 'def \|class \|^[A-Z_].*=' --include='*.py' . | grep -v __pycache__ | grep -v test_ | head -80
+```
+
+If ruff is not installed, fall back to `python -m py_compile` on key files.
+Store the lint output as LINT_WARNINGS. Store grep output as REPO_MAP.
+
+Do NOT run separate commands for file counts — use the Glob output from
+iteration 1.
+
+**CRITICAL**: You will pass SOURCE_FILES, LINT_WARNINGS, and REPO_MAP to
+every child agent so they do NOT need to re-discover or re-lint the codebase.
 
 ## Phase 2: Code Review (1 iteration)
 
@@ -136,6 +149,9 @@ with real values, then concatenate with blank lines between blocks):
 >
 > IMPORTANT: Use the file lists above instead of running Glob **/*.py.
 > Read ONLY files that appear in lint warnings or that you need based on the repo map. Do NOT read every file.
+> Do NOT re-run ruff or any linter — the LINT_WARNINGS above are pre-collected. Use them to direct your work.
+> Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> If the linter has no warnings, limit your reads to the 5-10 most complex files based on the repo map.
 
 **Tool call** (prompt = Block A + Block D + Block B):
 
@@ -173,6 +189,8 @@ Invoke python-tests, passing review context AND file lists. Assemble the prompt:
 > {TEST_FILES, one per line}
 >
 > IMPORTANT: Use the file lists above instead of running Glob **/*.py.
+> Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> Start writing tests by iteration 8 at latest. Read a module, write its tests, move on.
 >
 > Do not re-review code quality. Focus only on test coverage.
 
@@ -213,6 +231,8 @@ Assemble the prompt:
 > {TEST_FILES, one per line}
 >
 > IMPORTANT: Use the file lists above instead of running Glob **/*.py.
+> Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> Start editing by iteration 5. Do NOT read all files before starting — read a batch, add docstrings, move on.
 >
 > Focus on source files. Do not document test files.
 

@@ -146,6 +146,15 @@ These override everything else.
 
 Follow this sequence exactly. Do not skip steps.
 
+## Phase 0: Use Pre-collected Data
+
+**If your prompt includes a "Pre-discovered source files" section:**
+
+- Use the provided file list instead of running Glob.
+- The orchestrator already confirmed tests {PASS/FAIL}. You still need to
+  run coverage measurement (Phase 1 below) but do NOT run a redundant
+  `go test` just to check if tests pass.
+
 ## Phase 1: Measure
 
 1. Run `go test ./... -coverprofile=coverage.out -count=1` via Bash.

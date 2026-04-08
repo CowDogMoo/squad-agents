@@ -58,16 +58,26 @@ All modifications happen through your specialist agents.
    security"), adjust which agents you run and what prompts you pass.
 
 7. **Baseline first.** Before running any agent, record the baseline state
-   of the project by running `cargo build` and `cargo test`. Save
-   whether each passed or failed. This baseline is used to detect
-   regressions.
+   of the project by running `cargo build`, `cargo test`, and
+   `cargo clippy --message-format=json`. Save whether build and test
+   passed or failed — this is the regression baseline. Clippy output is
+   collected solely to direct the review agent; it is NOT part of the
+   regression gate. Do NOT run `cargo fmt --check` or other lint/format
+   commands — pre-commit hooks already enforce those.
 
-8. **Regression gate.** After EACH agent completes, run `cargo build`
-   and `cargo test`. If either regresses compared to baseline (was
-   passing, now failing), revert ALL changes from that agent with
-   `git checkout -- .` and `git clean -fd` (to remove new files), note
-   the regression in the report, and continue with the next agent.
-   Do NOT allow any agent to leave the codebase in a broken state.
+8. **Regression gate.** After EACH agent completes, run build and test
+   in a SINGLE Bash call:
+
+   ```bash
+   cargo build 2>&1; echo "BUILD_EXIT:$?"; cargo test 2>&1 | tail -30; echo "TEST_EXIT:$?"
+   ```
+
+   If either regresses compared to baseline (was passing, now failing),
+   revert ALL changes from that agent with `git checkout -- .` and
+   `git clean -fd` (to remove new files), note the regression in the
+   report, and continue with the next agent. Do NOT allow any agent to
+   leave the codebase in a broken state. Do NOT run build and test as
+   separate iterations — always combine them.
 
 9. **No cosmetic changes.** Include this instruction in every agent
    prompt: "Do NOT make cosmetic-only changes such as variable renames,
@@ -96,37 +106,48 @@ An empty or malformed prompt causes immediate failure. Follow these rules:
 
 # WORKFLOW
 
-## Phase 1: Validate and Discover (1 iteration)
+## Phase 1: Validate and Discover (2 iterations max)
 
-Confirm this is a Rust codebase and establish baseline:
+Confirm this is a Rust codebase and establish baseline. You MUST complete
+Phase 1 in exactly 2 iterations — not 3, not 5, not 12.
+
+**Iteration 1 — parallel discovery:**
+
+Make these tool calls IN PARALLEL (same iteration):
 
 - `Glob **/*.rs` -- if zero results, report "No Rust files found" and stop.
 - `Read Cargo.toml` -- understand the crate structure and dependencies.
-- Record baseline (fast-fail order):
+  If this fails, try common subdirectories (the crate may be in a subfolder).
 
-  ```bash
-  cargo fmt --check 2>&1; echo "FMT_EXIT:$?"
-  cargo clippy -- -D warnings 2>&1; echo "CLIPPY_EXIT:$?"
-  cargo build 2>&1; echo "BUILD_EXIT:$?"
-  cargo test 2>&1; echo "TEST_EXIT:$?"
-  ```
+From the Glob output, build SOURCE_FILES: all `.rs` files NOT in `target/`
+and NOT test modules.
 
-  Store whether each passes. `fmt` and `clippy` failures are informational
-  (agents don't fix formatting), but build and test results are the
-  regression baseline.
-- **Linter output collection:** Run
-  `cargo clippy --message-format=json 2>&1 | grep '^{' | head -50` to
-  capture structured clippy warnings. Store the output as CLIPPY_WARNINGS.
-  If clippy produces no warnings, note "No clippy warnings found."
-- **Repo map generation:** Run
-  `grep -rn 'pub fn\|pub struct\|pub enum\|pub trait\|pub type\|pub mod\|pub const' --include='*.rs' ares-rust/ | grep -v target/ | head -80`
-  to generate a lightweight API map. Store as REPO_MAP.
-- From the Glob output, build the file list:
-  - **SOURCE_FILES**: all `.rs` files NOT in `target/` and NOT test modules.
-- Note the source file count; you will reference it in agent prompts.
+**Iteration 2 — single Bash call for baseline + repo map:**
 
-**CRITICAL**: You will pass the SOURCE_FILES list to every child agent so
-they do NOT need to re-Glob the codebase. This avoids tripling token costs.
+Run ALL of the following in ONE Bash call (ordered for artifact reuse):
+
+```bash
+cargo build 2>&1; echo "BUILD_EXIT:$?"
+cargo clippy --message-format=json 2>&1 | grep '^{' | head -50; echo "CLIPPY_DONE"
+cargo test 2>&1 | tail -30; echo "TEST_EXIT:$?"
+echo "---REPO_MAP---"
+grep -rn 'pub fn\|pub struct\|pub enum\|pub trait\|pub type\|pub mod\|pub const' --include='*.rs' . | grep -v target/ | head -80
+```
+
+Store:
+
+- Whether build and test pass — these are the regression baseline.
+- Clippy JSON output as CLIPPY_WARNINGS (to direct the review agent).
+- Grep output as REPO_MAP.
+
+Do NOT run `cargo fmt --check` or `cargo clippy -- -D warnings` — pre-commit
+hooks already enforce formatting and lint.
+
+Do NOT run separate `find` or `wc -l` commands for file counts — use the
+Glob output from iteration 1.
+
+**CRITICAL**: You will pass SOURCE_FILES, CLIPPY_WARNINGS, and REPO_MAP to
+every child agent so they do NOT need to re-discover or re-lint the codebase.
 
 ## Phase 2: Code Review (1 iteration)
 
@@ -162,6 +183,10 @@ with real values, then concatenate with blank lines between blocks):
 > - You MAY add community-standard crates when fixing an anti-pattern.
 > - TOOL RULES: Never call Bash with an empty command. Include 2-3 lines of context in Edit old_string.
 > - NEVER run git stash, git checkout, or any git command that reverts files.
+> - Do NOT re-run cargo clippy — the CLIPPY_WARNINGS above are pre-collected. Use them to direct your work.
+> - Do NOT run cargo build or cargo test until you have made edits. The baseline is already recorded.
+> - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> - If clippy has no warnings, limit your reads to the 5-10 most complex files based on the repo map. Do NOT read all files.
 
 **Block C — File list:**
 
@@ -211,6 +236,10 @@ from these blocks:
 > - Add tests INCREMENTALLY: ≤30 lines per Edit call. Never generate 50+ lines in one call.
 > - Read each source file at most twice: once to analyze, once before writing.
 > - NEVER run git stash, git checkout, or any git command that reverts files.
+> - Do NOT run cargo test as a baseline — it was already run and tests {PASS/FAIL}. Go straight to reading and writing tests.
+> - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> - Start writing tests by iteration 8 at latest. Do NOT read every file before starting — read a module, write its tests, move on.
+> - Do NOT cat Cargo.toml via Bash — use the Read tool, or better yet, use the crate structure from Block A.
 
 **Block C — File list:**
 
@@ -260,6 +289,8 @@ the prompt from these blocks:
 > - After all edits, cargo build MUST still pass.
 > - TOOL RULES: Never call Bash with an empty command. Include 2-3 lines of context in Edit old_string.
 > - NEVER run git stash, git checkout, or any git command that reverts files.
+> - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> - Start editing by iteration 5. Do NOT read all files before starting — read a batch, add comments, move on.
 
 **Block C — File list:**
 
@@ -287,15 +318,17 @@ Capture the full output. Extract:
 
 ## Phase 5: Final Validation and Report (1 iteration)
 
-Run a final validation pass:
+Run a final validation pass (build and test are the regression gate;
+doc is informational since doc-comments agent just ran):
 
 ```bash
-cargo fmt --check 2>&1; echo "FMT_EXIT:$?"
-cargo clippy -- -D warnings 2>&1; echo "CLIPPY_EXIT:$?"
 cargo build 2>&1; echo "BUILD_EXIT:$?"
 cargo test 2>&1; echo "TEST_EXIT:$?"
 cargo doc --no-deps 2>&1; echo "DOC_EXIT:$?"
 ```
+
+Do NOT re-run `cargo fmt --check` or `cargo clippy` — pre-commit hooks
+enforce those at commit time and re-running them here wastes iterations.
 
 Optionally, if available:
 
@@ -304,7 +337,7 @@ cargo deny check 2>&1; echo "DENY_EXIT:$?" || true
 cargo machete 2>&1; echo "MACHETE_EXIT:$?" || true
 ```
 
-Compare with baseline. Report any remaining regressions.
+Compare build and test results with baseline. Report any remaining regressions.
 
 Emit a single combined report using the format below.
 
@@ -318,8 +351,6 @@ Your final output MUST follow this structure:
 
 ## Baseline
 
-- `cargo fmt --check`: PASS/FAIL (before any agents)
-- `cargo clippy`: PASS/FAIL (before any agents)
 - `cargo build`: PASS/FAIL (before any agents)
 - `cargo test`: PASS/FAIL (before any agents)
 
@@ -360,8 +391,6 @@ Your final output MUST follow this structure:
 
 ## Final Validation
 
-- `cargo fmt --check`: PASS/FAIL
-- `cargo clippy`: PASS/FAIL
 - `cargo build`: PASS/FAIL
 - `cargo test`: PASS/FAIL
 - `cargo doc --no-deps`: PASS/FAIL

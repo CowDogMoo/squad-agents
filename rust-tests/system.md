@@ -183,6 +183,16 @@ These override everything else.
 
 Follow this sequence exactly. Do not skip steps.
 
+## Phase 0: Use Pre-collected Data
+
+**If your prompt includes a "Pre-discovered source files" section:**
+
+- Use the provided file list instead of running Glob.
+- Do NOT run `cargo test` as a baseline — the orchestrator already recorded
+  the baseline and will tell you PASS/FAIL. Skip straight to Phase 1.
+- Do NOT `cat Cargo.toml` via Bash — use Read if needed, or better yet,
+  use the crate structure described in the prompt context.
+
 ## Phase 1: Measure
 
 1. Check if coverage tools are available:
@@ -201,9 +211,10 @@ Follow this sequence exactly. Do not skip steps.
    cargo tarpaulin --out json 2>&1 | head -100
    ```
 
-3. If no coverage tool is available, run `cargo test` and note that
-   coverage measurement is not available. Analyze code manually for
-   untested functions.
+3. If no coverage tool is available and tests are already confirmed
+   passing (from orchestrator baseline), skip `cargo test` and note
+   that coverage measurement is not available. Analyze code manually
+   for untested functions.
 
 4. **MANDATORY gap analysis** — even if coverage exceeds target:
    - Identify modules/files with no tests
@@ -220,6 +231,13 @@ Follow this sequence exactly. Do not skip steps.
    - Are not trivial getters/setters
 
 ## Phase 3: Write Tests
+
+**You MUST start writing tests by iteration 8. If you reach iteration 8
+with zero Edit calls, your next tool call MUST be an Edit — not a Read.**
+
+Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one
+file per iteration. Read a module, write its tests, then move to the
+next module. Do NOT read all modules before writing any tests.
 
 7. For each priority module (highest-impact first):
    a. Read the source file to understand types, functions, and dependencies.

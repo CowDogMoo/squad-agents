@@ -73,12 +73,19 @@ All modifications happen through your specialist agents.
    whether each passed or failed. This baseline is used to detect
    regressions.
 
-10. **Regression gate.** After EACH agent completes, run `go build ./...`
-    and `go test ./...`. If either regresses compared to baseline (was
-    passing, now failing), revert ALL changes from that agent with
-    `git checkout -- .` and `git clean -fd` (to remove new files), note
-    the regression in the report, and continue with the next agent.
-    Do NOT allow any agent to leave the codebase in a broken state.
+10. **Regression gate.** After EACH agent completes, run build and test
+    in a SINGLE Bash call:
+
+    ```bash
+    go build ./... 2>&1; echo "BUILD_EXIT:$?"; go test ./... 2>&1 | tail -30; echo "TEST_EXIT:$?"
+    ```
+
+    If either regresses compared to baseline (was passing, now failing),
+    revert ALL changes from that agent with `git checkout -- .` and
+    `git clean -fd` (to remove new files), note the regression in the
+    report, and continue with the next agent. Do NOT allow any agent to
+    leave the codebase in a broken state. Do NOT run build and test as
+    separate iterations — always combine them.
 
 11. **No cosmetic changes.** Include this instruction in every agent
     prompt: "Do NOT make cosmetic-only changes such as variable renames,
@@ -108,37 +115,45 @@ An empty or malformed prompt causes immediate failure. Follow these rules:
 
 # WORKFLOW
 
-## Phase 1: Validate and Discover (1 iteration)
+## Phase 1: Validate and Discover (2 iterations max)
 
-Confirm this is a Go codebase and establish baseline:
+Confirm this is a Go codebase and establish baseline. You MUST complete
+Phase 1 in exactly 2 iterations — not 3, not 5, not 12.
+
+**Iteration 1 — parallel discovery:**
+
+Make these tool calls IN PARALLEL (same iteration):
 
 - `Glob **/*.go` -- if zero results, report "No Go files found" and stop.
 - `Read go.mod` -- check for `github.com/spf13/cobra` to determine whether
   to run go-cobra.
-- Record baseline:
 
-  ```bash
-  go build ./... 2>&1; echo "EXIT:$?"
-  go test ./... 2>&1; echo "EXIT:$?"
-  ```
+From the Glob output, build two lists:
 
-  Store whether build and tests pass. This is your regression baseline.
-- **Linter output collection:** Run
-  `golangci-lint run --out-format json 2>&1 | head -100` to capture
-  structured lint warnings. If golangci-lint is not installed, fall back to
-  `go vet ./... 2>&1`. Store the output as LINT_WARNINGS. If the linter
-  produces no warnings, note "No lint warnings found."
-- **Repo map generation:** Run
-  `grep -rn 'func \|type \|const \|var ' --include='*.go' . | grep -v _test.go | grep -v vendor/ | head -80`
-  to generate a lightweight API map. Store as REPO_MAP.
-- From the Glob output, build two lists:
-  - **SOURCE_FILES**: all `.go` files that are NOT test files (`*_test.go`)
-    and NOT in excluded directories (`vendor/`, `.git/`).
-  - **TEST_FILES**: all `*_test.go` files.
-- Note the source file count; you will reference it in agent prompts.
+- **SOURCE_FILES**: all `.go` files that are NOT test files (`*_test.go`)
+  and NOT in excluded directories (`vendor/`, `.git/`).
+- **TEST_FILES**: all `*_test.go` files.
 
-**CRITICAL**: You will pass the SOURCE_FILES list to every child agent so
-they do NOT need to re-Glob the codebase. This avoids tripling token costs.
+**Iteration 2 — single Bash call for baseline + lint + repo map:**
+
+Run ALL of the following in ONE Bash call:
+
+```bash
+go build ./... 2>&1; echo "BUILD_EXIT:$?"
+go test ./... 2>&1 | tail -30; echo "TEST_EXIT:$?"
+golangci-lint run --out-format json 2>&1 | head -100; echo "LINT_DONE"
+echo "---REPO_MAP---"
+grep -rn 'func \|type \|const \|var ' --include='*.go' . | grep -v _test.go | grep -v vendor/ | head -80
+```
+
+If golangci-lint is not installed, fall back to `go vet ./... 2>&1`.
+Store the lint output as LINT_WARNINGS. Store grep output as REPO_MAP.
+
+Do NOT run separate commands for file counts — use the Glob output from
+iteration 1.
+
+**CRITICAL**: You will pass SOURCE_FILES, LINT_WARNINGS, and REPO_MAP to
+every child agent so they do NOT need to re-discover or re-lint the codebase.
 
 ## Phase 2: Cobra Review -- CONDITIONAL (1 iteration)
 
@@ -173,6 +188,10 @@ with real values, then concatenate with blank lines between blocks):
 > - Do NOT remove or simplify custom Args validators — they often handle edge cases.
 > - Every edit must fix a real functional or best-practice violation.
 > - After all edits, go build ./... and go test ./... MUST still pass.
+> - Do NOT re-run golangci-lint or go vet — the LINT_WARNINGS above are pre-collected. Use them to direct your work.
+> - Do NOT run go build or go test until you have made edits. The baseline is already recorded.
+> - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> - If the linter has no warnings, limit your reads to the 5-10 most complex files based on the repo map. Do NOT read all files.
 
 **Block C — File lists:**
 
@@ -193,11 +212,10 @@ with real values, then concatenate with blank lines between blocks):
 {"agent": "go-cobra", "prompt": "<assembled prompt>"}
 ```
 
-After the agent completes, run the regression gate:
+After the agent completes, run the regression gate in a SINGLE Bash call:
 
 ```bash
-go build ./... 2>&1; echo "EXIT:$?"
-go test ./... 2>&1; echo "EXIT:$?"
+go build ./... 2>&1; echo "BUILD_EXIT:$?"; go test ./... 2>&1 | tail -30; echo "TEST_EXIT:$?"
 ```
 
 If build or tests regress (were passing, now failing), revert with
@@ -241,6 +259,10 @@ Invoke go-review, passing prior context AND file lists. Assemble the prompt:
 > - Do NOT change observable behavior unless existing tests still pass.
 > - Every edit must fix a real functional issue.
 > - After all edits, go build ./... and go test ./... MUST still pass.
+> - Do NOT re-run golangci-lint or go vet — the LINT_WARNINGS above are pre-collected. Use them to direct your work.
+> - Do NOT run go build or go test until you have made edits. The baseline is already recorded.
+> - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> - If the linter has no warnings, limit your reads to the 5-10 most complex files based on the repo map. Do NOT read all files.
 
 **Block C — File lists:**
 
@@ -294,6 +316,9 @@ Invoke go-tests, passing prior context AND file lists. Assemble the prompt:
 > - Do NOT write tests that depend on unexported internals unless in the same package.
 > - Read existing \*\_test.go files in the same package BEFORE writing new tests.
 > - After all edits, go build ./... and go test ./... MUST pass with zero failures.
+> - Do NOT run go test as a baseline — it was already run and tests {PASS/FAIL}. Go straight to reading and writing tests.
+> - Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one file per iteration.
+> - Start writing tests by iteration 8 at latest. Do NOT read every file before starting — read a module, write its tests, move on.
 
 **Block C — File lists:**
 

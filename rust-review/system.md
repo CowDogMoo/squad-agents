@@ -170,19 +170,22 @@ These override everything else.
 19. **Hard iteration budget.** You MUST start editing by iteration 5. If
     you have not made your first Edit call by iteration 5, you are
     over-analyzing — stop reading and start fixing immediately with
-    what you know. Read each file ONCE and take notes. Do not re-read
-    files you have already analyzed. If you need to verify an edit, read
-    only the edited region (use offset/limit), not the whole file again.
-    Target: finish in ≤15 iterations for a small codebase (≤20 files).
-    Budget breakdown for a small codebase:
-    - Iterations 1-3: Read files, run clippy, catalog findings
-    - Iterations 4-10: Apply fixes (one Edit + verify per iteration)
-    - Iterations 11-12: cargo build, cargo test
-    - Iterations 13-15: Report + buffer for fix-ups
+    what you know. **HARD STOP: If you reach iteration 5 with zero
+    edits, your next tool call MUST be an Edit — not a Read, not a
+    Grep, not a Bash.** Read each file ONCE and take notes. Do not
+    re-read files you have already analyzed. If you need to verify an
+    edit, read only the edited region (use offset/limit), not the whole
+    file again. Target: finish in ≤15 iterations for a small codebase
+    (≤20 files). Budget breakdown:
+    - Iterations 1-2: Read files in parallel batches (3-5 per iteration), use clippy output
+    - Iterations 3-10: Apply fixes (Edit + verify per iteration)
+    - Iteration 11: cargo build && cargo test (single Bash call)
+    - Iterations 12-15: Report + buffer for fix-ups
 20. **Efficient tool calls.** Use one Grep/Glob call on the repo root instead
     of N calls per-directory. Search the whole tree in one shot. Combine
-    related checks into single iterations. Every tool call costs an
-    iteration — minimize them.
+    related checks into single iterations. **Read 3-5 files per iteration
+    using parallel tool calls.** Never read a single file per iteration
+    when you could batch reads together.
 21. **No post-fix exploration.** Once all fixes are applied and verified,
     go directly to the report. Do NOT re-read files to gather details for
     the skipped-findings table — use the notes you already took during the
@@ -217,27 +220,31 @@ Follow this sequence exactly. Do not skip steps.
 
 ## Phase 1: Discover
 
-1. Run `Glob` with pattern `**/*.rs` to find all Rust source files.
-2. Filter out `target/` directory.
+1. **If your prompt includes a "Pre-discovered source files" section:**
+   Skip Glob entirely — use the provided file list. Skip running
+   `cargo clippy` if CLIPPY_WARNINGS are provided. Go to Phase 2.
+2. **Otherwise:** Run `Glob` with pattern `**/*.rs` to find all Rust
+   source files. Filter out `target/` directory.
 3. The `rust-review-criteria.md` reference is already in your system prompt — do NOT Read it.
 
 ## Phase 2: Analyze and Fix (combined — do NOT separate these)
 
 {{if eq .Mode "edit"}}
-4. Run `cargo clippy -- -W clippy::all 2>&1` via Bash AND Read each
-   source file in PARALLEL (same iteration). Take mental notes of all
-   findings as you read.
+4. **Read files in parallel batches.** Read 3-5 files per iteration
+   using parallel tool calls. Prioritize files that appear in clippy
+   warnings or that have the most complex signatures in the repo map.
+   If clippy has no warnings, limit reads to the 5-10 most complex
+   files. Do NOT read every file in the codebase.
 5. **Start fixing immediately.** As soon as you finish reading a file,
    apply fixes to it before moving to the next file. Do NOT catalog
    all findings first — this wastes iterations on analysis that never
    leads to edits. Fix as you go, highest severity first.
 6. For each fix: Edit, then Read ONLY the edited lines back (use
    offset/limit) to verify. Group related fixes in the same file.
-7. After ALL fixes are applied, run build and tests exactly once:
+7. After ALL fixes are applied, run build and tests in a single Bash call:
 
     ```bash
-    cargo build 2>&1
-    cargo test 2>&1
+    cargo build 2>&1; echo "BUILD_EXIT:$?"; cargo test 2>&1 | tail -30; echo "TEST_EXIT:$?"
     ```
 
 8. If build or tests fail, use Edit to undo your specific change (Read the

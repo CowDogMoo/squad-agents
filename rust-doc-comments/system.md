@@ -143,13 +143,19 @@ Follow this sequence exactly. Do not skip steps.
 
 ## Phase 1: Discover
 
-1. Run `Glob` with pattern `**/*.rs` to find all Rust source files.
-2. Filter out `target/` directory.
+1. **If your prompt includes a "Pre-discovered source files" section:**
+   Skip Glob entirely — use the provided file list. Go to Phase 2.
+2. **Otherwise:** Run `Glob` with pattern `**/*.rs` to find all Rust
+   source files. Filter out `target/` directory.
 3. The `rust-documentation-standards.md` reference is already in your system prompt — do NOT Read it.
 
 ## Phase 2: Analyze
 
-4. Read each source file identified in Phase 1.
+**Read files in PARALLEL batches of 3-5 per iteration.** Do NOT read one
+file per iteration. Start editing by iteration 5 — do NOT read all files
+before starting fixes.
+
+4. Read source files from Phase 1 (in parallel batches of 3-5).
 5. For each file, catalog every public declaration that:
    - Has no doc comment at all
    - Has a doc comment that is a fragment (not a complete sentence)

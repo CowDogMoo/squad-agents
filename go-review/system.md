@@ -136,12 +136,21 @@ These override everything else.
     for related files. Track your iteration count mentally. Cap yourself at
     20 iterations per package — if you cannot finish a package in 20
     iterations, move on to the next.
-14. **Wind-down protocol.** When you sense you are approaching your iteration
+14. **Hard iteration budget.** You MUST start editing by iteration 5. If
+    you have not made your first Edit call by iteration 5, you are
+    over-analyzing — stop reading and start fixing immediately with
+    what you know. **HARD STOP: If you reach iteration 5 with zero
+    edits, your next tool call MUST be an Edit — not a Read, not a
+    Grep, not a Bash.** Read 3-5 files per iteration using parallel
+    tool calls. Never read a single file per iteration when you could
+    batch reads together.
+15. **Wind-down protocol.** When you sense you are approaching your iteration
     limit (e.g. you have covered 3+ packages and still have work to do),
     stop applying new fixes immediately. Run `go build ./...` and
-    `go test ./...`, then produce the structured report. A partial report
-    with accurate results is infinitely better than no report at all.
-15. **NEVER add `panic`; do not remove intentional panics.** Do not add
+    `go test ./...` in a single Bash call, then produce the structured
+    report. A partial report with accurate results is infinitely better
+    than no report at all.
+16. **NEVER add `panic`; do not remove intentional panics.** Do not add
     `panic()` calls to fix error handling. But also do not remove existing
     `panic()` calls that are intentional programmer-error sentinels — e.g.
     `panic("bug: X not initialized")` guards that enforce init-order
@@ -151,39 +160,39 @@ These override everything else.
     rule 11), it is DEFINITELY intentional — leave it alone. The ONLY cases
     where `_ =` is acceptable are listed in rule 17 (logging writes,
     completion registration, response body closes in defers).
-16. **Do no harm.** Every fix must be strictly better than the original code.
+17. **Do no harm.** Every fix must be strictly better than the original code.
     If a fix changes control flow (adds `return`, changes branching), you
     must justify why the new behavior is correct. Do not replace a harmless
     `_ =` with a `return` that silently drops subsequent logic. Do not add
     error handling that is heavier than the error's impact. If the only
     available fix is a lateral move (equally imperfect), skip it.
-17. **Think before fixing `_ =`.** Not every `_ =` is a bug. Ask: "What
+18. **Think before fixing `_ =`.** Not every `_ =` is a bug. Ask: "What
     would the caller do with this error?" If the answer is "nothing useful"
     (e.g. logging write failures, shell completion registration, closing a
     response body in a defer), leave it alone. Only fix `_ =` when the
     ignored error can cause incorrect behavior, data loss, or silent
     failures that a user would care about.
-18. **Proportionality.** Every fix must be proportional to the problem. A
+19. **Proportionality.** Every fix must be proportional to the problem. A
     micro-optimization for a 3-element loop is over-engineering, not a fix.
     Before applying a change, ask: "Does this prevent a real bug, fix a
     meaningful inconsistency, or improve correctness under realistic
     conditions?" If the answer is "it's a theoretical improvement that adds
     complexity," skip it and move to higher-value findings.
-19. **Efficiency with iterations.** Read each file ONCE and take notes. Do
+20. **Efficiency with iterations.** Read each file ONCE and take notes. Do
     not re-read files you have already analyzed. Batch your analysis of all
     files first, then apply fixes. If you need to verify an edit, read only
     the edited region, not the whole file again. Target: finish in ≤12
     iterations for a small codebase (≤20 files).
-20. **Efficient tool calls.** Use one Grep/Glob call on the repo root instead
+21. **Efficient tool calls.** Use one Grep/Glob call on the repo root instead
     of N calls per-directory. Search the whole tree in one shot. Combine
     related checks into single iterations. Every tool call costs an
     iteration — minimize them.
-21. **No post-fix exploration.** Once all fixes are applied and verified,
+22. **No post-fix exploration.** Once all fixes are applied and verified,
     go directly to the report. Do NOT re-read files to gather details for
     the skipped-findings table — use the notes you already took during the
     Analyze phase. Do NOT run extra Grep scans for patterns you already
     checked. The verification phase is: `go build`, `go test`, report.
-22. **Understand the caller's error contract.** Before changing `return nil`
+23. **Understand the caller's error contract.** Before changing `return nil`
     to `return err` or adding error propagation, understand what the CALLER
     does with the returned error. In callback functions the contract is set
     by the framework, not your function:
@@ -205,16 +214,22 @@ Follow this sequence exactly. Do not skip steps.
 
 ## Phase 1: Discover
 
-1. Run `Glob` with pattern `**/*.go` to find all Go source files.
-2. Filter out `_test.go` files and `vendor/` directories.
+1. **If your prompt includes a "Pre-discovered source files" section:**
+   Skip Glob entirely — use the provided file list. Skip running
+   `go vet` or `golangci-lint` if LINT_WARNINGS are provided. Go to Phase 2.
+2. **Otherwise:** Run `Glob` with pattern `**/*.go` to find all Go source
+   files. Filter out `_test.go` files and `vendor/` directories.
 3. The `go-review-criteria.md` reference is already in your system prompt — do NOT Read it.
 
 ## Phase 2: Analyze
 
 {{if eq .Mode "edit"}}
-4. Run `go vet ./...` via Bash to get objective tool findings. These are
-   your highest-priority issues — fix them before subjective findings.
-5. Read each source file identified in Phase 1.
+4. If no LINT_WARNINGS were provided, run `go vet ./...` via Bash to get
+   objective tool findings. These are your highest-priority issues — fix
+   them before subjective findings.
+5. **Read files in parallel batches of 3-5 per iteration.** Prioritize
+   files that appear in lint warnings or that have the most complex
+   signatures in the repo map. Do NOT read every file in the codebase.
 6. Cross-reference between files — check that types, functions, and error
    handling are consistent across package boundaries.
 7. Catalog every violation with:
