@@ -2,6 +2,7 @@
 name: rust-review
 version: 0.1.0
 description: Autonomous Rust code review agent that discovers code quality issues, fixes best-practice violations, and verifies the result compiles.
+disable_task: true
 entrypoint: system.md
 wrapper: agent.md
 references:

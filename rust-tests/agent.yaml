@@ -2,6 +2,7 @@
 name: rust-tests
 version: 0.1.0
 description: Autonomous Rust test coverage agent that discovers gaps, writes tests, and iterates to a target percentage. Always analyzes coverage even if target is met.
+disable_task: true
 entrypoint: system.md
 wrapper: agent.md
 references:

@@ -90,6 +90,15 @@ Confirm this is a Python codebase and build the file inventory:
     (`__pycache__/`, `.venv/`, `venv/`, `.tox/`).
   - **TEST_FILES**: all `test_*.py`, `*_test.py`, and `conftest.py` files.
 - Note the source file count; you will reference it in agent prompts.
+- **Linter output collection:** Run
+  `ruff check --output-format json 2>&1 | head -100` to capture structured
+  lint warnings. If ruff is not installed, fall back to
+  `python -m py_compile` on each source file. Store the output as
+  LINT_WARNINGS. If the linter produces no warnings, note "No lint warnings
+  found."
+- **Repo map generation:** Run
+  `grep -rn 'def \|class \|^[A-Z_].*=' --include='*.py' . | grep -v __pycache__ | grep -v test_ | head -80`
+  to generate a lightweight API map. Store as REPO_MAP.
 
 **CRITICAL**: You will pass the SOURCE_FILES list to every child agent so
 they do NOT need to re-Glob the codebase. This avoids tripling token costs.
@@ -105,6 +114,16 @@ with real values, then concatenate with blank lines between blocks):
 >
 > Context: This is a Python codebase with {N} source files.
 
+**Block D — Linter output and repo map:**
+
+> \## Lint Warnings
+>
+> {LINT_WARNINGS, or "No lint warnings found."}
+>
+> \## Repo Map (public API signatures)
+>
+> {REPO_MAP}
+
 **Block B — File lists:**
 
 > \## Pre-discovered source files (DO NOT re-Glob)
@@ -116,8 +135,9 @@ with real values, then concatenate with blank lines between blocks):
 > {TEST_FILES, one per line}
 >
 > IMPORTANT: Use the file lists above instead of running Glob **/*.py.
+> Read ONLY files that appear in lint warnings or that you need based on the repo map. Do NOT read every file.
 
-**Tool call** (prompt = Block A + Block B):
+**Tool call** (prompt = Block A + Block D + Block B):
 
 ```json
 {"agent": "python-review", "prompt": "<assembled prompt>"}

@@ -123,6 +123,14 @@ Confirm this is a Go codebase and establish baseline:
   ```
 
   Store whether build and tests pass. This is your regression baseline.
+- **Linter output collection:** Run
+  `golangci-lint run --out-format json 2>&1 | head -100` to capture
+  structured lint warnings. If golangci-lint is not installed, fall back to
+  `go vet ./... 2>&1`. Store the output as LINT_WARNINGS. If the linter
+  produces no warnings, note "No lint warnings found."
+- **Repo map generation:** Run
+  `grep -rn 'func \|type \|const \|var ' --include='*.go' . | grep -v _test.go | grep -v vendor/ | head -80`
+  to generate a lightweight API map. Store as REPO_MAP.
 - From the Glob output, build two lists:
   - **SOURCE_FILES**: all `.go` files that are NOT test files (`*_test.go`)
     and NOT in excluded directories (`vendor/`, `.git/`).
@@ -146,6 +154,16 @@ with real values, then concatenate with blank lines between blocks):
 > Context: This is a Go CLI project using Cobra with {N} source files.
 > Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
 
+**Block D — Linter output and repo map:**
+
+> \## Lint Warnings
+>
+> {LINT_WARNINGS, or "No lint warnings found."}
+>
+> \## Repo Map (public API signatures)
+>
+> {REPO_MAP}
+
 **Block B — Constraints (include verbatim):**
 
 > HARD CONSTRAINTS (override agent defaults):
@@ -167,8 +185,9 @@ with real values, then concatenate with blank lines between blocks):
 > {TEST_FILES, one per line}
 >
 > IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+> Read ONLY files that appear in lint warnings or that you need based on the repo map. Do NOT read every file.
 
-**Tool call** (prompt = Block A + Block B + Block C):
+**Tool call** (prompt = Block A + Block D + Block B + Block C):
 
 ```json
 {"agent": "go-cobra", "prompt": "<assembled prompt>"}
@@ -204,6 +223,16 @@ Invoke go-review, passing prior context AND file lists. Assemble the prompt:
 > - Key changes: {summary}
 > Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
 
+**Block D — Linter output and repo map:**
+
+> \## Lint Warnings
+>
+> {LINT_WARNINGS, or "No lint warnings found."}
+>
+> \## Repo Map (public API signatures)
+>
+> {REPO_MAP}
+
 **Block B — Constraints:**
 
 > HARD CONSTRAINTS (override agent defaults):
@@ -224,10 +253,11 @@ Invoke go-review, passing prior context AND file lists. Assemble the prompt:
 > {TEST_FILES, one per line}
 >
 > IMPORTANT: Use the file lists above instead of running Glob **/*.go.
+> Read ONLY files that appear in lint warnings or that you need based on the repo map. Do NOT read every file.
 >
 > Do not re-review Cobra/Viper patterns already fixed. Focus on general Go code quality.
 
-**Tool call** (prompt = Block A + Block B + Block C):
+**Tool call** (prompt = Block A + Block D + Block B + Block C):
 
 ```json
 {"agent": "go-review", "prompt": "<assembled prompt>"}

@@ -7,6 +7,7 @@ wrapper: agent.md
 references:
   - references/llm-tells.md
 task: task.md
+disable_task: true
 budget:
   estimated_iterations: 20
   scale_factor: files

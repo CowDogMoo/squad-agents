@@ -114,6 +114,13 @@ Confirm this is a Rust codebase and establish baseline:
   Store whether each passes. `fmt` and `clippy` failures are informational
   (agents don't fix formatting), but build and test results are the
   regression baseline.
+- **Linter output collection:** Run
+  `cargo clippy --message-format=json 2>&1 | grep '^{' | head -50` to
+  capture structured clippy warnings. Store the output as CLIPPY_WARNINGS.
+  If clippy produces no warnings, note "No clippy warnings found."
+- **Repo map generation:** Run
+  `grep -rn 'pub fn\|pub struct\|pub enum\|pub trait\|pub type\|pub mod\|pub const' --include='*.rs' ares-rust/ | grep -v target/ | head -80`
+  to generate a lightweight API map. Store as REPO_MAP.
 - From the Glob output, build the file list:
   - **SOURCE_FILES**: all `.rs` files NOT in `target/` and NOT test modules.
 - Note the source file count; you will reference it in agent prompts.
@@ -132,6 +139,16 @@ with real values, then concatenate with blank lines between blocks):
 >
 > Context: This is a Rust project with {N} source files.
 > Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
+
+**Block D — Linter output and repo map:**
+
+> \## Clippy Warnings
+>
+> {CLIPPY_WARNINGS, or "No clippy warnings found."}
+>
+> \## Repo Map (public API signatures)
+>
+> {REPO_MAP}
 
 **Block B — Constraints (include verbatim after substituting baseline):**
 
@@ -153,8 +170,9 @@ with real values, then concatenate with blank lines between blocks):
 > {SOURCE_FILES, one per line, capped at 80}
 >
 > IMPORTANT: Use the file list above instead of running Glob **/*.rs.
+> Read ONLY files that appear in clippy warnings or that you need based on the repo map. Do NOT read every file.
 
-**Tool call** (prompt = Block A + Block B + Block C):
+**Tool call** (prompt = Block A + Block D + Block B + Block C):
 
 ```json
 {"agent": "rust-review", "prompt": "<assembled prompt>"}

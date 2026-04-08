@@ -8,3 +8,4 @@ references:
   - references/ansible-standards.md
   - references/ansible-review-criteria.md
 task: task.md
+disable_task: true

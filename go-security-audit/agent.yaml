@@ -7,3 +7,4 @@ wrapper: agent.md
 references:
   - references/golang-security-guide.md
 task: task.md
+disable_task: true

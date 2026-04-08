@@ -2,6 +2,7 @@
 name: go-doc-comments
 version: 0.2.0
 description: Autonomous Go documentation agent that discovers exported declarations, adds or improves doc comments following the Go Doc Comments spec, and verifies compilation.
+disable_task: true
 entrypoint: system.md
 wrapper: agent.md
 references:

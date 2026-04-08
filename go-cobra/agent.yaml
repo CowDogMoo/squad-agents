@@ -2,6 +2,7 @@
 name: go-cobra
 version: 0.2.0
 description: Autonomous Cobra/Viper agent that discovers CLI code, fixes best-practice violations, and verifies the result compiles.
+disable_task: true
 entrypoint: system.md
 wrapper: agent.md
 references:

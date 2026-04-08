@@ -8,3 +8,4 @@ references:
   - references/taskfile-best-practices.md
   - references/go-taskfile-standards.md
 task: task.md
+disable_task: true
