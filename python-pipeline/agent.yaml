@@ -1,6 +1,6 @@
 ---
 name: python-pipeline
-version: 0.1.0
+version: 0.2.0
 description: Orchestrator agent that runs python-review, python-tests, and python-doc-comments sequentially with context passing to avoid redundant work.
 entrypoint: system.md
 wrapper: agent.md
@@ -9,6 +9,9 @@ budget:
   max_tokens: 16384
   estimated_iterations: 10
   children:
-    - python-review
-    - python-tests
-    - python-doc-comments
+    - name: python-review
+      max_cost: 5.00
+    - name: python-tests
+      max_cost: 8.00
+    - name: python-doc-comments
+      max_cost: 3.00

@@ -2,6 +2,8 @@
 name: ansible-molecule
 version: 0.1.0
 description: Autonomous Molecule testing agent that discovers quality issues in Ansible role/playbook tests, improves converge/verify playbooks, and ensures multi-platform coverage.
+model: claude-sonnet-4-6
+provider: anthropic
 entrypoint: system.md
 wrapper: agent.md
 references:

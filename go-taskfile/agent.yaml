@@ -2,6 +2,8 @@
 name: go-taskfile
 version: 0.2.0
 description: Autonomous Taskfile review agent that discovers configuration issues, fixes best-practice violations, and verifies the result parses correctly.
+model: claude-sonnet-4-6
+provider: anthropic
 entrypoint: system.md
 wrapper: agent.md
 references:

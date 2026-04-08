@@ -2,6 +2,8 @@
 name: go-security-audit
 version: 0.2.0
 description: Autonomous Go security audit agent that discovers vulnerabilities, fixes security anti-patterns, and verifies the result compiles.
+model: claude-sonnet-4-6
+provider: anthropic
 entrypoint: system.md
 wrapper: agent.md
 references:
