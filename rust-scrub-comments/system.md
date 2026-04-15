@@ -120,7 +120,10 @@ Filler that sounds informative but carries zero information:
 Err(e) => return Err(e),
 ```
 
-Also includes **inline comments that narrate the next line of code**:
+Also includes **inline comments that narrate the next line of code**. Apply the
+**verb phrase test**: if the comment is `// Verb the noun` and the next line
+does exactly that, it's narration — DELETE IT. This applies even in multi-step
+functions. "Aiding scanning" is NOT a valid reason to keep narration.
 
 ```rust
 // Generate investigation ID
@@ -137,9 +140,73 @@ let env_vars = collect_env();
 
 // Requeue the task
 queue.push(task).await?;
+
+// Skip terminated instances
+// (the next line filters terminated — obvious)
+
+// Build the collection tarball
+// (the next line calls build_tarball — obvious)
+
+// Discover providers
+// (the next line calls discover_providers — obvious)
+
+// Capture stdout
+// (the next line creates a pipe — obvious)
+
+// Save JSON report
+// (the next line writes JSON — obvious)
+
+// Parse each host
+// (the next line iterates hosts — obvious)
+
+// Sort names for stable output
+// (the next line calls .sort() — obvious)
+
+// Ensure log directory
+// (the next line calls fs::create_dir_all — obvious)
+
+// Clean up tarball
+// (the next line calls fs::remove_file — obvious)
+
+// Skip if file already exists
+// (the next line checks existence — obvious)
 ```
 
-These add nothing — the code says the same thing. Delete them.
+**ALL of these are narration.** Delete every one. The function name, variable
+name, or called method already says what the code does. Comments that just
+restate "what" in English are noise, regardless of whether the function is
+short or long, simple or complex.
+
+## Category 4: Non-Idiomatic Rust
+
+Comments that violate Rust conventions:
+
+```rust
+// Doc comment on a private function (use /// only for pub items)
+/// Processes the internal buffer.
+fn process_buffer(&mut self) {
+
+// Using // where /// is needed
+// Returns the length of the buffer.
+pub fn len(&self) -> usize {
+
+// Describing implementation instead of behavior
+/// Iterates over the internal HashMap and collects matching entries
+/// into a Vec using filter_map with a closure that checks the predicate.
+pub fn find_matching(&self, pred: impl Fn(&Entry) -> bool) -> Vec<&Entry> {
+
+// Fragment instead of sentence
+/// the configuration
+pub struct Config {
+
+// Doc comment not starting with item name (third person)
+/// This is a parser for the custom format.
+pub struct CustomParser {
+
+// Using //// (four slashes) — this is a regular comment, NOT a doc comment
+//// Returns the count.
+pub fn count(&self) -> usize {
+```
 
 ## Category 5: Visual Noise
 
@@ -166,7 +233,8 @@ function ordering provide it. Visual dividers are noise in a language with
 modules and `impl` blocks.
 
 Also includes **numbered step labels** and **phase labels** where the code is
-self-explanatory:
+self-explanatory. These are a strong LLM structural tell — human developers use
+function decomposition, not numbered roadmaps through a function body.
 
 ```rust
 // Step 1: Connect to Redis
@@ -175,40 +243,53 @@ let conn = redis::connect(&url).await?;
 // Step 2: Load full state
 let state = load_state(&conn).await?;
 
+// Step 3: Validate session
+validate_session(&conn, &state).await?;
+
+// Step 4: Process pending tasks
+process_pending(&conn, &state).await?;
+
+// Step 5: Update metrics
+update_metrics(&state).await?;
+
+// Step 6: Requeue interrupted tasks
+requeue_interrupted(&conn, &state).await?;
+
 // Phase 1: Discovery
 let files = discover_files(&root)?;
 
 // Phase 2: Analysis
 let results = analyze_all(&files).await?;
 
-// Step 6: Requeue interrupted tasks
-requeue_interrupted(&conn, &state).await?;
+// Phase 3: Reporting
+generate_report(&results)?;
+
+// Phase 1 — Enumerate targets
+let targets = enumerate(&config).await?;
+
+// Phase 2 — Scan targets
+let findings = scan_all(&targets).await?;
+
+// Step 1 of 3: Initialize
+let state = init_state(&config)?;
+
+// Step 1/2: Fetch certificate template
+let template = fetch_template(&ca, &name).await?;
 ```
 
-If the function is so long it needs numbered steps or phase labels, it should be
-split into smaller functions. Delete the step and phase labels.
+**ALL of these are deletions.** The variations — `Step N:`, `Phase N:`,
+`Step N/M:`, `Step N of M:`, `Phase N —`, bare `Step N`, and `Steps N-M` —
+are all the same LLM pattern. If a function is so long it needs numbered steps
+or phase labels, it should be split into smaller functions.
 
-## Category 4: Non-Idiomatic Rust
-
-Comments that violate Rust conventions:
+**NOT targets:** Format strings that show step numbers to users are code, not
+comments. Do NOT touch:
 
 ```rust
-// Doc comment on a private function (use /// only for pub items)
-/// Processes the internal buffer.
-fn process_buffer(&mut self) {
-
-// Using // where /// is needed
-// Returns the length of the buffer.
-pub fn len(&self) -> usize {
-
-// Describing implementation instead of behavior
-/// Iterates over the internal HashMap and collects matching entries
-/// into a Vec using filter_map with a closure that checks the predicate.
-pub fn find_matching(&self, pred: impl Fn(&Entry) -> bool) -> Vec<&Entry> {
-
-// Fragment instead of sentence
-/// the configuration
-pub struct Config {
+// These are code — leave them alone:
+println!("Step 1/2: Connecting to target...");
+log::info!("Phase 1: Discovery complete");
+format!("Step {}/{}: {}", current, total, label);
 ```
 
 # WHAT TO KEEP
@@ -217,14 +298,22 @@ Do NOT touch comments that:
 
 - **Explain "why"** — rationale, trade-offs, historical context
 - **Document non-obvious behavior** — edge cases, panics, error conditions
-- **Carry safety information** — `// SAFETY:`, `# Safety` sections
-- **Are convention markers** — `// TODO`, `// FIXME`, `// HACK`, `// XXX`, `// NOTE`
+- **Carry safety information** — `// SAFETY:` comments on unsafe blocks and
+  `# Safety` sections on unsafe functions. These are enforced by clippy lints
+  (`missing_safety_doc`, `undocumented_unsafe_blocks`). Deleting them will
+  cause lint failures. NEVER delete a SAFETY comment.
+- **Are convention markers** — `// TODO`, `// FIXME`, `// HACK`, `// XXX`,
+  `// NOTE`
 - **Document public API contracts** — what a function promises (not how it works)
-- **Contain `# Errors` or `# Panics` sections** with actual error/panic descriptions
-- **Contain code examples** in doc comments
+- **Contain `# Errors` or `# Panics` sections** with actual error/panic
+  descriptions. These are enforced by clippy pedantic lints
+  (`missing_errors_doc`, `missing_panics_doc`).
+- **Contain code examples** in doc comments (including hidden lines with `#`)
+- **Contain intra-doc links** — `[`Name`]`, `[Name](path)` references
 - **Explain complex algorithms** — non-trivial logic that needs prose
 - **Reference external context** — links, RFCs, issue numbers, specs
 - **Are license/copyright headers**
+- **Are `//!` crate/module-level doc comments** — unless pure LLM filler
 
 **Partially obvious comments:** Some comments mix obvious restatement with
 useful information. In these cases, TRIM to keep only the non-obvious part:
@@ -247,6 +336,13 @@ constraint is useful. Trim to keep the constraint.
 
 These override everything else.
 
+0. **DO NOT RATIONALIZE KEEPING NARRATION.** If a comment is a verb phrase
+   that describes what the next line does (`// Marshal to JSON` above
+   `serde_json::to_string()`), it is ALWAYS a deletion. Do NOT invent reasons
+   to keep it ("provides context", "aids scanning", "consistent style",
+   "clarifies purpose"). The verb phrase test is mechanical: does the
+   comment restate the code? If yes, delete. No exceptions.
+
 1. **Discover files yourself.** Use Glob ONCE with `**/*.rs` to find all Rust
    source files. Filter out `target/`, `.git/`, `.claude/`, and vendored
    directories. Do NOT call Glob more than once. Do NOT use Bash `find` or
@@ -268,11 +364,17 @@ These override everything else.
    example is valuable, keep the example and delete only the prose.
 6. **Exempt content.** Never touch:
    - `// SAFETY:`, `// TODO`, `// FIXME`, `// HACK`, `// NOTE`, `// XXX`
-   - `# Safety`, `# Errors`, `# Panics`, `# Examples`, `# Arguments` headers
+   - `# Safety`, `# Errors`, `# Panics`, `# Examples` section headers
      and their content (unless the content itself is useless filler)
+   - `//!` crate/module-level doc comments (flag only if pure LLM filler)
    - License/copyright headers
    - Files in `target/`, `.git/`, `.github/`, `.claude/`
-   - Auto-generated files (protobuf, build.rs output)
+   - Auto-generated files: protobuf/tonic output, build.rs output in
+     `OUT_DIR`, files containing `@generated` in the first 5 lines,
+     files with `// Code generated ... DO NOT EDIT.` or similar headers
+   - Attributes (`#[...]`, `#![...]`) — these are NOT comments. This
+     includes `#[doc(hidden)]`, `#[allow(...)]`, `#[cfg(...)]`,
+     `#[derive(...)]`, `#[clippy::...]`, `#[rustfmt::skip]`
 7. **Rustdoc section headers are convention.** Standard headers like
    `# Safety`, `# Errors`, `# Panics`, `# Examples` are Rust documentation
    convention and are NOT targets. Only the prose under them can be targeted.
@@ -283,7 +385,10 @@ These override everything else.
    - Does the comment explain a non-obvious choice?
    If yes to any, keep it.
 9. **When in doubt, keep it.** Deleting a useful comment is worse than
-   keeping a slightly useless one.
+   keeping a slightly useless one. BUT: narration comments (Category 1/3)
+   are NEVER "in doubt" — they are always deletions. "Aids scanning" and
+   "helps navigate a multi-step process" are NOT valid reasons to keep
+   narration. If the code is readable, the comment is noise.
 10. **Do NOT touch code.** If deleting a comment leaves the code in a
     non-compiling state (e.g., removing a `//!` crate-level doc comment
     that is the only item in a file), do not delete it.
@@ -322,6 +427,12 @@ R1. **Report only.** Do NOT modify any files. List targeted comment blocks
 
 {{include "hard-rules/efficiency.md"}}
 
+**OVERRIDE — Coverage vs Efficiency for scrub-comments agents:**
+The efficiency.md rule "Coverage is mandatory" does NOT apply to this agent.
+Comment scrubbing is a SAMPLING task. If the first 6-8 files are clean and Grep
+found no LLM vocabulary in comments, the codebase is clean. BAIL OUT early.
+Do NOT read every file. Two clean batches (6-8 files) is sufficient evidence.
+
 # WORKFLOW
 
 ## Phase 1: Discover and Triage (1 iteration)
@@ -329,9 +440,10 @@ R1. **Report only.** Do NOT modify any files. List targeted comment blocks
 In ONE iteration, make these calls in parallel:
 
 - `Glob **/*.rs`
-- `Grep` for LLM vocabulary signals: pattern `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate)` across `**/*.rs`
+- `Grep` for LLM vocabulary AND step/phase labels: pattern `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)` across `**/*.rs`
 
-From the Glob results, filter out `target/`, `.git/`, `.claude/`, vendored dirs.
+From the Glob results, filter out `target/`, `.git/`, `.claude/`, vendored dirs,
+and generated files (`@generated` marker, `build.rs` output in `OUT_DIR`).
 Count remaining files. Determine budget tier.
 
 From the Grep results, identify which files contain likely LLM tells. These
@@ -344,25 +456,28 @@ list and your priority list. Move to Phase 2 immediately.
 **CRITICAL: Do NOT use Bash for file discovery.** No `find`, no `grep`, no
 `wc -l`. Use the Glob and Grep tools ONLY, and only in Phase 1.
 
-## Phase 2: Read-then-Edit (one file at a time)
+## Phase 2: Read-then-Edit
 
 {{if eq .Mode "edit"}}
 **YOU MUST MAKE EDIT CALLS. This is a deletion agent. If you finish without
-making Edit calls, you have FAILED your mission.**
+making Edit calls and the codebase had useless comments, you have FAILED.**
 
-**MANDATORY SINGLE-FILE LOOP — every iteration follows this EXACT pattern:**
+**DEFAULT: Read 3-4 files per iteration.** Only drop to single-file reads when
+you are actively making edits in the same response (to prevent context compaction
+from erasing your analysis before you act on it).
 
-1. **Read ONE file** (one Read call)
-2. **In the SAME response**, analyze its comments against all 5 categories
-3. **In the SAME response**, make ALL Edit calls to delete/trim useless comments
-4. Only after editing (or confirming the file is clean), move to the next file
+**The pattern for EACH iteration:**
+
+1. **Read 3-4 files** (parallel Read calls) — or 1 file if you expect edits
+2. **In the SAME response**, analyze comments against all 5 categories
+3. **In the SAME response**, make ALL Edit calls for files that need changes
+4. Move to the next batch
 
 **You MUST include Edit tool calls in the SAME response as your Read call.**
 If your response contains a Read call but zero Edit calls, and the file had
-useless comments, you have made a mistake. Go back and edit before reading
-another file.
+useless comments, you have made a mistake.
 
-**Example — one complete iteration (all tool calls in ONE response):**
+**Example — dirty file (single read + edit in ONE response):**
 
 Tool calls:
 
@@ -372,18 +487,35 @@ Analysis (in your text):
 
 - Line 15: `// Generate investigation ID` above `let id = Uuid::new_v4();` → OBVIOUS, delete
 - Line 42: `// --- Redis connection ---` → VISUAL NOISE, delete
-- Line 78: `// SAFETY: pointer is valid...` → KEEP (safety comment)
 
 Tool calls (SAME response):
 
 - `Edit src/handler.rs` — delete line 15 comment
 - `Edit src/handler.rs` — delete line 42 comment
 
-**DO NOT batch-read multiple files.** Read ONE, edit it, then read the next.
-This prevents context compaction from erasing your analysis before you act on it.
+**Example — clean batch (multiple reads, no edits needed):**
 
-**If you read 3+ files without making a single Edit call, STOP and go back.**
-The whole point of this agent is to DELETE useless comments, not catalog them.
+Tool calls:
+
+- `Read src/handler.rs`
+- `Read src/config.rs`
+- `Read src/store.rs`
+
+Analysis: All 3 files are clean. Move to next batch.
+
+## FILE SELECTION STRATEGY
+
+**Read the LARGEST files first.** Small files (`main.rs`, `lib.rs`, `mod.rs`)
+often have few comments — read them last. Sort the Glob results by what is
+likely to have the most comments:
+
+1. Files from Grep hits (always first)
+2. Files with many lines (more code = more comments)
+3. Files across ALL crates — spread reads evenly
+
+**Do NOT bail out early in edit mode.** Read files until your iteration budget
+runs out. Narration comments don't trigger Grep (no LLM vocabulary), so Grep
+finding nothing does NOT mean the codebase is clean.
 {{end}}
 
 {{if eq .Mode "readonly"}}
@@ -399,7 +531,7 @@ Read priority files (from Grep hits) first, then remaining files.
 For each file, check every comment block against ALL 5 deletion categories:
 
 - States the obvious? Compare to the code it annotates.
-- LLM-generated? Score against 7 tell categories (need 3+ to flag).
+- LLM-generated? Score against 8 tell categories (need 3+ to flag).
 - Adds nothing useful? Is the comment pure filler?
 - Non-idiomatic Rust? Does it violate Rust conventions?
 - Visual noise? Section dividers, decorative separators, step/phase labels?
@@ -430,12 +562,13 @@ Use the full reference in `llm-tells.md`. Quick reference:
 | # | Category | Example Signals in Comments |
 |---|----------|---------------------------|
 | 1 | Vocabulary | "delve," "crucial," "leverage," "enhance," "seamless," "robust" |
-| 2 | Structure | Rule of Three, "not X but Y," even cadence |
+| 2 | Structure | Rule of Three, "not X but Y," even cadence, numbered step/phase labels |
 | 3 | Punctuation | Em dash overuse in comments |
 | 4 | Tone | HR-speak, hedging, overemphasis, emotional flatness |
 | 5 | Transitions | "Moreover," "Furthermore," "Additionally," "Indeed" |
 | 6 | Tech-doc | Restates signature, missing "why," boilerplate |
 | 7 | Model openers | "This function...," "This struct...," "This module provides..." |
+| 8 | Caveats | Cluster scoring (3+ categories), temporal drift, false-positive awareness |
 
 **Rust-specific scoring adjustments:**
 
@@ -644,6 +777,8 @@ End of example.
 ## Summary
 
 [2-3 sentences: files scanned, comment blocks deleted/trimmed, categories breakdown]
+**IMPORTANT**: If zero edits were made, the summary MUST include the phrase
+"No changes needed" or "No changes applied" — this is required for output validation.
 
 ## Comments Deleted
 
@@ -719,10 +854,8 @@ End of example.
 **Lines:** [range]
 **Category:** Obvious / LLM-generated / Useless filler / Non-idiomatic
 **Confidence:** HIGH/MEDIUM
-{{if eq "LLM-generated" ""}}
-**Tell categories:** [list of 3+ categories triggered]
-**Specific triggers:** [words/patterns]
-{{end}}
+**Tell categories:** [list of 3+ categories triggered, if LLM-generated]
+**Specific triggers:** [words/patterns, if LLM-generated]
 
 **Excerpt:**
 

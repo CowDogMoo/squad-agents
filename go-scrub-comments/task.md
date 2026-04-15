@@ -1,75 +1,87 @@
-Scan all Rust source files in this codebase for useless, LLM-generated, and
+Scan all Go source files in this codebase for useless, LLM-generated, and
 non-idiomatic comments and
 {{if eq .Mode "edit"}}delete them{{end}}{{if eq .Mode "readonly"}}report them with confidence scores{{end}}.
 
 In your FIRST iteration, make these parallel calls:
 
-1. `Glob **/*.rs` to discover all Rust source files
-2. `Grep` pattern `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)` across `**/*.rs` to find priority files (LLM vocabulary AND numbered step/phase labels)
+1. `Glob **/*.go` to discover all Go source files
+2. `Grep` pattern `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)` across `**/*.go` to find priority files (LLM vocabulary AND numbered step/phase labels)
 
 Do NOT call Glob or Grep again after iteration 1. Do NOT use Bash for file
 discovery (no find, grep, wc). Start reading files in iteration 2.
 
+FILE FILTERING:
+
+- Skip `vendor/`, `.git/`, `.github/`, `.claude/` directories
+- Skip `_test.go` files — test comments have different conventions
+- Skip files with `// Code generated ... DO NOT EDIT.` header
+- Skip `//go:generate`, `//go:build`, `//go:embed`, `//nolint` directives
+
 THE 5 DELETION CATEGORIES:
 
-1. **States the obvious** — restates the code (e.g., `/// Returns the name` on
-   `fn name()`, `// increment counter` above `counter += 1`). INCLUDES inline
-   comments that narrate the next line: `// Generate ID` above `let id = Uuid::new_v4()`,
-   `// Load state` above `let state = load_state().await?`.
-   **VERB PHRASE TEST**: if comment is `// Verb the noun` and the next line does
-   that, DELETE IT. Examples: `// Skip terminated instances`, `// Build the
-   tarball`, `// Capture stdout`, `// Parse each host`, `// Discover providers`.
-   "Aids scanning" is NOT a reason to keep narration.
+1. **States the obvious** — restates the code. ALWAYS delete these patterns:
+   `// NewFoo creates a new Foo`, `// SetX sets X`, `// GetX returns X`,
+   `// FooManager manages Foo`, `// FooConfig contains config for Foo`.
+   These are NOT "standard Go doc convention" — they are restatements.
+   Also delete inline narration: `// Generate ID` above `id := uuid.New()`,
+   `// Skip terminated instances`, `// Build the tarball`, `// Capture stdout`,
+   `// Marshal to pretty JSON`, `// Ensure output directory exists`,
+   `// Required flags`, `// Optional flags`, `// Register shell completions`,
+   `// Write schema file`. "Aids scanning" is NOT a reason to keep narration.
 2. **LLM-generated** — exhibits 3+ LLM tell categories (e.g., "crucial,"
    "leverage," "Moreover," "This function provides a robust mechanism")
-3. **Adds nothing useful** — filler (e.g., "A struct that holds data,"
-   "Handles the logic," "Performs the necessary processing")
-4. **Non-idiomatic Rust** — doc comments on private items, `//` on pub items
-   instead of `///`, implementation-detail docs on public API
+3. **Adds nothing useful** — filler (e.g., "Config is a struct that holds data,"
+   "handleLogic handles the logic," "Process performs the necessary processing")
+4. **Non-idiomatic Go** — doc comment doesn't start with declared name, blank
+   line between comment and declaration, `returns true if` instead of `reports
+   whether`, implementation-detail docs, doc comments on unexported functions
 5. **Visual noise** — section dividers (`// --- Configuration ---`,
    `// ========================`), decorative separators, numbered step labels
-   (`// Step 1:`, `// Step 2:`, `// Step N/M:`, `// Step N of M:`), and
-   phase labels (`// Phase 1:`, `// Phase 2:`, `// Phase N —`). ALL variants
-   of numbered step/phase labels are deletions — they are a strong LLM
-   structural tell. Do NOT touch format strings that show step numbers to
-   users (those are code, not comments).
+   (`// Step 1:`, `// Step 2:`, `// Step N/M:`, `// Step N of M:`), phase
+   labels (`// Phase 1:`, `// Phase 2:`, `// Phase N —`), and section labels
+   (`// Check directory structure`, `// Validate env.hcl content`,
+   `// Build a set of live instance IDs from AWS.`). ALL variants of numbered
+   step/phase labels are deletions — they are a strong LLM structural tell.
+   Do NOT touch format strings that show step numbers to users (those are
+   code, not comments).
 
 WHAT TO KEEP:
 
 - Comments that explain "why" — rationale, trade-offs, history
 - Non-obvious behavior — edge cases, panics, error conditions
-- Safety information — `// SAFETY:`, `# Safety` sections
+- Concurrency safety notes ("safe for concurrent use")
 - Convention markers — `// TODO`, `// FIXME`, `// HACK`, `// XXX`, `// NOTE`
+- Go directives — `//go:generate`, `//go:build`, `//go:embed`, `//nolint`
 - Public API contracts with real information
-- `# Errors`/`# Panics` sections with actual descriptions
-- Code examples in doc comments
+- Error return documentation
+- Code examples
 - Complex algorithm explanations
 - External references (links, RFCs, issue numbers)
 - License/copyright headers
+- Package comments (unless pure LLM filler)
 
 {{if eq .Mode "edit"}}
 DELETION RULES:
 
 - Delete entire comment blocks that are entirely useless
 - Trim mixed blocks — keep useful parts, delete useless parts
+- Fix blank-line gaps between doc comments and declarations
 - Clean up whitespace (no double blank lines after deletion)
 - Never modify code, only comments
-- Never delete code examples inside doc comments
-- Run `cargo check 2>&1` after all deletions
+- Run `go build ./... 2>&1` after all deletions
 - If in doubt, keep the comment
 {{end}}
 
 ABSOLUTE PROHIBITIONS:
 
 - Do NOT delete comments that explain "why"
-- Do NOT delete safety-related comments (`// SAFETY:`, `# Safety` — clippy-enforced)
-- Do NOT delete convention markers (TODO, FIXME, SAFETY, etc.)
-- Do NOT delete code examples inside doc comments
-- Do NOT modify code, signatures, attributes, or macros
+- Do NOT delete concurrency safety notes
+- Do NOT delete convention markers (TODO, FIXME, etc.)
+- Do NOT delete Go directives (//go:generate, //go:build, //nolint, etc.)
+- Do NOT modify code, signatures, imports, or var/const blocks
 - Do NOT flag LLM-generated comments with fewer than 3 tell categories
-- Do NOT touch files in `target/`, `.git/`, `.github/`, `.claude/`
-- Do NOT touch generated files (`@generated` marker, protobuf/tonic output,
-  `build.rs` output, `// Code generated ... DO NOT EDIT.`)
+- Do NOT touch files in `vendor/`, `.git/`, `.github/`, `.claude/`
+- Do NOT touch `_test.go` files or generated files
 - Do NOT re-read files after editing — trust Edit output
 - Do NOT make additional tool calls after emitting the report
 
@@ -90,14 +102,14 @@ Phase allocation:
   making edits (to prevent context compaction erasing analysis).
   For each iteration: Read file(s) → Analyze → Edit if needed → move on.
   YOU MUST MAKE EDIT CALLS if a file has useless comments.
-  Start with Grep-hit files. Spread across ALL crates.
+  Start with Grep-hit files.
   START READING IN ITERATION 2 — no planning iterations.
 
   NO EARLY BAIL-OUT in edit mode. Narration doesn't trigger Grep — Grep
   finding nothing does NOT mean clean. Read LARGEST files first (not
-  main.rs/lib.rs). Keep reading until budget runs out.
+  main.go/doc.go). Keep reading until budget runs out.
 {{if eq .Mode "edit"}}
-- Phase 3 (1 iter): `cargo check`, then emit report in SAME response, NO more iterations
+- Phase 3 (1 iter): `go build ./...`, then emit report in SAME response, NO more iterations
 {{end}}
 {{if eq .Mode "readonly"}}
 - Phase 3 (1 iter): Emit report in SAME response as final analysis, NO more iterations
@@ -110,9 +122,8 @@ ITERATION BUDGET:
 - Large (50+ files): 18 iterations max (readonly), 25 max (edit)
 
 For large codebases: you CANNOT read every file. Prioritize Grep-hit files,
-entry points (main.rs, lib.rs), and public API modules. Spread reads across
-ALL crates — do NOT get stuck reading only one crate. Document what was
-sampled vs skipped.
+entry points (main.go, package-level files), and exported API files. Document
+what was sampled vs skipped.
 
 CRITICAL ANTI-PATTERN — RE-READING FILES:
 
@@ -136,12 +147,11 @@ FORBIDDEN PATTERNS (these waste iterations):
 - Reading the same file twice — EVER
 - Reading only ONE file per iteration when NOT making edits (batch 3-4)
 - Reading MORE than 5 consecutive clean files without bailing out to Phase 3
-- Getting stuck in one crate instead of spreading across the codebase
 
 AGENT-SPECIFIC REQUIREMENTS:
 
 - Every file scanned OR skipped must appear in the output report
 - Context check before every deletion: does it explain "why"?
 {{if eq .Mode "edit"}}
-- `cargo check` must PASS before report is emitted
+- `go build ./...` must PASS before report is emitted
 {{end}}

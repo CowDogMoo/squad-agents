@@ -14,6 +14,21 @@ guidance.
   Fix compilation errors before moving on.
 - **Follow existing conventions.** Read surrounding code before editing. Match
   the existing style.
+- **Be efficient with iterations.** Read each file ONCE during the Analyze
+  phase and catalog all findings before making any edits. Do not re-read
+  files you have already analyzed. When verifying an edit, read only the
+  changed lines. Read 3-5 files per iteration using parallel tool calls.
+  Never read a single file per iteration when you could batch reads together.
+- **Efficient tool calls.** Use one Grep/Glob on the repo root, not N calls
+  per-directory. Search the whole tree in one shot. Every tool call costs
+  an iteration.
+- **No post-fix exploration.** Once fixes are applied and `go build`/`go test`
+  pass, go STRAIGHT to the report. Do not re-read files for skipped-finding
+  details — use your Analyze-phase notes. Do not run extra Grep scans.
+- **Proportional fixes only.** Every fix must be proportional to the problem.
+  A micro-optimization is over-engineering. Ask: "Does this prevent a real
+  bug or fix a meaningful inconsistency?" If the answer is "theoretical
+  improvement that adds complexity," skip it.
 - **Iterate toward zero violations.** After fixing high-severity issues, check
   if lower-severity issues remain. Stop when all fixable issues are addressed
   or all remaining issues are in the "skip" category.

@@ -10,10 +10,14 @@ budget:
   estimated_iterations: 10
   children:
     - name: go-cobra
-      max_cost: 3.00
+      max_cost: 6.00
+      max_iterations: 25
     - name: go-review
-      max_cost: 5.00
+      max_cost: 10.00
+      max_iterations: 30
     - name: go-tests
-      max_cost: 8.00
+      max_cost: 16.00
+      max_iterations: 40
     - name: go-doc-comments
-      max_cost: 3.00
+      max_cost: 6.00
+      max_iterations: 25
