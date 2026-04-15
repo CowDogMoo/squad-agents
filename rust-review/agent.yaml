@@ -10,6 +10,8 @@ models:
   - model: gpt-4.1-mini
     provider: openai
 disable_task: true
+max_iterations: 20
+edit_deadline: 8
 entrypoint: system.md
 wrapper: agent.md
 references:

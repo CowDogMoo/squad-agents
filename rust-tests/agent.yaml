@@ -10,6 +10,8 @@ models:
   - model: gemini-2.5-flash
     provider: google
 disable_task: true
+max_iterations: 25
+edit_deadline: 10
 entrypoint: system.md
 wrapper: agent.md
 references:

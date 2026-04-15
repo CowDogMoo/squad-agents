@@ -1,17 +1,23 @@
 ---
 name: rust-pipeline
-version: 0.2.0
-description: Orchestrator agent that runs rust-review, rust-tests, and rust-doc-comments sequentially with context passing to avoid redundant work.
+version: 0.3.0
+description: >-
+  Orchestrator agent that uses RepoMap to discover Cargo workspace members,
+  then dispatches rust-review, rust-tests, and rust-doc-comments per-crate
+  in parallel where dependencies allow.
 entrypoint: system.md
 wrapper: agent.md
 task: task.md
 budget:
   max_tokens: 16384
-  estimated_iterations: 10
+  estimated_iterations: 25
   children:
     - name: rust-review
-      max_cost: 5.00
+      max_cost: 10.00
+      max_iterations: 20
     - name: rust-tests
-      max_cost: 8.00
+      max_cost: 10.00
+      max_iterations: 25
     - name: rust-doc-comments
-      max_cost: 3.00
+      max_cost: 5.00
+      max_iterations: 15
