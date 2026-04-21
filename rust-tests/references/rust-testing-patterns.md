@@ -104,13 +104,12 @@ stops remaining cases from running.
 - Tests requiring different setup/teardown per case
 - Tests with complex assertions that vary per case
 
-### When NOT to Use Tables
-
-- Single test case
-- Tests requiring different setup/teardown per case
-- Tests with complex assertions that vary per case
-
 ## Integration Tests
+
+**Use sparingly.** Most tests should be inline `#[cfg(test)]` unit tests.
+Only use `tests/` for true cross-module integration workflows (e.g.,
+testing that parsing + correlation + reporting work together end-to-end).
+Testing a single module's public functions is a unit test — put it inline.
 
 Integration tests live in the `tests/` directory and test the public API:
 
@@ -304,7 +303,7 @@ pub fn setup_test_db() -> TestDb {
 mod common;
 
 #[test]
-fn test_with_db() {
+fn creates_user_in_db() {
     let db = common::setup_test_db();
     // ...
 }
@@ -353,8 +352,6 @@ proptest! {
 **Commit the proptest regressions file.** Proptest records failing seeds
 to a file (typically `proptest-regressions/`). Commit this to source
 control so regressions are caught in CI.
-
-```
 
 ## Coverage
 

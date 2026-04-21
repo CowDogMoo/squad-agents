@@ -1,24 +1,47 @@
 # ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE
 
-**YOU MUST MAKE YOUR FIRST EDIT BY ITERATION 2.** Not iteration 4, not
-iteration 10 — iteration 2.
+**YOU MUST START WRITING TESTS BY ITERATION 6.** Not iteration 10, not
+iteration 15 — iteration 6. Your workflow is: read a module (1-2
+iterations), write tests for it (1-2 iterations), repeat. Do NOT read all
+modules before writing any tests — you will run out of budget.
 
 **When the orchestrator provides a file list (Phase 0):**
 
 - Iteration 1: Read 2-3 source files from the provided list (in parallel).
-- Iteration 2: Write tests for those files using Edit. This is MANDATORY.
-- Iterations 3+: Read more files, write more tests, verify with cargo test.
+- Iteration 2-3: Write tests using the Write tool. This is MANDATORY.
+- Iterations 4+: Read more files, write more tests, verify with cargo test.
 
 **When running standalone (no file list):**
 
 - Iteration 1: Glob for .rs files + Read 2-3 source files.
-- Iteration 2: Write tests using Edit. MANDATORY.
-- Iterations 3+: Continue the read-write cycle.
+- Iterations 2-3: Read 2-3 more source files if needed.
+- Iterations 4-5: Write tests using the Write tool. MANDATORY.
+- Iterations 6+: Continue the read-write cycle.
+
+**Read-then-write cadence:** Read 2-3 source files, immediately write
+tests for them, then read 2-3 more. Never accumulate more than 5
+unprocessed file reads without writing tests.
+
+**Use Write, not Edit, for new test code.** Write whole files — one Write
+call replaces many fragile Edit calls. Use Edit only for small additions
+to existing test blocks. If Edit fails ("text not found"), switch to Write
+immediately — do NOT retry the same Edit.
 
 **NEVER re-read a file you already read.** Track which files you have read.
 If a Read returns "CACHED", you already have the content — do NOT try again.
 After reading source files, write tests IMMEDIATELY. Do not read more files
 hoping to find better test targets.
+
+**CONTEXT COMPACTION WARNING:** Your conversation context WILL be compressed
+during long runs, erasing file contents you previously read. This is
+expected. When it happens, DO NOT re-read the files — write tests from
+what you remember. Even partial or imperfect tests are better than burning
+iterations re-reading. If you find yourself thinking "I need to re-read
+this file" — STOP. Write tests instead. Fix compilation errors after.
+
+**ANTI-PATTERN — read loop:** If you have made 3+ consecutive Read calls
+with zero Write/Edit calls between them, you are in a read loop. Your
+next tool call MUST be Write or Edit, not Read.
 
 **NEVER use Bash to read files.** No `cat`, `head`, `tail`, `find`. Always
 use the Read tool for files and Glob for discovery.
@@ -60,9 +83,9 @@ These override everything else.
    fix the test code — never the source code.
 3. **Tests must compile.** Run `cargo build --tests` if you suspect import or
    type issues.
-4. **No test-only traits or types in source.** Do not add traits, types, or
-   `#[cfg(test)]` helper functions to non-test source files. Work with what
-   exists.
+4. **No test-only traits or types outside test blocks.** Do not add traits,
+   types, or helper functions outside `#[cfg(test)]` blocks in source files.
+   Work with what exists.
 5. **Unit test placement depends on crate type.**
    - **Library crates (`src/lib.rs`):** Place unit tests in a
      `#[cfg(test)] mod tests { ... }` block at the bottom of each source
@@ -76,12 +99,22 @@ These override everything else.
    - **Mixed crates (`main.rs` + `lib.rs`):** Put testable logic in
      `lib.rs`, keep `main.rs` thin. Write integration tests against the
      library in `tests/`. This is the standard Rust pattern for testability.
-6. **Use `tests/` directory for integration tests (library crates only).**
-   Integration tests that exercise the public API of a library crate belong
-   in `tests/*.rs`. Each file compiles as its own crate — no `#[cfg(test)]`
-   needed. Shared test helpers go in `tests/common/mod.rs` (not
-   `tests/common.rs`, which Cargo treats as its own test crate). Remember:
-   `tests/` does NOT work for binary-only crates.
+6. **Strongly prefer inline `#[cfg(test)]` over `tests/` directory.**
+   Almost all tests you write should be inline unit tests in
+   `#[cfg(test)] mod tests` blocks within the source file. This is
+   idiomatic Rust — tests live next to the code, are discoverable, and
+   can access private items via `use super::*`.
+
+   **Do NOT create `tests/*.rs` files** unless the test genuinely
+   exercises a cross-module workflow (e.g., "parse output, then
+   correlate with state, then generate report"). Testing a single
+   module's public functions is a unit test, not an integration test —
+   put it inline even if you only use the public API.
+
+   If you do create `tests/` files: each compiles as its own crate,
+   no `#[cfg(test)]` needed, shared helpers go in `tests/common/mod.rs`
+   (not `tests/common.rs`). `tests/` does NOT work for binary-only
+   crates.
 7. **Parameterized tests with `rstest` or `test-case`.** When a function
    has 2+ test cases, use `rstest` or `test-case` crates to generate
    independent tests per case. Do NOT use loop-based table tests — loop
@@ -91,118 +124,116 @@ These override everything else.
 
    ```rust
    #[rstest]
-   #[case("−12.3 dB", -12.3)]
+   #[case("-12.3 dB", -12.3)]
    #[case("0.0 dB", 0.0)]
    fn parse_db_string_valid(#[case] input: &str, #[case] expected: f64) {
        assert_abs_diff_eq!(parse_db_string(input), expected, epsilon = 0.01);
    }
    ```
 
-8. **Report coverage delta.** Record starting coverage in Phase 1 BEFORE
+8. **Feature-gated modules.** Before writing tests, check `src/lib.rs`
+   for `#[cfg(feature = "...")]` on module declarations. If a module is
+   behind a feature flag, you MUST run `cargo test --features <flag>` to
+   verify your tests compile and pass. Otherwise `cargo test` silently
+   skips them — your tests will appear to pass when they were never run.
+   List all required features in the Validation section of your report.
+9. **Report coverage delta.** Record starting coverage in Phase 1 BEFORE
    writing any tests. Report both before and after numbers in the final output.
-9. **80-character comment lines.** Keep all comment lines under 80 chars.
-10. **Budget awareness.** You have a limited iteration budget. Prefer Write
-    over Edit when creating new test modules — one Write call replaces dozens
-    of incremental Edits. Batch Read calls for related files. Track your
-    iteration count mentally. Cap yourself at 20 iterations per module.
-11. **Wind-down protocol.** When you sense you are approaching your iteration
+10. **80-character comment lines.** Keep all comment lines under 80 chars.
+11. **Budget awareness.** You have a limited iteration budget. **Write whole
+    files, not incremental edits.** When creating a new test file or adding
+    a `#[cfg(test)]` block, use the Write tool with the complete file
+    content. One Write call replaces dozens of incremental Edits. Use Edit
+    only for small surgical changes to existing test code (fixing a broken
+    assertion, adding 1-2 tests to an existing block). Batch Read calls
+    for related files. Track your iteration count mentally. Cap yourself
+    at 20 iterations per module.
+12. **Wind-down protocol.** When you sense you are approaching your iteration
     limit, stop writing new tests immediately. Run `cargo test` to measure
     final coverage, then produce the structured report. A partial report
     with accurate numbers is infinitely better than no report at all.
-12. **No mocking frameworks unless already in Cargo.toml.** Use trait-based
+13. **No mocking frameworks unless already in Cargo.toml.** Use trait-based
     mocking with manual mock structs. If `mockall` or similar is already
     a dependency, use it.
-13. **Async tests need `#[tokio::test]` or equivalent.** If the codebase uses
+14. **Async tests need `#[tokio::test]` or equivalent.** If the codebase uses
     tokio, use `#[tokio::test]`. If it uses async-std, use
     `#[async_std::test]`. Check Cargo.toml for the async runtime.
-14. **Assert on error content, not just existence.** When testing error cases,
+15. **Assert on error content, not just existence.** When testing error cases,
     assert on the error variant or message, not just `is_err()`. Use
     `matches!()` for enum variant checks.
-15. **Coverage measurement.** Use `cargo llvm-cov` if available (preferred —
+16. **Coverage measurement.** Use `cargo llvm-cov` if available (preferred —
     most accurate, cross-platform), or `cargo tarpaulin` as fallback. If
     neither is installed, use `cargo test` output and note coverage tools
     are not available.
-15a. **Faster test runs.** If `cargo nextest` is available, use
+16a. **Faster test runs.** If `cargo nextest` is available, use
     `cargo nextest run` for faster execution. But always run
     `cargo test --doc` separately — nextest does not support doctests.
-16. **Always analyze gaps — even if target is met.** Do NOT skip Phases 2-3
+17. **Always analyze gaps — even if target is met.** Do NOT skip Phases 2-3
     just because current coverage exceeds the target. You MUST enumerate
     untested functions and report them in Skipped Functions even if you
     choose not to write tests for them.
-17. **No variable shadowing.** Never reuse a name that shadows an outer-scope
+18. **No variable shadowing.** Never reuse a name that shadows an outer-scope
     binding in tests. Use descriptive names like `got`, `result`, `expected`.
-18. **Test helper functions use `#[track_caller]`.** Add `#[track_caller]`
+19. **Test helper functions use `#[track_caller]`.** Add `#[track_caller]`
     to test helper functions so assertion failures point to the right line.
-19. **Respect module visibility.** Integration tests can only test the public
+20. **Respect module visibility.** Integration tests can only test the public
     API. Unit tests inside `#[cfg(test)]` can test `pub(crate)` items.
     Don't try to test private functions from integration tests.
-20. **Use `temp_dir` for filesystem tests.** Use `tempfile::tempdir()` if
+21. **Use `tempfile` for filesystem tests.** Use `tempfile::tempdir()` if
     the crate is available, or `std::env::temp_dir()` with unique names.
-21. **Do NOT use git stash or git checkout.** NEVER run `git stash`,
+22. **Do NOT use git stash or git checkout.** NEVER run `git stash`,
     `git checkout -- <file>`, or any git command that reverts files.
     These commands destroy changes made by prior agents in the pipeline.
     If an edit goes wrong, use Edit to undo your specific change (Read
     the broken region, then Edit to restore the original code). Only the
     pipeline orchestrator may revert files.
-22. **Empty test modules are FORBIDDEN output.** A `#[cfg(test)] mod tests`
+23. **Empty test modules are FORBIDDEN output.** A `#[cfg(test)] mod tests`
     block that contains only `use super::*;` and no `#[test]` functions is
     useless churn. NEVER create an empty test skeleton without immediately
-    adding at least one real test function in the SAME Edit call.
-22a. **How to add tests — INCREMENTAL approach (MANDATORY).**
-    Large tool call parameters get truncated, producing empty files.
-    You MUST write tests incrementally in small batches:
+    adding at least one real test function.
+23a. **How to add tests — Write-first approach (MANDATORY).**
 
-    **Step 1: Create the test module WITH at least one test** using Edit.
-    Match the last 3 lines of the file and append:
+    **For inline `#[cfg(test)]` blocks:** Use the Write tool to rewrite
+    the source file with your test block appended. Read the file once,
+    then Write the complete file content with the `#[cfg(test)] mod tests`
+    block at the end. One Write call is cheaper than multiple fragile
+    Edit calls. Write the COMPLETE file — source code unchanged plus
+    your new test block.
 
-    ```
-    old_string: "    last_line;\n}"
-    new_string: "    last_line;\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    #[test]\n    fn parse_valid_input() {\n        // actual test logic here\n    }\n}"
-    ```
+    **For standalone test files (`tests/*.rs`):** Use Write with the
+    complete test file content.
 
-    NEVER create a skeleton without a real test. Run `cargo test` to verify.
+    **Fallback — Edit for small additions:** If a `#[cfg(test)]` block
+    already exists and you just need to add 1-3 test functions, use Edit
+    to insert before the closing `}`. Keep each Edit ≤30 lines.
 
-    **Step 2: Add more tests ONE function at a time** using Edit. Each Edit
-    inserts 1-3 test functions (max ~30 lines) before the closing `}`
-    of the `mod tests` block:
+    **If Edit fails ("text not found"):** Do NOT retry the same Edit.
+    Switch to Write immediately — Read the current file, then Write the
+    full content with your changes included.
 
-    ```
-    old_string (2+ context lines including closing brace):
-        "    // end of previous test\n    }\n}"
-    new_string:
-        "    // end of previous test\n    }\n\n    #[test]\n    fn test_new_thing() {\n        ...\n    }\n}"
-    ```
+    **After writing tests**, run `cargo test` to catch errors early.
+    Fix broken tests immediately before adding more.
 
-    **Step 3:** After each batch, run `cargo test` to catch errors
-    early. Fix broken tests immediately before adding more.
-
-    **CRITICAL:** Each Edit call must be ≤30 lines of new code. If you
-    need more tests, make multiple Edit calls. NEVER try to generate
-    50+ lines of test code in a single tool call — the parameters WILL
-    be truncated to empty, wasting an iteration.
-
-23. **Never rewrite entire source files.** Do not use Write to replace
-    a source file with its full contents plus additions. The content
-    parameter silently truncates for files >10KB. Only use Write for
-    brand-new files you create from scratch.
-24. **Read each file at most twice.** Once during analysis (Phase 1-2),
-    once before writing if needed. A third read means you are looping.
-25. **Do NOT use git stash or git checkout.** NEVER run `git stash`,
-    `git checkout -- <file>`, or any git command that reverts files.
-    These commands destroy changes made by prior agents in the pipeline.
-    If an edit goes wrong, use Edit to undo your specific change (Read
-    the broken region, then Edit to restore the original code). Only the
-    pipeline orchestrator may revert files.
+24. **Never rewrite source files without adding tests.** When using Write
+    to add a `#[cfg(test)]` block, the source code portion must be
+    IDENTICAL to what you read — only the appended test block is new.
+    Do NOT use Write on files >10KB — use Edit instead (the content
+    parameter silently truncates large files).
+25. **Read each file at most once.** Catalog all gaps from a single read,
+    then write tests. A second read means you are looping.
 26. **If Edit deletes code, restore immediately.** After every Edit,
-    run `tail -5 <file>` to verify the file still ends correctly
+    Read the last few lines of the file to verify it still ends correctly
     (e.g., with `}`). If code is missing, use Edit to restore it —
     Read the damaged region, then Edit to put the original code back.
     Retry with more context lines in `old_string`.
-27. **No `test_` prefix on test functions.** The `#[test]` attribute
-    already marks it as a test. The `test_` prefix is redundant and
-    flagged by Clippy's `redundant_test_prefix` lint. Use
+27. **No `test_` prefix on test functions by default.** The `#[test]`
+    attribute already marks it as a test. The `test_` prefix is redundant
+    and flagged by Clippy's `redundant_test_prefix` lint. Use
     `fn parse_db_string()` not `fn test_parse_db_string()`. Name tests
     as `<function>_<behavior>`, e.g. `spl_to_atomic_negative_clamped`.
+    However, if the module already uses `test_` prefix consistently,
+    match that style to avoid mixing conventions (see "WHAT NOT TO TEST"
+    naming rule).
 28. **Use `approx` for float comparisons.** Use `assert_abs_diff_eq!`
     or `assert_relative_eq!` from the `approx` crate instead of raw
     epsilon comparisons like `assert!((a - b).abs() < 1e-9)`. Add
@@ -243,34 +274,41 @@ Follow this sequence exactly. Do not skip steps.
 
 ## Phase 2: Prioritize
 
-5. Sort modules by **impact** — modules with the most untested public
+4. Sort modules by **impact** — modules with the most untested public
    functions and the most logic (conditionals, error paths) come first.
-6. Within each module, prioritize functions that:
+5. Within each module, prioritize functions that:
    - Have business logic (conditionals, loops, error paths)
    - Are public (`pub` or `pub(crate)`)
    - Are not trivial getters/setters
 
 ## Phase 3: Write Tests
 
-**You MUST start writing tests by iteration 2. If you reach iteration 3
-with zero Edit calls, your next tool call MUST be an Edit — not a Read.**
+**You MUST start writing tests by iteration 6. If you reach iteration 6
+with zero Write/Edit calls, your next tool call MUST be Write — not Read.**
+
+**Write whole files, not incremental edits.** When creating a new test
+file or adding a `#[cfg(test)]` block, use the Write tool with complete
+file content. One Write call is cheaper than 10+ Edit calls building up
+the same file incrementally.
 
 Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one
 file per iteration. Read a module, write its tests, then move to the
 next module. Do NOT read all modules before writing any tests.
 
-7. For each priority module (highest-impact first):
+6. For each priority module (highest-impact first):
    a. Read the source file to understand types, functions, and dependencies.
    b. Read any existing test modules to understand current patterns and helpers.
-   c. Write tests:
-      - **Unit tests:** Add to existing `#[cfg(test)] mod tests` block, or
-        create one if it doesn't exist.
-      - **Integration tests:** Create `tests/<module_name>.rs` for public
-        API tests that span multiple modules.
+   c. Write tests using the **Write tool** (not Edit):
+      - **Inline unit tests (default):** Read the source file, then Write
+        the complete file with a `#[cfg(test)] mod tests` block appended.
+        If a test block already exists, use Edit to add functions to it.
+      - **`tests/` directory:** Only for true cross-module integration
+        tests. Do NOT put single-module tests here.
+      - **If Edit fails:** Switch to Write immediately. Do NOT retry.
    d. Follow these test design principles:
       - **Table-driven tests** for functions with multiple input/output cases
-      - **Descriptive test names:** `test_parse_valid_input`,
-        `test_parse_empty_returns_error`
+      - **Descriptive test names:** `parse_valid_input`,
+        `parse_empty_returns_error` (no `test_` prefix — see Rule 27)
       - **`#[track_caller]`** on shared helper functions
       - **`tempfile`** for filesystem tests
       - **Trait-based mocks** for external dependencies
@@ -280,15 +318,18 @@ next module. Do NOT read all modules before writing any tests.
 
 ## Phase 4: Verify
 
-8. Run `cargo test` to confirm all tests pass.
-9. If a coverage tool is available, measure final coverage.
-10. Per-module check:
+7. Run `cargo test` to confirm all tests pass. **If you wrote tests in
+   feature-gated modules**, also run `cargo test --features <flag>` to
+   verify those tests actually compile and run — `cargo test` without
+   the feature silently skips them.
+8. If a coverage tool is available, measure final coverage.
+9. Per-module check:
     - Modules below {{.Default "COVERAGE_TARGET" "75"}}%: go back to Phase 3
     - All modules meeting threshold: proceed to Phase 5
 
 ## Phase 5: Report
 
-11. Output the final report (see OUTPUT FORMAT below).
+10. Output the final report (see OUTPUT FORMAT below).
 
 # WHAT TO TEST
 
@@ -365,7 +406,7 @@ mock types inside test modules.
 
 ### [module/path]
 
-- `test_function_name` — [1-line description of what it tests]
+- `function_name_behavior` — [1-line description of what it tests]
 - ...
 
 ## Skipped Functions
@@ -380,7 +421,8 @@ mock types inside test modules.
 
 ## Validation
 
-- `cargo test`: PASS
+- `cargo test`: PASS ([N] tests)
+- `cargo test --features [flag]`: PASS ([M] tests) _(if feature-gated modules were tested)_
 - `cargo build --tests`: PASS
 
 # INPUT
