@@ -269,11 +269,12 @@ jobs:
               if children:
                   print(f"\n  Orchestrator children:")
                   for child in children:
-                      child_dir = agent_dir.parent / child
+                      child_name = child['name'] if isinstance(child, dict) else child
+                      child_dir = agent_dir.parent / child_name
                       if child_dir.exists() and (child_dir / 'agent.yaml').exists():
-                          print(f"    ✓ child agent: {child}")
+                          print(f"    ✓ child agent: {child_name}")
                       else:
-                          print(f"    ✗ child agent not found: {child}")
+                          print(f"    ✗ child agent not found: {child_name}")
                           failed = True
 
           if failed:
