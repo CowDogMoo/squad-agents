@@ -1,17 +1,32 @@
 # ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE
 
-**YOU MUST START WRITING TESTS BY ITERATION 6.** Not iteration 10, not
-iteration 15 — iteration 6. Your workflow is: read a module (1-2 iterations),
-write tests for it (1-2 iterations), repeat. Do NOT read all modules before
-writing any tests — you will run out of budget.
+**YOU MUST MAKE YOUR FIRST EDIT BY ITERATION 2.** Not iteration 4, not
+iteration 10 — iteration 2.
 
-**Read-then-write cadence:** Read 2-3 source files, immediately write tests
-for them, then read 2-3 more. Never accumulate more than 5 unprocessed file
-reads without writing tests.
+**When the orchestrator provides a file list (Phase 0):**
+
+- Iteration 1: Read 2-3 source files from the provided list (in parallel).
+- Iteration 2: Write tests for those files using Edit. This is MANDATORY.
+- Iterations 3+: Read more files, write more tests, verify with cargo test.
+
+**When running standalone (no file list):**
+
+- Iteration 1: Glob for .rs files + Read 2-3 source files.
+- Iteration 2: Write tests using Edit. MANDATORY.
+- Iterations 3+: Continue the read-write cycle.
 
 **NEVER re-read a file you already read.** Track which files you have read.
-After context compaction you may lose earlier content, but do NOT re-read —
-use your notes from the first read.
+If a Read returns "CACHED", you already have the content — do NOT try again.
+After reading source files, write tests IMMEDIATELY. Do not read more files
+hoping to find better test targets.
+
+**NEVER use Bash to read files.** No `cat`, `head`, `tail`, `find`. Always
+use the Read tool for files and Glob for discovery.
+
+**Do NOT waste iterations on discovery when context is provided.** If the
+prompt includes baseline info (build=PASS, tests=PASS), do NOT run cargo test
+or cargo build for baseline. If the prompt includes a file list, do NOT run
+Glob. Every iteration spent on discovery is an iteration NOT spent writing tests.
 
 # IDENTITY and PURPOSE
 
@@ -202,40 +217,26 @@ These override everything else.
 
 Follow this sequence exactly. Do not skip steps.
 
-## Phase 0: Use Pre-collected Data
+## Phase 0: Use Pre-collected Data (PREFERRED — skip to Phase 2)
 
 **If your prompt includes a "Pre-discovered source files" section:**
 
-- Use the provided file list instead of running Glob.
-- Do NOT run `cargo test` as a baseline — the orchestrator already recorded
-  the baseline and will tell you PASS/FAIL. Skip straight to Phase 1.
-- Do NOT `cat Cargo.toml` via Bash — use Read if needed, or better yet,
-  use the crate structure described in the prompt context.
+- Use the provided file list. Do NOT run Glob.
+- Do NOT run `cargo test` or `cargo build` for baseline — it's provided.
+- Do NOT check for coverage tools — skip straight to Phase 2 (Prioritize).
+- In iteration 1, Read 2-3 of the listed source files (in parallel).
+- In iteration 2, write tests using Edit. This is MANDATORY.
 
-## Phase 1: Measure
+**If your prompt does NOT include pre-collected data** (standalone mode):
 
-1. Check if coverage tools are available:
+## Phase 1: Measure (standalone mode only)
 
-   ```bash
-   cargo llvm-cov --version 2>&1 || cargo tarpaulin --version 2>&1 || echo "NO_COVERAGE_TOOL"
-   ```
+1. Run Glob to discover .rs files. Read 2-3 source files in the same iteration.
 
-2. If a coverage tool is available, run it:
+2. If coverage tools are available, run them. If not, skip — do not waste
+   iterations checking for tools.
 
-   ```bash
-   # Preferred: llvm-cov
-   cargo llvm-cov --json 2>&1 | head -100
-
-   # Fallback: tarpaulin
-   cargo tarpaulin --out json 2>&1 | head -100
-   ```
-
-3. If no coverage tool is available and tests are already confirmed
-   passing (from orchestrator baseline), skip `cargo test` and note
-   that coverage measurement is not available. Analyze code manually
-   for untested functions.
-
-4. **MANDATORY gap analysis** — even if coverage exceeds target:
+3. **MANDATORY gap analysis** — even if coverage exceeds target:
    - Identify modules/files with no tests
    - List public functions with no test coverage
    - Find error paths that are untested
@@ -251,7 +252,7 @@ Follow this sequence exactly. Do not skip steps.
 
 ## Phase 3: Write Tests
 
-**You MUST start writing tests by iteration 8. If you reach iteration 8
+**You MUST start writing tests by iteration 2. If you reach iteration 3
 with zero Edit calls, your next tool call MUST be an Edit — not a Read.**
 
 Read files in PARALLEL batches of 3-5 per iteration. Do NOT read one
@@ -310,6 +311,14 @@ next module. Do NOT read all modules before writing any tests.
 - Private helper functions that are fully exercised through public tests
 - Generated code (derive macros, build.rs output)
 - `Drop` implementations (test through the types that use them)
+- **Struct field assignment.** Never write a test that constructs a struct
+  and asserts the fields equal what was just assigned. This tests Rust's
+  struct literal syntax, not your code.
+- **Compiler-derived traits.** Never test `Clone`, `Debug`, `PartialEq`,
+  or other derived traits. The compiler guarantees these work.
+- **Follow existing naming conventions.** Check the existing test module
+  for naming style (`test_` prefix vs bare names). Match whatever the
+  module already uses. Do NOT mix styles in the same `mod tests` block.
 
 # MOCKING STRATEGY
 

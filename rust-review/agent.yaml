@@ -11,7 +11,7 @@ models:
     provider: openai
 disable_task: true
 max_iterations: 20
-edit_deadline: 8
+edit_deadline: 4
 entrypoint: system.md
 wrapper: agent.md
 references:

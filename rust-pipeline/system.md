@@ -52,7 +52,11 @@ All modifications happen through your specialist agents.
    your context window.
 
 3. **Do not duplicate work.** You orchestrate; you do not review, test, or
-   document. Never use Edit or Write yourself.
+   document. Never use Edit or Write yourself. **CRITICAL: Never dispatch
+   the same agent for the same crate twice.** Before calling Task, verify
+   you haven't already dispatched that agent+crate combination. Track
+   dispatched tasks: {agent}+{crate} → {task_id}. If you already have a
+   bg-ID for "rust-review on ares-tools", do NOT spawn another one.
 
 4. **Fail forward.** If an agent errors out on a crate, capture the error,
    note it in the combined report, and continue with other crates / phases.
@@ -68,6 +72,11 @@ All modifications happen through your specialist agents.
 6. **Respect user overrides.** If the user provides additional instructions
    (e.g., "skip doc comments" or "focus on the parser crate"), adjust which
    agents and crates you run.
+
+6a. **Collect each TaskResult exactly once.** After calling TaskResult for
+    a task ID, record the result. Do NOT call TaskResult for the same ID
+    again — you already have the data. Repeated TaskResult calls waste
+    iterations.
 
 7. **Baseline first.** Before running any agent, record the workspace-level
    baseline by running `cargo build` and `cargo test` from the workspace root.
@@ -138,9 +147,34 @@ cargo test 2>&1 | tail -20; echo "TEST_EXIT:$?"
 Store: baseline build/test status, CLIPPY_WARNINGS (grouped by crate if
 possible).
 
-**Phase 1 is exactly 2 iterations. Proceed to Phase 2.**
+**Phase 1 is exactly 2 iterations. Proceed to Phase 1b.**
 
-## Phase 2: Code Review — per-crate (parallel where possible)
+## Phase 1b: Budget Allocation and Phase Skipping
+
+After baseline, decide which phases to run based on clippy output:
+
+**If clippy found ZERO warnings:**
+
+- **SKIP Phase 2 (review) entirely.** A clean-clippy codebase rarely has
+  fixable issues, and review agents will consume 30-50% of your budget
+  reading files and reporting "no issues found."
+- Go directly to **Phase 3 (tests).**
+- Note "Review: SKIPPED (zero clippy warnings)" in the report.
+
+**If clippy found warnings:**
+
+- Run Phase 2 (review) but limit to crates WITH warnings.
+- Do NOT dispatch review for crates that have zero clippy warnings.
+
+**Budget partitioning:**
+
+- Reserve at least **60% of your budget for Phase 3 (tests).**
+- If review consumes more than 30% of budget, stop dispatching reviews
+  and move to tests immediately.
+- Tests are the highest-value phase — they produce measurable output
+  (new test files, coverage improvements).
+
+## Phase 2: Code Review — per-crate (ONLY if clippy found warnings)
 
 For each tier in CRATE_PLAN (in order, one tier at a time):
 
@@ -165,7 +199,11 @@ and keeps your context window manageable.
 > in a Cargo workspace. Dependencies: {DEPS or "none"}.
 > Baseline: build={PASS/FAIL}, tests={PASS/FAIL}
 >
-> \## Clippy Warnings (for this crate)
+> ## Source files in this crate
+>
+> {LIST EACH .rs FILE from RepoMap output for this crate, one per line.}
+>
+> ## Clippy Warnings (for this crate)
 >
 > {CLIPPY_WARNINGS for this crate, or "No clippy warnings found."}
 >
@@ -175,24 +213,35 @@ and keeps your context window manageable.
 > - Do NOT change observable behavior unless existing tests still pass.
 > - Every edit must fix a real functional or best-practice violation.
 > - After all edits, cargo build and cargo test MUST still pass.
-> - Make your first Edit by iteration 5. Fix as you go. Target ≤15 iterations.
+> - Make your first Edit by iteration 3. Read in iterations 1-2, edit starting iteration 3. Target ≤15 iterations.
 > - You MAY add community-standard crates when fixing an anti-pattern.
 > - TOOL RULES: Never call Bash with an empty command. Include 2-3 lines of context in Edit old_string.
 > - NEVER run git stash, git checkout, or any git command that reverts files.
 > - Do NOT re-run cargo clippy — the CLIPPY_WARNINGS above are pre-collected.
 > - Do NOT run cargo build or cargo test until you have made edits.
-> - Do NOT call Glob or RepoMap — the orchestrator already did discovery for you.
+> - Do NOT call Glob or RepoMap — file list and clippy output are provided above.
 > - Read files in PARALLEL batches of 3-5 per iteration. Do NOT re-read files you already read.
-> - You have AT MOST 20 iterations total. Budget: 4 iterations reading, 10 iterations editing, 2 iterations verifying. That's it.
-> - HARD STOP RULE: If you reach iteration 8 with zero Edit calls, you MUST stop reading and either make edits or emit your report. No exceptions. Reading more files will not help.
-> - If this crate has no issues worth fixing, say so in 2 sentences and stop. Do not fill iterations with reads to justify "thoroughness."
+> - You have AT MOST 20 iterations total. Budget: 2 iterations reading, 12 iterations editing, 2 iterations verifying. That's it.
+> - HARD STOP RULE: If you reach iteration 3 with zero Edit calls, you MUST stop reading and either make edits or emit your report. No exceptions.
+> - If this crate has no issues worth fixing, say so in 2 sentences and stop.
+> - NEVER use Bash (cat/head/tail) to read files — use Read tool only.
 
 After all crates complete review, run the regression gate from workspace root.
 Revert if regressed.
 
-## Phase 3: Test Coverage — per-crate (parallel where possible)
+## Phase 3: Test Coverage — per-crate (THIS IS THE HIGHEST-VALUE PHASE)
 
-Same tier-based dispatch pattern as Phase 2, but with `rust-tests`.
+This phase writes new tests. It produces the most measurable value.
+Dispatch ALL crates in parallel (all tiers at once) since each test agent
+only modifies files within its own crate directory. Unlike review,
+dependency ordering does not matter for tests.
+
+**Dispatch ALL crates in one batch using `Task(background=true)` for each.**
+Then collect all results with `TaskResult` calls. This is much faster
+than tier-by-tier dispatch and uses fewer orchestrator iterations.
+
+Focus on the 3-4 largest crates first if budget is tight. Skip tiny
+crates (< 500 lines) that have little testable logic.
 
 **Prompt blocks for rust-tests (substitute all `{...}`):**
 
@@ -206,18 +255,41 @@ Same tier-based dispatch pattern as Phase 2, but with `rust-tests`.
 >
 > - rust-review on this crate: {ran/skipped/reverted}, changes: {summary}
 >
+> ## Pre-discovered source files
+>
+> {LIST EACH .rs FILE from RepoMap output for this crate, one per line.
+> Example:
+>
+> - src/lib.rs
+> - src/parser.rs
+> - src/types.rs
+> }
+>
+> Since you have the file list above, do NOT run Glob. Do NOT run cargo test
+> for baseline — the orchestrator already recorded it. Do NOT check for
+> coverage tools — skip straight to reading 2-3 source files and writing tests.
+>
+> YOUR FIRST ITERATION must be: Read 2-3 source files from the list above.
+> YOUR SECOND ITERATION must include at least one Edit call that writes a test.
+>
 > HARD CONSTRAINTS (override agent defaults):
 >
-> - Every test you write MUST compile and pass. Run cargo test before finishing.
-> - Read existing test modules BEFORE writing new tests to match patterns and helpers.
+> - YOUR FIRST EDIT MUST HAPPEN BY ITERATION 2. Read source files in iteration 1, write tests in iteration 2. No exceptions.
+> - Every test you write MUST compile and pass. Run cargo test after writing tests.
 > - After all edits, cargo build and cargo test MUST pass with zero failures.
 > - Add tests INCREMENTALLY: ≤30 lines per Edit call.
 > - NEVER create empty test modules. Every `#[cfg(test)] mod tests` block MUST contain at least one real `#[test]` function.
-> - Read each source file at most twice.
+> - Read each source file at most once.
 > - NEVER run git stash, git checkout, or any git command that reverts files.
 > - Read files in PARALLEL batches of 3-5 per iteration.
-> - You have AT MOST 25 iterations. Read ≤5 files, then start writing tests. Do not read all files before starting.
-> - Start writing tests by iteration 8 at latest. If you haven't written a test by iteration 10, STOP and emit your report.
+> - You have AT MOST 25 iterations. Read 2-3 files, then IMMEDIATELY start writing tests.
+> - If you haven't written a test by iteration 3, STOP and emit your report.
+> - NEVER use Bash (cat/head/tail) to read files — use Read tool only.
+> - Read each file ONCE. If Read returns "CACHED", you already have the content — do NOT try again.
+> - Do NOT run Glob — file list is provided above.
+> - Do NOT check for coverage tools or run cargo test for baseline — it's provided above.
+> - Do NOT write useless tests: no struct-field-assignment tests (construct + assert equals input), no derived-trait tests (Clone, Debug, PartialEq).
+> - Match existing test naming style in the module (test_ prefix vs bare). Do NOT mix styles.
 
 After all crates complete testing, run the regression gate.
 
@@ -268,9 +340,9 @@ If RepoMap finds 0 or 1 module, run the pipeline sequentially on the whole
 repo (no crate slicing, no background tasks). This is the same as the
 pre-0.3.0 behavior:
 
-1. rust-review (blocking Task, no working_dir override)
-2. Regression gate
-3. rust-tests (blocking Task)
+1. If clippy has warnings: rust-review (blocking Task). If clean: skip.
+2. Regression gate (if review ran)
+3. rust-tests (blocking Task) — ALWAYS run this
 4. Regression gate
 5. rust-doc-comments (blocking Task)
 6. Regression gate

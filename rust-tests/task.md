@@ -1,12 +1,15 @@
 {{if eq .Mode "edit"}}
 Analyze and improve test coverage for this Rust codebase.
 
-Start by checking for coverage tools (cargo llvm-cov or cargo tarpaulin).
-Measure baseline coverage before writing any tests.
-Discover all .rs files with Glob '**/*.rs', skip target/.
-Read source files and existing test modules.
+If the orchestrator provided a file list and baseline, use them — do NOT
+run Glob, cargo test, or check for coverage tools. Read 2-3 source files
+in iteration 1, then WRITE TESTS in iteration 2. No exceptions.
+
+If running standalone: discover .rs files with Glob, read source files,
+then write tests immediately.
+
 Write tests to close coverage gaps, highest-impact modules first.
-Run 'cargo test' after each batch.
+Run 'cargo test' after each batch of tests.
 
 IMPORTANT CONSTRAINTS (repeat from system prompt):
 

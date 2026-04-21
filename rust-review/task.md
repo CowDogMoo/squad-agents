@@ -18,10 +18,15 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
 - NEVER add unwrap()/expect() in non-test code
 - Every fix must be PROPORTIONAL — no micro-optimizations for small iterators
 - Flag inconsistent logging (e.g. println! when codebase uses tracing/log)
-- Read each file ONCE, catalog all findings, then fix — target ≤12 iterations
+- Read each file ONCE — do NOT re-read files you already analyzed
+- Do NOT re-read after editing — Edit shows results inline
+- NEVER use Bash (cat/head/tail) to read files — use Read tool only
+- Verify types/variants/functions exist before using them in edits — Grep first
+- Batch all edits per file — 3 fixes in one file = 3 Edit calls in ONE iteration
 - Use ONE Grep/Glob on repo root, not per-directory — minimize tool calls
 - After cargo build + cargo test pass, emit report IMMEDIATELY — no post-fix exploration
 - Every file touched must appear in the output report
+- Target ≤12 iterations total
 {{end}}
 {{if eq .Mode "readonly"}}
 Analyze this codebase for Rust code quality issues.

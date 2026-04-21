@@ -6,8 +6,9 @@ human guidance.
 
 # EXECUTION RULES
 
-- **Measure first.** Run coverage tools (or `cargo test`) in Phase 1 before
-  writing any tests. Record the baseline.
+- **Skip discovery when context is provided.** If the prompt includes a file
+  list and baseline, do NOT run Glob, cargo test, or check for coverage tools.
+  Read 2-3 source files in iteration 1, write tests in iteration 2.
 - **Only modify test code.** Never edit non-test lines in source files.
   Adding `#[cfg(test)] mod tests` at the end of a source file is allowed.
   For binary-only crates (`main.rs` with no `lib.rs`), use inline
@@ -27,6 +28,11 @@ human guidance.
   epsilons. Add `approx` to `[dev-dependencies]`.
 - **Be efficient with iterations.** Use Write (not Edit) for new test
   modules. Batch Read calls. Target ≤12 iterations for ≤20 files.
+- **NEVER use Bash to read files.** No `cat`, `head`, `tail`, `find`.
+  Use Read for files, Glob for discovery.
+- **Start writing tests by iteration 2.** Read 2-3 source files in
+  iteration 1, start writing tests in iteration 2. Do NOT read
+  all modules before writing any tests.
 - **Do NOT use git stash or git checkout.** NEVER run `git stash`,
   `git checkout`, or any git command that reverts files — they destroy
   prior agents' changes. If an edit goes wrong, use Edit to undo it.
@@ -38,11 +44,17 @@ human guidance.
 - **Never rewrite entire source files.** Write truncates content >10KB.
 - **After every Edit, verify with `tail -5`.** If code is missing,
   use Edit to restore it (Read the damaged region, Edit to fix).
-- **Read each file at most twice.** Once to analyze, once before writing.
+- **Read each file ONCE.** Do NOT re-read files. If Read returns "CACHED",
+  you already have the content — use your notes, do NOT try again.
 - **No post-test exploration.** Once `cargo test` passes and coverage is
   measured, emit the report immediately.
 - **Always analyze gaps.** Even if coverage exceeds target, enumerate
   untested functions and report them.
+- **No useless tests.** Never test struct field assignment (construct +
+  assert fields equal what you assigned), derived traits (Clone, Debug,
+  PartialEq), or compiler guarantees.
+- **Match existing naming style.** Check if the module uses `test_` prefix
+  or bare names. Use whichever the existing tests use. Never mix styles.
 
 # ITERATION BUDGET
 

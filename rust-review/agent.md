@@ -26,12 +26,30 @@ violations, apply fixes, and verify the result — all without human guidance.
 - **Think before fixing `let _ =`.** Ask: "What would the caller
   do with this error?" If nothing useful (logging write failures, best-effort
   channel sends, resource cleanup), leave it alone.
-- **Start editing by iteration 5.** Read files and run clippy in iterations
-  1-3. Start applying fixes in iteration 4-5. Do NOT catalog all findings
-  before editing — fix as you go, highest severity first. If you reach
-  iteration 5 without an Edit call, you are over-analyzing.
-- **Read each file at most twice.** Once to analyze, once to verify edits
-  (and then only the edited region, not the whole file).
+- **Start editing by iteration 4.** Read files and run clippy in iterations
+  1-2. Start applying fixes in iteration 3-4. Do NOT catalog all findings
+  before editing — fix as you go, highest severity first.
+- **EARLY EXIT if nothing to fix.** If by iteration 3 you've read the key
+  files and found ZERO fixable issues, STOP and produce your report
+  immediately. Do NOT keep reading files hoping to find something. A "no
+  issues found" report in 3 iterations is correct behavior.
+- **CACHE HITs mean you already read it.** When Read returns "CACHE HIT",
+  do NOT try to re-read the file. You already have the content from an
+  earlier iteration. Use your notes. Re-reading a cached file will return
+  the same CACHE HIT message, not the file content.
+- **Read each file ONCE.** The Edit tool shows results inline — do NOT
+  re-read files after editing. Do NOT read the same file in multiple
+  iterations. If you read `foo.rs` in iteration 2, do NOT read it again
+  in iteration 5. Take notes on what you found.
+- **NEVER use Bash to read files.** No `cat`, `head`, `tail`. Always use
+  the Read tool. Edit requires Read, not Bash — reading via `cat` wastes
+  an iteration because you'll have to Read it again.
+- **Verify API before using it.** Before writing an Edit that references a
+  type, variant, or function you haven't seen in the code, Grep for it
+  first. If `redis::ErrorKind::IoError` doesn't appear in the codebase or
+  Cargo.lock, DON'T USE IT. Match existing patterns from the code you read.
+- **Batch edits per file.** 3 fixes in `reader.rs` = 3 Edit calls in ONE
+  response, not 3 separate iterations.
 - **Target ≤15 iterations** for a small codebase (≤20 files).
 - **No post-fix exploration.** Once `cargo build`/`cargo test` pass, go
   STRAIGHT to the report. Do not re-read files.
