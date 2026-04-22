@@ -175,8 +175,11 @@ jobs:
                       if not stage.get('name'):
                           print(f"  ✗ Stage missing name")
                           failed = True
+                      elif stage.get('entrypoint'):
+                          # Inline stage — has its own entrypoint
+                          print(f"  ✓ stage (inline): {stage['name']}")
                       elif not stage.get('agent') and not stage.get('agents'):
-                          print(f"  ✗ Stage '{stage.get('name')}' must specify agent or agents")
+                          print(f"  ✗ Stage '{stage.get('name')}' must specify agent, agents, or inline entrypoint")
                           failed = True
                       else:
                           print(f"  ✓ stage: {stage['name']}")
@@ -266,25 +269,43 @@ jobs:
               is_composed = 'stages' in data and data['stages']
 
               if is_composed:
-                  # Composed agents: validate that all referenced sub-agents exist
-                  print(f"  ℹ Composed agent — checking sub-agent references")
+                  # Composed agents: validate stage references
+                  print(f"  ℹ Composed agent — checking stage references")
                   for stage in data['stages']:
-                      agents = []
-                      if stage.get('agent'):
-                          agents = [stage['agent']]
-                      elif stage.get('agents'):
-                          agents = stage['agents']
-                      for sub_agent in agents:
-                          # Check nested agents/ dir first, then sibling dirs
-                          nested_dir = agent_dir / 'agents' / sub_agent
-                          sibling_dir = agent_dir.parent / sub_agent
-                          if nested_dir.exists() and (nested_dir / 'agent.yaml').exists():
-                              print(f"    ✓ sub-agent (nested): {sub_agent}")
-                          elif sibling_dir.exists() and (sibling_dir / 'agent.yaml').exists():
-                              print(f"    ✓ sub-agent (sibling): {sub_agent}")
-                          else:
-                              print(f"    ✗ sub-agent not found: {sub_agent}")
-                              failed = True
+                      stage_name = stage.get('name', '?')
+
+                      # Inline stages: check prompt files exist
+                      if stage.get('entrypoint'):
+                          for field in ['entrypoint', 'wrapper', 'task']:
+                              val = stage.get(field, '')
+                              if val:
+                                  path = agent_dir / val
+                                  if path.exists():
+                                      print(f"    ✓ {stage_name}/{field}: {val}")
+                                  else:
+                                      print(f"    ✗ {stage_name}/{field} not found: {path}")
+                                      failed = True
+                          for ref in stage.get('references', []):
+                              path = agent_dir / ref
+                              if path.exists():
+                                  print(f"    ✓ {stage_name}/ref: {ref}")
+                              else:
+                                  print(f"    ✗ {stage_name}/ref not found: {path}")
+                                  failed = True
+                      else:
+                          # External agent references
+                          agents = []
+                          if stage.get('agent'):
+                              agents = [stage['agent']]
+                          elif stage.get('agents'):
+                              agents = stage['agents']
+                          for sub_agent in agents:
+                              sibling_dir = agent_dir.parent / sub_agent
+                              if sibling_dir.exists() and (sibling_dir / 'agent.yaml').exists():
+                                  print(f"    ✓ sub-agent: {sub_agent}")
+                              else:
+                                  print(f"    ✗ sub-agent not found: {sub_agent}")
+                                  failed = True
               else:
                   # Leaf agents: validate file references
                   # Check entrypoint file exists
@@ -337,10 +358,140 @@ jobs:
               print(f"\n✓ All agent references are valid")
           EOF
 
+  compliance-check:
+    name: Check Architecture Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Check prompt file line counts
+        run: |
+          failed=0
+          SYSTEM_MAX=300
+          AGENT_MAX=50
+          TASK_MAX=30
+
+          check_limit() {
+            local file="$1" max="$2" kind="$3"
+            if [ ! -f "$file" ]; then return; fi
+            count=$(wc -l < "$file" | tr -d ' ')
+            if [ "$count" -gt "$max" ]; then
+              echo "::error file=${file}::${kind} has ${count} lines (limit ${max})"
+              return 1
+            fi
+            return 0
+          }
+
+          while IFS= read -r agent_yaml; do
+            dir=$(dirname "$agent_yaml")
+
+            if grep -q '^stages:' "$agent_yaml"; then
+              # Composed agent: check stage files
+              for f in "$dir"/*-system.md; do
+                [ -f "$f" ] && check_limit "$f" $SYSTEM_MAX "system prompt" || failed=1
+              done
+              for f in "$dir"/*-agent.md; do
+                [ -f "$f" ] && check_limit "$f" $AGENT_MAX "agent wrapper" || failed=1
+              done
+              for f in "$dir"/*-task.md; do
+                [ -f "$f" ] && check_limit "$f" $TASK_MAX "task file" || failed=1
+              done
+              # Also check stages/ subdirectory layout
+              for f in "$dir"/stages/*/system.md; do
+                [ -f "$f" ] && check_limit "$f" $SYSTEM_MAX "system prompt" || failed=1
+              done
+              for f in "$dir"/stages/*/agent.md; do
+                [ -f "$f" ] && check_limit "$f" $AGENT_MAX "agent wrapper" || failed=1
+              done
+              for f in "$dir"/stages/*/task.md; do
+                [ -f "$f" ] && check_limit "$f" $TASK_MAX "task file" || failed=1
+              done
+
+              # Pipeline agents (stages referencing external agents) have no prompt files
+              if grep -qE '^\s+agent:' "$agent_yaml" && ! grep -qE '^\s+entrypoint:' "$agent_yaml"; then
+                continue
+              fi
+            else
+              # Leaf agent
+              check_limit "$dir/system.md" $SYSTEM_MAX "system prompt" || failed=1
+              check_limit "$dir/agent.md" $AGENT_MAX "agent wrapper" || failed=1
+              check_limit "$dir/task.md" $TASK_MAX "task file" || failed=1
+            fi
+          done < <(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+
+          if [ $failed -eq 1 ]; then
+            echo "::error::One or more prompt files exceed line count limits"
+            exit 1
+          fi
+          echo "✓ All prompt files within line count limits"
+
+      - name: Check required sections
+        run: |
+          failed=0
+
+          check_section() {
+            local file="$1" pattern="$2" label="$3"
+            if ! grep -qiE "$pattern" "$file"; then
+              echo "::error file=${file}::Missing required section: ${label}"
+              return 1
+            fi
+            return 0
+          }
+
+          while IFS= read -r agent_yaml; do
+            dir=$(dirname "$agent_yaml")
+
+            # Skip pipeline agents
+            if grep -q '^stages:' "$agent_yaml"; then
+              if grep -qE '^\s+agent:' "$agent_yaml" && ! grep -qE '^\s+entrypoint:' "$agent_yaml"; then
+                continue
+              fi
+            fi
+
+            # Find all system.md files for this agent
+            system_files=()
+            agent_files=()
+            if grep -q '^stages:' "$agent_yaml"; then
+              for f in "$dir"/*-system.md "$dir"/stages/*/system.md; do
+                [ -f "$f" ] && system_files+=("$f")
+              done
+              for f in "$dir"/*-agent.md "$dir"/stages/*/agent.md; do
+                [ -f "$f" ] && agent_files+=("$f")
+              done
+            else
+              [ -f "$dir/system.md" ] && system_files=("$dir/system.md")
+              [ -f "$dir/agent.md" ] && agent_files=("$dir/agent.md")
+            fi
+
+            for f in "${system_files[@]}"; do
+              check_section "$f" '^#.*(IDENTITY|IDENTITY and PURPOSE)' "IDENTITY" || failed=1
+              check_section "$f" '^#.*HARD RULES' "HARD RULES" || failed=1
+              check_section "$f" '^#.*WORKFLOW' "WORKFLOW" || failed=1
+              check_section "$f" '^#.*INPUT' "INPUT" || failed=1
+              if ! grep -qE '(^#.*OUTPUT FORMAT|include.*output/.*format)' "$f"; then
+                echo "::error file=${f}::Missing required section: OUTPUT FORMAT"
+                failed=1
+              fi
+            done
+
+            for f in "${agent_files[@]}"; do
+              check_section "$f" '^#.*EXECUTION RULES' "EXECUTION RULES" || failed=1
+              check_section "$f" '^#.*OUTPUT COMPLIANCE' "OUTPUT COMPLIANCE" || failed=1
+            done
+          done < <(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+
+          if [ $failed -eq 1 ]; then
+            echo "::error::One or more prompt files are missing required sections"
+            exit 1
+          fi
+          echo "✓ All prompt files have required sections"
+
   summary:
     name: Validation Summary
     runs-on: ubuntu-latest
-    needs: [validate, metadata-check, reference-check]
+    needs: [validate, metadata-check, reference-check, compliance-check]
     if: always()
 
     steps:
@@ -348,13 +499,15 @@ jobs:
         run: |
           if [ "${{ needs.validate.result }}" != "success" ] || \
              [ "${{ needs.metadata-check.result }}" != "success" ] || \
-             [ "${{ needs.reference-check.result }}" != "success" ]; then
+             [ "${{ needs.reference-check.result }}" != "success" ] || \
+             [ "${{ needs.compliance-check.result }}" != "success" ]; then
             echo "::error::Agent validation failed"
             echo ""
             echo "Job Results:"
             echo "  validate: ${{ needs.validate.result }}"
             echo "  metadata-check: ${{ needs.metadata-check.result }}"
             echo "  reference-check: ${{ needs.reference-check.result }}"
+            echo "  compliance-check: ${{ needs.compliance-check.result }}"
             exit 1
           fi
           echo "✓ All agent validations passed"

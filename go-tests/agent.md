@@ -5,65 +5,31 @@ coverage, write tests, and verify they pass — all without human guidance.
 
 # EXECUTION RULES
 
-- **Measure first.** Always run coverage analysis before writing any tests.
-- **Only touch `_test.go` files.** Never edit, write, or delete source files.
-  If you write to a non-test file, the run is invalid.
-- **Verify after every package.** Run `go test -v ./<pkg>/...` after writing
-  tests for a package. Fix failures in the test code before moving on.
-- **Follow existing conventions.** Read any existing `_test.go` files first
-  and match their style (package naming, helper patterns, assertion style).
-- **Strict 1:1 test file naming.** `foo.go` → `foo_test.go`. Never create
-  `_extra_test.go`, `_coverage_test.go`, or any `*_<suffix>_test.go` variant.
-  To separate test types, use build tags, subtests (`t.Run`), or the
-  `_internal_test.go` convention (white-box `package foo`) — not file infixes.
-- **Report coverage delta.** Your output MUST include before/after coverage
-  numbers and a "Files Touched" section listing every test file created or
-  modified. Record the starting total coverage percentage BEFORE writing any
-  tests. Include it in your final report as "Before: X%". This is mandatory —
-  runs that omit the before/after delta are considered failures.
-- **Per-package target: {{.Default "COVERAGE_TARGET" "75"}}%.** The goal is {{.Default "COVERAGE_TARGET" "75"}}% on EACH package, not just
-  overall. Keep writing tests for a package until it reaches {{.Default "COVERAGE_TARGET" "75"}}%.
-  - Exception: `cmd/*` packages (CLI/Cobra) target 50% — CLI code is hard
-    to unit test. Document untestable functions and move on.
-  - A package at 64% is NOT done — keep going until {{.Default "COVERAGE_TARGET" "75"}}% or document why not.
-- **Always analyze gaps.** Run `go test ./... -cover` to see per-package
-  coverage. Identify every package below its target ({{.Default "COVERAGE_TARGET" "75"}}% or 50% for cmd/).
-  A run that stops at 64% without trying to reach {{.Default "COVERAGE_TARGET" "75"}}% is a FAILURE.
+- **Measure first.** Run coverage analysis before writing any tests.
+- **Only touch `_test.go` files.** Never edit source files.
+- **Verify after every package.** Run `go test -v ./<pkg>/...` after writing tests. Fix test code only.
+- **Follow existing conventions.** Read existing `_test.go` files and match their style.
+- **Strict 1:1 naming.** `foo.go` -> `foo_test.go`. Use build tags/subtests for separation, not file infixes.
+- **Report coverage delta.** Record starting coverage BEFORE writing tests. Omitting delta = failure.
+- **Per-package target: {{.Default "COVERAGE_TARGET" "75"}}%.** cmd/* targets 50%. A package at 64% is NOT done.
+- **Always analyze gaps.** Identify every package below target. Stopping at 64% without trying = failure.
 
 # OUTPUT COMPLIANCE
 
-Your response MUST use the structured output format from system.md.
-Do NOT write a freeform summary. The report MUST include ALL of these
-sections in order:
+Your response MUST include ALL sections from system.md in order:
+Coverage Report, Discovered Gaps, Packages Tested, Tests Written,
+Skipped Functions, Files Touched, Validation.
 
-1. `## Coverage Report` — with Target, Before, After, and Delta lines
-2. `## Discovered Gaps` — packages with `[no test files]` and 0% functions
-3. `## Packages Tested` — markdown table with per-package before/after
-4. `## Tests Written` — list of test functions with 1-line descriptions
-5. `## Skipped Functions` — table of functions you chose not to test
-6. `## Files Touched` — every `_test.go` file created or modified
-7. `## Validation` — `go test ./...` and `go build ./...` results
-
-An automated validator checks for "files touched" or "no changes"
-(case-insensitive). Missing both = pipeline failure. Missing the
-"Coverage Report" section with Before/After/Delta = pipeline failure.
-Missing "Discovered Gaps" section = pipeline failure.
+Missing "files touched"/"no changes" = pipeline failure.
+Missing Coverage Report with Before/After/Delta = pipeline failure.
+Missing Discovered Gaps = pipeline failure.
 
 # EFFICIENCY RULES
 
-- **Write whole files, not incremental edits.** When creating a new test file,
-  use the Write tool with the complete file content. One Write call is cheaper
-  than 10+ Edit calls building up the same file incrementally.
-- **Wind down gracefully.** If you are running low on iterations, stop writing
-  tests, measure final coverage, and produce the report. A partial report with
-  accurate before/after numbers is a success. No report is a failure.
-- **Prioritize breadth over depth.** Cover more packages at basic level rather
-  than achieving 100% on a single package. Move to the next package after
-  covering the high-impact exported functions.
-- **One command for coverage.** Use `go tool cover -func=coverage.out | tail -1`
-  for total coverage. Do not attempt to re-derive the percentage with awk or by
-  reading coverage.out raw. If the command works in Phase 1, it works in Phase 4.
-  Do not invent alternative approaches.
+- **Write whole files, not incremental edits.** Use Write for new test files.
+- **Wind down gracefully.** Partial report with accurate numbers = success.
+- **Prioritize breadth over depth.** Cover more packages at basic level first.
+- **One command for coverage.** Use `go tool cover -func=coverage.out | tail -1`.
 
 # INPUT
 

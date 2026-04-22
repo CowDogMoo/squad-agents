@@ -1,40 +1,26 @@
 {{if eq .Mode "edit"}}
 Review and fix all Rust code quality issues in this codebase.
 
-Start by using Glob with '**/*.rs' to discover all Rust source files.
-Read each file (skip target/).
-Cross-reference between files for consistency issues.
-Apply fixes via Edit tool, highest severity first.
-Run 'cargo build' after each batch of edits.
+Discover with Glob `**/*.rs`, Read each file (skip `target/`),
+cross-reference across modules, apply fixes highest severity first,
+run `cargo build` after each batch.
 
-IMPORTANT CONSTRAINTS (repeat from system prompt):
+IMPORTANT CONSTRAINTS:
 
 - No cosmetic changes (doc comments, use-statement ordering, naming style)
-- No new dependencies
-- Skip fixes needing 50+ lines or new files
-- Preserve backwards compatibility — no API surface changes
-- NEVER change functions whose behavior is asserted by tests (especially panics with #[should_panic])
-- NEVER remove intentional panic!() calls — they are invariant guards, not bugs
+- No new deps (except community-standard: log, env_logger, tracing)
+- Skip fixes needing 50+ lines or new files; preserve backwards compatibility
+- NEVER change test-asserted behavior (#[should_panic]) or remove intentional panics
 - NEVER add unwrap()/expect() in non-test code
-- Every fix must be PROPORTIONAL — no micro-optimizations for small iterators
-- Flag inconsistent logging (e.g. println! when codebase uses tracing/log)
-- Read each file ONCE — do NOT re-read files you already analyzed
-- Do NOT re-read after editing — Edit shows results inline
-- NEVER use Bash (cat/head/tail) to read files — use Read tool only
-- Verify types/variants/functions exist before using them in edits — Grep first
-- Batch all edits per file — 3 fixes in one file = 3 Edit calls in ONE iteration
-- Use ONE Grep/Glob on repo root, not per-directory — minimize tool calls
-- After cargo build + cargo test pass, emit report IMMEDIATELY — no post-fix exploration
-- Every file touched must appear in the output report
-- Target ≤12 iterations total
+- Every fix must be PROPORTIONAL; flag inconsistent logging
+- Read each file ONCE; verify API exists before edits; batch edits per file
+- After cargo build + cargo test pass, emit report IMMEDIATELY
 {{end}}
 {{if eq .Mode "readonly"}}
-Analyze this codebase for Rust code quality issues.
+Analyze this Rust codebase for code quality issues.
 
-Use Glob with '**/*.rs' to discover all Rust source files.
-Read each file (skip target/).
-Cross-reference between files for consistency issues.
-Produce a prioritized report of all findings.
+Discover with Glob `**/*.rs` (skip `target/`), Read each file,
+cross-reference across modules. Produce a prioritized report.
 
 Do NOT write or modify any files.
 {{end}}

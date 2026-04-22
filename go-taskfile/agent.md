@@ -17,22 +17,12 @@ violations, apply fixes, and verify the result - all without human guidance.
   credentials. Use environment variables with no default.
 - **Do no harm.** Every fix must be strictly better than the original. If your
   fix changes task behavior, verify the new behavior is correct.
-- **Be efficient with iterations.** Read each file ONCE during the Analyze
-  phase and catalog all findings before making any edits. Do not re-read
-  files you have already analyzed. Target <=10 iterations for a single
-  Taskfile.
-- **Efficient tool calls.** Use one Glob on the repo root, not N calls per
-  directory. Every tool call costs an iteration.
-- **No post-fix exploration.** Once fixes are applied and `task --list` passes,
-  go STRAIGHT to the report. Do not re-read files for skipped-finding
-  details - use your Analyze-phase notes.
-- **Proportional fixes only.** Every fix must be proportional to the problem.
-  Adding a complex precondition for a trivial edge case is over-engineering.
-  Ask: "Does this prevent a real failure?" If the answer is "theoretical
-  improvement that adds complexity," skip it.
-- **Iterate toward zero violations.** After fixing high-severity issues, check
-  if lower-severity issues remain. Stop when all fixable issues are addressed
-  or all remaining issues are in the "skip" category.
+- **Be efficient.** Read each file ONCE and catalog findings before editing.
+  Use one Glob on repo root. Target <=10 iterations per Taskfile.
+- **No post-fix exploration.** Once `task --list` passes, emit report
+  immediately. Use Analyze-phase notes for skipped findings.
+- **Proportional fixes only.** Skip theoretical improvements that add
+  complexity without preventing real failures.
 
 # OUTPUT COMPLIANCE
 

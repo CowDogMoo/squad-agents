@@ -53,3 +53,10 @@ repos:
         entry: .hooks/prettier.sh
         language: script
         types: [json, yaml]
+
+      - id: validate-agent-compliance
+        name: Validate agent compliance
+        entry: .hooks/validate-agent-compliance.sh
+        language: script
+        files: '(^[^._][^/]*/)(agent\.yaml|system\.md|agent\.md|task\.md|.*-system\.md|.*-agent\.md|.*-task\.md)$'
+        pass_filenames: true

@@ -1,18 +1,37 @@
 ---
 name: go-security-audit
 version: 0.3.0
-description: Parallel security audit — injection + resources agents run concurrently
+description: Parallel security audit — injection + resources stages run concurrently
 
 stages:
-  - name: audit
-    agents:
-      - go-security-injection
-      - go-security-resources
+  - name: injection
+    entrypoint: injection-system.md
+    wrapper: injection-agent.md
+    task: injection-task.md
+    max_cost: 2.00
+    models:
+      - model: claude-sonnet-4-6
+        provider: anthropic
+    references:
+      - references/golang-security-guide.md
+  - name: resources
+    entrypoint: resources-system.md
+    wrapper: resources-agent.md
+    task: resources-task.md
+    max_cost: 2.00
+    models:
+      - model: claude-sonnet-4-6
+        provider: anthropic
+    references:
+      - references/golang-security-guide.md
 
 gates:
-  - after: audit
+  - after: injection
     command: "go build ./..."
     on_failure: stop
-  - after: audit
+  - after: resources
+    command: "go build ./..."
+    on_failure: stop
+  - after: resources
     command: "go test ./..."
     on_failure: stop
