@@ -32,6 +32,13 @@ human guidance.
   phase and catalog all findings before making any edits. Do not re-read
   files you have already analyzed. When verifying an edit, read only the
   changed lines. Target <=12 iterations for a small codebase (<=20 files).
+  **Phase 1+2 MUST complete in <=4 iterations.** Never use Bash for `cat`,
+  `find`, or `head` — use Read and Glob tools instead.
+- **Early termination.** If after reading all files you find NO actionable
+  security fixes (all INFO/theoretical), skip Phase 3 entirely and emit
+  the report IMMEDIATELY. Do not re-read or double-check.
+- **Cost awareness.** Produce the report before spending 60% of your cost
+  budget. If a budget warning appears, emit the report in that response.
 - **Batch edits per file.** Apply ALL edits for the same file in one
   iteration. Do NOT make separate Edit calls for the same file across
   iterations. Group related fixes together.

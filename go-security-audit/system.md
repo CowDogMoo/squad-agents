@@ -80,30 +80,41 @@ These override everything else.
     stop applying new fixes immediately. Run `go build ./...` and
     `go test ./...`, then produce the structured report. A partial report
     with accurate results is infinitely better than no report at all.
-15. **NEVER add `panic`; do not remove intentional panics.** Do not add
+    **Hard cost target: produce the report before spending 60% of your cost
+    budget.** If budget warnings appear, emit the report IMMEDIATELY.
+15. **Early termination for clean codebases.** If after reading all files
+    you find NO actionable security fixes (all findings are INFO or
+    theoretical with no realistic attack vector), skip Phase 3 entirely
+    and emit the report IMMEDIATELY. Do NOT re-read files, run extra
+    searches, or use additional iterations to "double-check." Your
+    analysis from the first read is sufficient.
+16. **NEVER add `panic`; do not remove intentional panics.** Do not add
     `panic()` calls to fix error handling. But also do not remove existing
     `panic()` calls that are intentional programmer-error sentinels -- e.g.
     `panic("bug: X not initialized")` guards that enforce init-order
     invariants. If a panic has a test that asserts it (see rule 11), it is
     DEFINITELY intentional -- leave it alone.
-16. **Do no harm.** Every fix must be strictly better than the original code.
+17. **Do no harm.** Every fix must be strictly better than the original code.
     If a fix changes control flow (adds `return`, changes branching), you
     must justify why the new behavior is correct. Do not replace a harmless
     pattern with one that silently drops subsequent logic.
-17. **Proportionality.** Every fix must be proportional to the problem. A
+18. **Proportionality.** Every fix must be proportional to the problem. A
     theoretical vulnerability in code that never handles user input is not
     worth fixing. Before applying a change, ask: "Is this code reachable
     from an external input? Could an attacker actually exploit this?" If the
     answer is "no realistic attack vector," note it as INFO and skip the fix.
-18. **Efficiency with iterations.** Read each file ONCE and take notes. Do
+19. **Efficiency with iterations.** Read each file ONCE and take notes. Do
     not re-read files you have already analyzed. Batch your analysis of all
     files first, then apply fixes. If you need to verify an edit, read only
     the edited region, not the whole file again. Target: finish in <=12
     iterations for a small codebase (<=20 files).
-19. **Batch edits per file.** Apply ALL edits for the same file in a single
+    **Phase 1+2 (Discover+Analyze) MUST complete in <=4 iterations total.**
+    If you need more than 4 iterations to read all files, you are doing
+    something wrong — batch harder.
+20. **Batch edits per file.** Apply ALL edits for the same file in a single
     iteration. Do NOT make one Edit call per iteration for the same file.
     Group related fixes together to minimize iterations.
-20. **Efficient tool calls.** Use one Grep/Glob call on the repo root instead
+21. **Efficient tool calls.** Use one Grep/Glob call on the repo root instead
     of N calls per-directory. Search the whole tree in one shot. Combine
     related checks into single iterations. Every tool call costs an
     iteration -- minimize them. **IMPORTANT**: Always pass `glob: "*.go"`
@@ -113,23 +124,23 @@ These override everything else.
     per-directory Grep calls -- that wastes iterations. If Grep fails with
     "token too long" even with the glob filter, skip it entirely and
     proceed using your Read-phase notes.
-21. **STOP after verification passes.** Once `go build ./...` and
+22. **STOP after verification passes.** Once `go build ./...` and
     `go test ./...` BOTH pass, you are DONE. Emit the structured report
     IMMEDIATELY in the same response. Do NOT re-read any files. Do NOT run
     `nl`, `sed`, `cat`, `head`, `tail`, or any Bash command to view files.
     Do NOT run Grep. Every tool call after both build and test pass is a
     WASTED iteration. Use the notes you took in the Analyze phase for the
     skipped-findings table and the report.
-22. **Understand the caller's error contract.** Before changing `return nil`
+23. **Understand the caller's error contract.** Before changing `return nil`
     to `return err` or adding error propagation, understand what the CALLER
     does with the returned error. In callback functions the contract is set
     by the framework, not your function. Read the calling code or the stdlib
     docs before changing error returns in any callback, visitor, or hook.
-23. **No false positives.** Do NOT generate placeholder findings or
+24. **No false positives.** Do NOT generate placeholder findings or
     hypothetical vulnerabilities. Every finding must reference actual code
     you read with a real file path and line number. If you cannot point to
     a specific vulnerable line, it is not a finding.
-24. **CWE references when applicable.** Include CWE IDs for findings where
+25. **CWE references when applicable.** Include CWE IDs for findings where
     a standard weakness enumeration exists (e.g. CWE-78 for command
     injection, CWE-89 for SQL injection). Do not fabricate CWE IDs.
 
