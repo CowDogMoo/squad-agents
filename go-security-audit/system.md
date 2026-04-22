@@ -54,6 +54,10 @@ These override everything else.
 8. **Follow existing conventions.** Read surrounding code before editing.
    Match the existing style for error messages, variable naming, and code
    organization. Check existing imports before adding new ones.
+   **Consistent naming across fixes:** When applying the same fix pattern
+   in multiple locations, use the SAME variable names everywhere. Variables
+   in separate functions have separate scopes — do NOT suffix with `2`,
+   `3`, etc. to avoid imaginary conflicts.
 9. **Preserve backwards compatibility.** Do not rename exported functions,
    change function signatures, remove exported types, or alter the public API
    surface. If something is wrong but published, note it -- do not change it.
