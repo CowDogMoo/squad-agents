@@ -275,9 +275,13 @@ jobs:
                       elif stage.get('agents'):
                           agents = stage['agents']
                       for sub_agent in agents:
-                          sub_dir = agent_dir.parent / sub_agent
-                          if sub_dir.exists() and (sub_dir / 'agent.yaml').exists():
-                              print(f"    ✓ sub-agent: {sub_agent}")
+                          # Check nested agents/ dir first, then sibling dirs
+                          nested_dir = agent_dir / 'agents' / sub_agent
+                          sibling_dir = agent_dir.parent / sub_agent
+                          if nested_dir.exists() and (nested_dir / 'agent.yaml').exists():
+                              print(f"    ✓ sub-agent (nested): {sub_agent}")
+                          elif sibling_dir.exists() and (sibling_dir / 'agent.yaml').exists():
+                              print(f"    ✓ sub-agent (sibling): {sub_agent}")
                           else:
                               print(f"    ✗ sub-agent not found: {sub_agent}")
                               failed = True
