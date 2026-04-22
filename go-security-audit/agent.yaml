@@ -1,17 +1,18 @@
 ---
 name: go-security-audit
-version: 0.2.0
-description: Autonomous Go security audit agent that discovers vulnerabilities, fixes security anti-patterns, and verifies the result compiles.
-models:
-  - model: claude-sonnet-4-6
-    provider: anthropic
-  - model: o4-mini
-    provider: openai
-  - model: gemini-2.5-pro
-    provider: google
-entrypoint: system.md
-wrapper: agent.md
-references:
-  - references/golang-security-guide.md
-task: task.md
-disable_task: true
+version: 0.3.0
+description: Parallel security audit — injection + resources agents run concurrently
+
+stages:
+  - name: audit
+    agents:
+      - go-security-injection
+      - go-security-resources
+
+gates:
+  - after: audit
+    command: "go build ./..."
+    on_failure: stop
+  - after: audit
+    command: "go test ./..."
+    on_failure: stop

@@ -1,23 +1,25 @@
 ---
 name: rust-pipeline
-version: 0.3.0
-description: >-
-  Orchestrator agent that uses RepoMap to discover Cargo workspace members,
-  then dispatches rust-review, rust-tests, and rust-doc-comments per-crate
-  in parallel where dependencies allow.
-entrypoint: system.md
-wrapper: agent.md
-task: task.md
-budget:
-  max_tokens: 16384
-  estimated_iterations: 25
-  children:
-    - name: rust-review
-      max_cost: 10.00
-      max_iterations: 20
-    - name: rust-tests
-      max_cost: 10.00
-      max_iterations: 25
-    - name: rust-doc-comments
-      max_cost: 5.00
-      max_iterations: 15
+version: 0.4.0
+description: Sequential Rust quality pipeline — review, tests, doc comments.
+
+stages:
+  - name: review
+    agent: rust-review
+  - name: tests
+    agent: rust-tests
+    depends_on: [review]
+  - name: docs
+    agent: rust-doc-comments
+    depends_on: [tests]
+
+gates:
+  - after: review
+    command: "cargo clippy -- -D warnings"
+    on_failure: stop
+  - after: tests
+    command: "cargo test"
+    on_failure: stop
+  - after: docs
+    command: "cargo build"
+    on_failure: stop

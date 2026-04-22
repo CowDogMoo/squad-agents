@@ -73,14 +73,27 @@ jobs:
             agent_name=$(basename "$agent_dir")
             echo "::group::Checking $agent_name"
 
-            for required_file in agent.yaml agent.md system.md task.md; do
-              if [ ! -f "${agent_dir}/${required_file}" ]; then
-                echo "::error file=${agent_yaml}::Missing required file ${required_file} in ${agent_name}"
-                failed=1
-              else
-                echo "  ✓ ${required_file}"
-              fi
-            done
+            # agent.yaml is always required
+            if [ ! -f "${agent_dir}/agent.yaml" ]; then
+              echo "::error file=${agent_yaml}::Missing required file agent.yaml in ${agent_name}"
+              failed=1
+            else
+              echo "  ✓ agent.yaml"
+            fi
+
+            # Check if this is a composed agent (has stages: in agent.yaml)
+            if grep -q '^stages:' "${agent_dir}/agent.yaml"; then
+              echo "  ℹ Composed agent — skipping leaf file checks"
+            else
+              for required_file in agent.md system.md task.md; do
+                if [ ! -f "${agent_dir}/${required_file}" ]; then
+                  echo "::error file=${agent_yaml}::Missing required file ${required_file} in ${agent_name}"
+                  failed=1
+                else
+                  echo "  ✓ ${required_file}"
+                fi
+              done
+            fi
 
             echo "::endgroup::"
           done < <(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
@@ -122,7 +135,10 @@ jobs:
           import sys
           from pathlib import Path
 
-          required_fields = ['name', 'version', 'description', 'entrypoint', 'wrapper', 'task']
+          # Common fields required by all agents
+          common_fields = ['name', 'version', 'description']
+          # Additional fields required only by leaf agents (not composed)
+          leaf_fields = ['entrypoint', 'wrapper', 'task']
           failed = False
 
           agent_files = sorted(
@@ -139,12 +155,39 @@ jobs:
               with open(agent_file) as f:
                   data = yaml.safe_load(f)
 
-              for field in required_fields:
+              is_composed = 'stages' in data and data['stages']
+              agent_type = 'composed' if is_composed else 'leaf'
+              print(f"  ℹ Agent type: {agent_type}")
+
+              for field in common_fields:
                   if field not in data or not data[field]:
                       print(f"  ✗ Missing required field: {field}")
                       failed = True
                   else:
                       print(f"  ✓ {field}: {data[field]}")
+
+              if is_composed:
+                  # Composed agents must have stages, must NOT have entrypoint
+                  if data.get('entrypoint'):
+                      print(f"  ✗ Composed agent must not have entrypoint")
+                      failed = True
+                  for stage in data['stages']:
+                      if not stage.get('name'):
+                          print(f"  ✗ Stage missing name")
+                          failed = True
+                      elif not stage.get('agent') and not stage.get('agents'):
+                          print(f"  ✗ Stage '{stage.get('name')}' must specify agent or agents")
+                          failed = True
+                      else:
+                          print(f"  ✓ stage: {stage['name']}")
+              else:
+                  # Leaf agents require entrypoint, wrapper, task
+                  for field in leaf_fields:
+                      if field not in data or not data[field]:
+                          print(f"  ✗ Missing required field: {field}")
+                          failed = True
+                      else:
+                          print(f"  ✓ {field}: {data[field]}")
 
               # Validate version follows semver pattern
               version = data.get('version', '')
@@ -220,62 +263,68 @@ jobs:
               with open(agent_file) as f:
                   data = yaml.safe_load(f)
 
-              # Check entrypoint file exists
-              entrypoint = data.get('entrypoint', '')
-              if entrypoint:
-                  path = agent_dir / entrypoint
-                  if path.exists():
-                      print(f"  ✓ entrypoint: {entrypoint}")
-                  else:
-                      print(f"  ✗ entrypoint not found: {path}")
-                      failed = True
+              is_composed = 'stages' in data and data['stages']
 
-              # Check wrapper file exists
-              wrapper = data.get('wrapper', '')
-              if wrapper:
-                  path = agent_dir / wrapper
-                  if path.exists():
-                      print(f"  ✓ wrapper: {wrapper}")
-                  else:
-                      print(f"  ✗ wrapper not found: {path}")
-                      failed = True
-
-              # Check task file exists
-              task = data.get('task', '')
-              if task:
-                  path = agent_dir / task
-                  if path.exists():
-                      print(f"  ✓ task: {task}")
-                  else:
-                      print(f"  ✗ task not found: {path}")
-                      failed = True
-
-              # Check all reference files exist
-              references = data.get('references', [])
-              if references:
-                  for ref in references:
-                      path = agent_dir / ref
-                      if path.exists():
-                          print(f"  ✓ reference: {ref}")
-                      else:
-                          print(f"  ✗ reference not found: {path}")
-                          failed = True
+              if is_composed:
+                  # Composed agents: validate that all referenced sub-agents exist
+                  print(f"  ℹ Composed agent — checking sub-agent references")
+                  for stage in data['stages']:
+                      agents = []
+                      if stage.get('agent'):
+                          agents = [stage['agent']]
+                      elif stage.get('agents'):
+                          agents = stage['agents']
+                      for sub_agent in agents:
+                          sub_dir = agent_dir.parent / sub_agent
+                          if sub_dir.exists() and (sub_dir / 'agent.yaml').exists():
+                              print(f"    ✓ sub-agent: {sub_agent}")
+                          else:
+                              print(f"    ✗ sub-agent not found: {sub_agent}")
+                              failed = True
               else:
-                  print(f"  ⚠ No references defined")
-
-              # Check for orchestrator children
-              budget = data.get('budget', {})
-              children = budget.get('children', [])
-              if children:
-                  print(f"\n  Orchestrator children:")
-                  for child in children:
-                      child_name = child['name'] if isinstance(child, dict) else child
-                      child_dir = agent_dir.parent / child_name
-                      if child_dir.exists() and (child_dir / 'agent.yaml').exists():
-                          print(f"    ✓ child agent: {child_name}")
+                  # Leaf agents: validate file references
+                  # Check entrypoint file exists
+                  entrypoint = data.get('entrypoint', '')
+                  if entrypoint:
+                      path = agent_dir / entrypoint
+                      if path.exists():
+                          print(f"  ✓ entrypoint: {entrypoint}")
                       else:
-                          print(f"    ✗ child agent not found: {child_name}")
+                          print(f"  ✗ entrypoint not found: {path}")
                           failed = True
+
+                  # Check wrapper file exists
+                  wrapper = data.get('wrapper', '')
+                  if wrapper:
+                      path = agent_dir / wrapper
+                      if path.exists():
+                          print(f"  ✓ wrapper: {wrapper}")
+                      else:
+                          print(f"  ✗ wrapper not found: {path}")
+                          failed = True
+
+                  # Check task file exists
+                  task = data.get('task', '')
+                  if task:
+                      path = agent_dir / task
+                      if path.exists():
+                          print(f"  ✓ task: {task}")
+                      else:
+                          print(f"  ✗ task not found: {path}")
+                          failed = True
+
+                  # Check all reference files exist
+                  references = data.get('references', [])
+                  if references:
+                      for ref in references:
+                          path = agent_dir / ref
+                          if path.exists():
+                              print(f"  ✓ reference: {ref}")
+                          else:
+                              print(f"  ✗ reference not found: {path}")
+                              failed = True
+                  else:
+                      print(f"  ⚠ No references defined")
 
           if failed:
               print(f"\n::error::One or more agents have missing referenced files")

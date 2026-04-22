@@ -25,8 +25,8 @@ This repository provides production-ready agents that enable:
   improve doc comments
 - **Security audits** - Vulnerability detection with CWE IDs and automated
   fixes
-- **Pipeline orchestration** - Multi-agent pipelines that chain review, tests,
-  and documentation with context passing
+- **Composed pipelines** - Multi-agent pipelines that chain review, tests,
+  and documentation with stages, dependency ordering, and gates
 
 All agents use declarative YAML manifests and modular prompt architecture
 following
@@ -269,7 +269,7 @@ The CI pipeline automatically validates:
 - Semantic version format
 - Agent name matches directory name
 - All referenced files exist
-- Orchestrator children point to valid agents
+- Composed agent stages reference valid sub-agents
 
 ---
 

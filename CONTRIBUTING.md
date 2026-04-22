@@ -63,22 +63,27 @@ budget:
   files_per_iteration: 3
 ```
 
-For pipeline/orchestrator agents, use `children` instead of `references`:
+For composed (multi-agent) pipelines, use `stages` instead of `entrypoint`:
 
 ```yaml
 name: my-pipeline
 version: 0.1.0
-description: Orchestrator that chains multiple agents
-entrypoint: system.md
-wrapper: agent.md
-task: task.md
-budget:
-  max_tokens: 16384
-  estimated_iterations: 10
-  children:
-    - my-review
-    - my-tests
-    - my-doc-comments
+description: Sequential pipeline that chains multiple agents
+
+stages:
+  - name: review
+    agent: my-review
+  - name: tests
+    agent: my-tests
+    depends_on: [review]
+  - name: docs
+    agent: my-doc-comments
+    depends_on: [tests]
+
+gates:
+  - after: tests
+    command: "go test ./..."
+    on_failure: stop
 ```
 
 ### system.md

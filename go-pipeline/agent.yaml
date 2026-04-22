@@ -1,23 +1,25 @@
 ---
 name: go-pipeline
-version: 0.2.0
-description: Orchestrator agent that runs go-review, go-tests, go-doc-comments, and optionally go-cobra sequentially with context passing to avoid redundant work.
-entrypoint: system.md
-wrapper: agent.md
-task: task.md
-budget:
-  max_tokens: 16384
-  estimated_iterations: 10
-  children:
-    - name: go-cobra
-      max_cost: 6.00
-      max_iterations: 25
-    - name: go-review
-      max_cost: 10.00
-      max_iterations: 30
-    - name: go-tests
-      max_cost: 16.00
-      max_iterations: 40
-    - name: go-doc-comments
-      max_cost: 6.00
-      max_iterations: 25
+version: 0.3.0
+description: Sequential Go quality pipeline — review, tests, doc comments, and optionally Cobra fixes.
+
+stages:
+  - name: cobra
+    agent: go-cobra
+  - name: review
+    agent: go-review
+    depends_on: [cobra]
+  - name: tests
+    agent: go-tests
+    depends_on: [review]
+  - name: docs
+    agent: go-doc-comments
+    depends_on: [tests]
+
+gates:
+  - after: tests
+    command: "go test ./..."
+    on_failure: stop
+  - after: docs
+    command: "go build ./..."
+    on_failure: stop

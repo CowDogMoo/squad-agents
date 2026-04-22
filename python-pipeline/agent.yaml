@@ -1,17 +1,19 @@
 ---
 name: python-pipeline
-version: 0.2.0
-description: Orchestrator agent that runs python-review, python-tests, and python-doc-comments sequentially with context passing to avoid redundant work.
-entrypoint: system.md
-wrapper: agent.md
-task: task.md
-budget:
-  max_tokens: 16384
-  estimated_iterations: 10
-  children:
-    - name: python-review
-      max_cost: 5.00
-    - name: python-tests
-      max_cost: 8.00
-    - name: python-doc-comments
-      max_cost: 3.00
+version: 0.3.0
+description: Sequential Python quality pipeline — review, tests, doc comments.
+
+stages:
+  - name: review
+    agent: python-review
+  - name: tests
+    agent: python-tests
+    depends_on: [review]
+  - name: docs
+    agent: python-doc-comments
+    depends_on: [tests]
+
+gates:
+  - after: tests
+    command: "python -m pytest"
+    on_failure: stop

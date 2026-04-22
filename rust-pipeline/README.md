@@ -1,18 +1,21 @@
 # rust-pipeline
 
-Orchestrator agent that runs `rust-review`, `rust-tests`, and
-`rust-doc-comments` sequentially with context passing to avoid redundant work.
+Composed agent that runs Rust quality agents sequentially: review, tests,
+and doc comments.
 
 ## Overview
 
-The `rust-pipeline` agent coordinates three child agents in order:
+This is a composed agent — it has no prompts of its own. It chains three
+sub-agents in dependency order, passing context between stages:
 
-1. **rust-review** — fix code quality and safety issues
-2. **rust-tests** — fill test coverage gaps
-3. **rust-doc-comments** — add missing doc comments
+| Order | Agent | Purpose |
+|-------|-------|---------|
+| 1 | rust-review | Code quality, safety, and correctness fixes |
+| 2 | rust-tests | Test coverage analysis and gap filling |
+| 3 | rust-doc-comments | Public API documentation |
 
-Each agent receives a summary of what the previous agent changed, so it skips
-files and declarations that were already handled.
+Gates run `cargo clippy` after review, `cargo test` after tests, and
+`cargo build` after docs to catch regressions.
 
 ## Usage
 
@@ -23,70 +26,20 @@ squad run --agent rust-pipeline
 # Run against a specific Rust project
 squad run --agent rust-pipeline --working-dir /path/to/rust-project
 
-# Specify model and provider
-squad run --agent rust-pipeline --model claude-opus-4-6 --provider anthropic
-
-# With explicit API key
-squad run --agent rust-pipeline \
-  --working-dir /path/to/project \
-  --model claude-opus-4-6 \
-  --provider anthropic \
-  --max-iterations 50 \
-  --api-key "$YOUR_API_KEY"
+# With cost limit
+squad run --agent rust-pipeline --max-cost 20.00
 ```
 
-## Example
+## Stages
 
-```bash
-LOG_LEVEL=debug squad run \
-  --agent rust-pipeline \
-  --working-dir /home/user/my-rust-crate \
-  --model claude-opus-4-6 \
-  --provider anthropic \
-  --max-iterations 50 \
-  --api-key "$YOUR_API_KEY"
 ```
-
-### Example Output
-
-```markdown
-## Pipeline Summary
-
-### Stage 1: rust-review
-**Files modified:** 4
-- src/client.rs — propagated error from `reconnect()` instead of `unwrap()`
-- src/ffi.rs — added safety comment on `unsafe` block
-- src/parser.rs — replaced `as` truncation with `try_into()`
-- src/config.rs — switched `std::sync::Mutex` to `tokio::sync::Mutex`
-
-### Stage 2: rust-tests
-**Tests added:** 12
-**Coverage:** 62% → 78%
-- src/parser.rs — 5 tests (edge cases for malformed input)
-- src/client.rs — 4 tests (reconnect error paths)
-- src/config.rs — 3 tests (concurrent access)
-
-### Stage 3: rust-doc-comments
-**Doc comments added:** 9
-- src/lib.rs — module-level documentation
-- src/client.rs — `Client`, `connect()`, `reconnect()`
-- src/parser.rs — `Parser`, `parse()`, `validate()`
-- src/config.rs — `Config`, `load()`
-
-## Validation
-- `cargo build`: PASS
-- `cargo test`: PASS (34 tests)
-- `cargo clippy`: PASS
+review → tests → docs
+  │        │       │
+  ▼        ▼       ▼
+clippy  cargo   cargo
+        test    build
 ```
-
-## Children
-
-| Order | Agent | Purpose |
-|-------|-------|---------|
-| 1 | rust-review | Code quality, safety, and correctness fixes |
-| 2 | rust-tests | Test coverage analysis and gap filling |
-| 3 | rust-doc-comments | Public API documentation |
 
 ## Version
 
-0.1.0
+0.4.0
