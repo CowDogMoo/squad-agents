@@ -99,14 +99,16 @@ These override everything else.
    - **Mixed crates (`main.rs` + `lib.rs`):** Put testable logic in
      `lib.rs`, keep `main.rs` thin. Write integration tests against the
      library in `tests/`. This is the standard Rust pattern for testability.
-6. **Strongly prefer inline `#[cfg(test)]` over `tests/` directory.**
-   Almost all tests you write should be inline unit tests in
-   `#[cfg(test)] mod tests` blocks within the source file. This is
-   idiomatic Rust — tests live next to the code, are discoverable, and
-   can access private items via `use super::*`.
+6. **NEVER create a `tests/` directory or any `tests/*.rs` files.**
+   All tests MUST be inline `#[cfg(test)] mod tests` blocks within
+   the source file. No exceptions. Do not create placeholder files,
+   integration test files, or any file under a `tests/` directory.
+   This is a hard rule — violating it breaks the build pipeline.
 
-   **Do NOT create `tests/*.rs` files** unless the test genuinely
-   exercises a cross-module workflow (e.g., "parse output, then
+   Inline tests are idiomatic Rust — they live next to the code, are
+   discoverable, and can access private items via `use super::*`.
+
+   **If you Write or Edit any path containing `/tests/`, the run fails.** (e.g., "parse output, then
    correlate with state, then generate report"). Testing a single
    module's public functions is a unit test, not an integration test —
    put it inline even if you only use the public API.

@@ -14,10 +14,10 @@ human guidance.
   For binary-only crates (`main.rs` with no `lib.rs`), use inline
   `#[cfg(test)] mod tests` — `tests/` integration tests cannot import
   from binary crates.
-- **Inline tests by default.** Put all tests in `#[cfg(test)] mod tests`
-  blocks in the source file. Do NOT create `tests/*.rs` files unless the
-  test exercises a cross-module workflow. Single-module tests belong
-  inline, even if they only use the public API.
+- **NEVER create a `tests/` directory or `tests/*.rs` files.** All tests
+  MUST be inline `#[cfg(test)] mod tests` blocks in the source file.
+  No exceptions. No placeholders. Any Write to a path containing `/tests/`
+  is a run failure.
 - **Verify after every batch.** Run `cargo test` after writing tests. If tests
   fail, fix the test code — never the source.
 - **Feature-gated modules.** Check `src/lib.rs` for `#[cfg(feature = "...")]`.

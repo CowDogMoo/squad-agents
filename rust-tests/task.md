@@ -1,4 +1,10 @@
 {{if eq .Mode "edit"}}
+{{- if .Var "CRATE"}}
+**SCOPE: Focus exclusively on the `{{.Var "CRATE"}}` crate.** Do NOT wander to
+other crates. All Glob patterns, Read calls, and test writes must target
+files within the `{{.Var "CRATE"}}` directory. Ignore source files outside it.
+{{- end}}
+
 Analyze and improve test coverage for this Rust codebase.
 
 If the orchestrator provided a file list and baseline, use them — do NOT
@@ -53,6 +59,10 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
 - Always analyze and report gaps even if target is already met
 {{end}}
 {{if eq .Mode "readonly"}}
+{{- if .Var "CRATE"}}
+**SCOPE: Focus exclusively on the `{{.Var "CRATE"}}` crate.** Ignore files outside it.
+{{- end}}
+
 Analyze test coverage for this Rust codebase.
 
 Use Glob with '**/*.rs' to discover all Rust source files.

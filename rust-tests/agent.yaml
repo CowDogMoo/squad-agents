@@ -11,6 +11,7 @@ models:
     provider: google
 disable_task: true
 max_iterations: 25
+edit_deadline: 12
 entrypoint: system.md
 wrapper: agent.md
 references:
