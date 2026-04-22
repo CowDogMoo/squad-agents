@@ -274,8 +274,19 @@ Follow this sequence exactly. Do not skip steps.
 
 ## Phase 2: Prioritize
 
-4. Sort modules by **impact** — modules with the most untested public
-   functions and the most logic (conditionals, error paths) come first.
+4. Sort modules by **coverage gap, not ease of testing.** Apply this
+   strict priority order:
+   a. **Files with 0% coverage first.** Any source file with zero tests
+      must be addressed before improving coverage in already-tested files.
+   b. **Within untested files, prioritize pure logic.** Most files that
+      touch databases, Redis, or external APIs also contain pure functions
+      (query builders, data transforms, validation, type conversions).
+      Test those — do NOT skip the entire file because it imports `sqlx`
+      or `redis`.
+   c. **Files below target second.** Files with some tests but below
+      {{.Default "COVERAGE_TARGET" "75"}}% come next.
+   d. **Already-tested files last.** Do NOT add more tests to files already
+      above {{.Default "COVERAGE_TARGET" "75"}}% until all other files are addressed.
 5. Within each module, prioritize functions that:
    - Have business logic (conditionals, loops, error paths)
    - Are public (`pub` or `pub(crate)`)
@@ -347,8 +358,11 @@ next module. Do NOT read all modules before writing any tests.
 - Trivial getters/setters with no logic
 - Functions that only delegate to another function with no transformation
 - `main()` functions
-- Functions that require live external services (HTTP APIs, databases)
-  unless you can mock the dependency through an existing trait
+- **Individual functions** whose body directly opens a DB connection,
+  creates a Redis client, or makes an HTTP request AND cannot be called
+  without that live service. Do NOT skip an entire file because it imports
+  `sqlx`, `redis`, `reqwest`, or `opentelemetry` — most such files
+  contain pure logic that is testable. See "TESTING IO-HEAVY FILES" below.
 - Private helper functions that are fully exercised through public tests
 - Generated code (derive macros, build.rs output)
 - `Drop` implementations (test through the types that use them)
@@ -361,17 +375,62 @@ next module. Do NOT read all modules before writing any tests.
   for naming style (`test_` prefix vs bare names). Match whatever the
   module already uses. Do NOT mix styles in the same `mod tests` block.
 
+# TESTING IO-HEAVY FILES
+
+**Do NOT skip entire files because they touch databases, Redis, or
+external services.** Most IO-heavy files contain pure logic mixed with IO
+calls. Your job is to identify and test that pure logic.
+
+**What to look for in files that import `sqlx`, `redis`, `reqwest`, etc.:**
+
+- **Query/command builders** — functions that construct SQL strings,
+  Redis commands, or HTTP requests without executing them
+- **Data transformation** — functions that map between types (DB rows to
+  domain objects, API responses to internal structs)
+- **Validation logic** — input validation, constraint checking, parameter
+  sanitization that happens before the IO call
+- **Type conversions** — `From`/`TryFrom`/`Into` implementations,
+  serialization helpers
+- **Configuration parsing** — connection string builders, option structs,
+  retry policy construction
+- **Error type construction** — custom error types, error mapping logic
+- **Template/report helpers** — string formatting, template context
+  building, report section generation
+- **Scoring/ranking/aggregation** — pure computation that happens to live
+  in a module that also persists results
+
+**Concrete examples of testable code in "untestable" files:**
+
+| File pattern | Looks untestable because... | Actually testable functions |
+|---|---|---|
+| `persistent_store/queries.rs` | Imports sqlx | Query builder fns, row-to-struct mappings |
+| `state/cache.rs` | Uses redis | Key generation, TTL calculation, serialization |
+| `telemetry/metrics.rs` | Requires OTel runtime | Metric name builders, label constructors |
+| `reports/generator.rs` | Complex template rendering | Section builders, data aggregation, formatters |
+| `eval/scoring.rs` | Deep dependency chain | Score calculation, threshold checks, normalization |
+
+**How to handle it:** Read the file, separate functions into "needs live
+service" vs "pure logic." Test the pure logic. Skip only the functions
+that literally cannot execute without an external connection. In the
+Skipped Functions table, list the specific function — not the whole file.
+
 # MOCKING STRATEGY
 
 When a function depends on an external service:
 
-1. Check if the dependency is behind a trait. If yes, create a mock struct
+1. **First, check if the function actually needs mocking.** Many functions
+   in IO-heavy files are pure — they build queries, transform data, or
+   validate inputs without touching the service. Test those directly.
+2. Check if the dependency is behind a trait. If yes, create a mock struct
    implementing that trait in the test module.
-2. If the dependency uses `reqwest::Client`, use `wiremock` or
-   `httpmock` if available in Cargo.toml, otherwise skip.
-3. If the dependency reads/writes files, use `tempfile::tempdir()`.
-4. If the dependency is a concrete type with no trait abstraction, skip it
-   and note "requires source refactor to test."
+3. If the dependency uses `reqwest::Client`, use `wiremock` or
+   `httpmock` if available in Cargo.toml, otherwise skip that specific
+   function.
+4. If the dependency reads/writes files, use `tempfile::tempdir()`.
+5. If the dependency is a concrete type with no trait abstraction AND the
+   function has no pure logic that can be tested separately, skip that
+   specific function and note why. Do NOT skip the entire file — check
+   every other function in the file for testable logic first.
 
 Do NOT add traits or `#[cfg(test)]` helpers to source files. Only create
 mock types inside test modules.
@@ -413,7 +472,11 @@ mock types inside test modules.
 
 | Function | Module | Reason |
 |----------|--------|--------|
-| [name]   | [mod]  | [why it was skipped] |
+| [name]   | [mod]  | [why it was skipped — must be a specific reason per function, e.g. "opens DB pool directly", NOT "module uses sqlx"] |
+
+**Invalid skip reasons:** "module requires database", "file imports redis",
+"needs external service." These skip an entire file. Valid reasons must
+name the specific function and explain what IO call its body makes.
 
 ## Files Touched
 

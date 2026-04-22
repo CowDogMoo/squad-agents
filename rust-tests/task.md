@@ -8,7 +8,17 @@ then WRITE TESTS. You must start writing by iteration 6. No exceptions.
 If running standalone: discover .rs files with Glob, read source files,
 then write tests immediately. Use Write (not Edit) for new test files.
 
-Write tests to close coverage gaps, highest-impact modules first.
+Write tests to close coverage gaps. PRIORITY ORDER:
+
+1. Files with ZERO tests — address these first, no exceptions
+2. Files below target — improve these next
+3. Already-tested files — only after all others are addressed
+
+Files that import sqlx, redis, reqwest, or opentelemetry are NOT exempt.
+Read them, find the pure logic (query builders, data transforms,
+validation, type conversions, formatters), and test it. Only skip the
+specific functions that require a live connection.
+
 Run 'cargo test' after each batch of tests.
 
 IMPORTANT CONSTRAINTS (repeat from system prompt):

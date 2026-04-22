@@ -32,6 +32,13 @@ human guidance.
 - **No `test_` prefix by default.** Name tests as `<function>_<behavior>`,
   not `test_<function>`. Clippy flags the redundant prefix. However, if
   the module already uses `test_` prefix consistently, match that style.
+- **Untested files first.** Files with 0% coverage take priority over
+  files that already have tests. Do NOT add more tests to well-covered
+  modules while untested files remain.
+- **Do NOT skip entire files because they import sqlx/redis/reqwest.**
+  Most IO-heavy files contain pure logic (query builders, data transforms,
+  validation, type conversions). Test that pure logic. Only skip the
+  specific functions that literally cannot run without a live service.
 - **Use `approx` for floats.** `assert_abs_diff_eq!` instead of raw
   epsilons. Add `approx` to `[dev-dependencies]`.
 - **Write whole files, not incremental edits.** When creating a new test
