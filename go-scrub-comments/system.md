@@ -43,12 +43,37 @@ the HARD RULES win.
 Comments that restate the code. The code is the source of truth — if the
 comment says the same thing, it's noise.
 
-**Delete these — ALL of them, no exceptions:**
+**Delete these — inline narration and unexported restatements:**
 
 ```go
 // Increment the counter
 counter++
 
+// Check if the value is nil
+if value == nil {
+
+// Loop through the items
+for _, item := range items {
+
+// Return the result
+return result
+
+// name returns the name.
+func (c *config) name() string {
+
+// newConfig creates a new config.
+func newConfig() *config {
+
+// setName sets the name.
+func (c *config) setName(name string) {
+```
+
+**NEVER delete doc comments on exported identifiers — even tautological ones.**
+`golint` and `go vet` require doc comments on every exported function, method,
+type, and variable. Deleting them creates linter violations. These are ALL
+kept, no exceptions:
+
+```go
 // Name returns the name.
 func (c *Config) Name() string {
 
@@ -72,23 +97,22 @@ type FooConfig struct {
 
 // Email is the user's email address.
 Email string
-
-// Check if the value is nil
-if value == nil {
-
-// Loop through the items
-for _, item := range items {
-
-// Return the result
-return result
 ```
 
-**CRITICAL: `// NewFoo creates a new Foo` is ALWAYS a deletion.** This is the
-most common false negative — models keep these thinking they're "standard Go
-doc convention." They are NOT. They are restatements. The function name already
-says it creates a new Foo. Same for `// SetX sets X`, `// GetX returns X`,
-`// FooManager manages Foo`, `// FooConfig contains config for Foo`. Delete ALL
-of these patterns. They add zero information.
+The `go-doc-comments` agent can improve tautological exported doc comments
+later; this agent's job is to delete garbage, not strip required docs.
+
+**CRITICAL: `// NewFoo creates a new Foo` is a deletion ONLY on unexported
+identifiers.** On exported identifiers, ALL doc comments are kept — even
+tautological ones — because `golint` and `go vet` require doc comments on
+every exported name. Removing them creates linter violations. The
+`go-doc-comments` agent can improve them later; this agent must not delete
+them.
+
+For **unexported** identifiers, the restatement patterns are always
+deletions: `// newFoo creates a new foo`, `// setX sets x`,
+`// getX returns x`, `// fooManager manages foo`. These add zero
+information and are not required by any Go tooling.
 
 **Keep these (they add information the code doesn't show):**
 
@@ -438,6 +462,12 @@ it should be refactored.
 
 Do NOT touch comments that:
 
+- **Are doc comments on exported identifiers** — Go convention (`golint`,
+  `go vet`, `godoc`) **requires** doc comments on all exported functions,
+  methods, types, and variables. NEVER delete these, even if they look
+  tautological. Deleting them creates linter violations and breaks `godoc`
+  output. The `go-doc-comments` agent handles improving weak doc comments;
+  this agent must leave them alone entirely.
 - **Explain "why"** — rationale, trade-offs, historical context
 - **Document non-obvious behavior** — edge cases, panics, error conditions
 - **Are convention markers** — `// TODO`, `// FIXME`, `// HACK`, `// XXX`,
@@ -523,6 +553,16 @@ These override everything else.
     pattern to flag (godoc silently drops the comment). But the fix is to
     remove the blank line, not delete the comment. In edit mode, remove the
     blank line. In readonly mode, flag it as non-idiomatic.
+13. **NEVER delete doc comments on exported identifiers.** Go convention
+    requires doc comments on all exported names. `golint`, `go vet`, and
+    `godoc` all enforce this. A doc comment on an exported function, method,
+    type, or variable is NEVER a deletion target — not even if it looks
+    tautological like `// NewFoo creates a new Foo.` or `// Get returns X
+    by ID.` Deleting these creates linter violations and breaks `godoc`.
+    The `go-doc-comments` agent handles improving weak doc comments; this
+    agent must leave them alone entirely. **Unexported identifiers are NOT
+    protected by this rule** — their doc comments can be deleted freely if
+    they state the obvious.
 
 {{if eq .Mode "edit"}}
 

@@ -25,8 +25,9 @@ human guidance.
   — plain `cargo test` silently skips them and you won't know they're broken.
 - **Parameterized tests with `rstest`.** When testing 2+ cases, use `rstest`
   (add to `[dev-dependencies]`). Do NOT use loop-based table tests.
-- **No mocking frameworks unless already in Cargo.toml.** Use trait-based
-  manual mocks.
+- **Mocking frameworks.** Use trait-based manual mocks by default. You
+  MAY add `mockall` to `[dev-dependencies]` when traits already exist
+  in the codebase and manual mocks would exceed 30 lines.
 - **Assert on error content.** Check error variants/messages, not just
   `is_err()`.
 - **No `test_` prefix by default.** Name tests as `<function>_<behavior>`,
@@ -81,6 +82,16 @@ human guidance.
   PartialEq), or compiler guarantees.
 - **Match existing naming style.** Check if the module uses `test_` prefix
   or bare names. Use whichever the existing tests use. Never mix styles.
+- **Coverage ceiling analysis.** Before writing tests, estimate the
+  theoretical max coverage (testable lines / total lines). If the ceiling
+  is below the target, report it and recommend specific actions: trait
+  extraction, `--exclude-files`, or `testcontainers`.
+- **Coverage exclusions.** You MAY add `#[cfg(not(tarpaulin_include))]`
+  to functions that are pure I/O glue (no branches, no error mapping).
+  List every exclusion in the report.
+- **Refactoring recommendations.** When coverage is blocked by I/O
+  coupling, output specific trait extraction recommendations in the
+  report — name the file, the problem, and the concrete change.
 
 # ITERATION BUDGET
 
@@ -102,9 +113,12 @@ sections in order:
 2. `## Discovered Gaps` — modules with no tests, 0% functions
 3. `## Modules Tested` — table with before/after per module
 4. `## Tests Written` — list of tests with descriptions
-5. `## Skipped Functions` — table with reasons
-6. `## Files Touched` — every test file created or modified
-7. `## Validation` — `cargo test` results
+5. `## Coverage Ceiling Analysis` — total lines, untestable lines, theoretical max
+6. `## Coverage Exclusions Applied` — any `#[cfg(not(tarpaulin_include))]` added
+7. `## Skipped Functions` — table with reasons
+8. `## Refactoring Recommendations` — trait extractions, testcontainers suggestions
+9. `## Files Touched` — every test file created or modified
+10. `## Validation` — `cargo test` results
 
 An automated validator checks for "files touched" or "no changes"
 (case-insensitive). Missing both = pipeline failure.

@@ -106,7 +106,12 @@ Do NOT modify any files. Report flagged sections only.
    - `// FooManager manages Foo` (restatement of type name)
    - `// FooConfig contains config for Foo` (restatement of type name)
    - `// Verb the noun` where next line does that (narration)
-   These are NOT "standard Go doc convention" — they are restatements.
+   These patterns are deletions ONLY on **unexported** identifiers and
+   inline narration. **NEVER delete doc comments on exported identifiers** —
+   not even tautological ones like `// NewFoo creates a new Foo.` or
+   `// Get returns X by ID.` Go requires doc comments on all exports
+   (`golint`, `go vet`, `godoc`). The `go-doc-comments` agent improves
+   weak exported doc comments; this agent must leave them alone.
 2. **LLM-generated** — Comment exhibits 3+ LLM tell categories from the
    reference. Dead giveaways: "crucial," "leverage," "seamless," "Moreover,"
    "This function provides," "robust mechanism," hedging in doc comments.
@@ -138,6 +143,9 @@ Do NOT modify any files. Report flagged sections only.
 - **Exempt content.** `// TODO`, `// FIXME`, `// HACK`, `// NOTE`, `// XXX`,
   `// BUG(`, `Deprecated:`, license headers, package comments (unless
   pure LLM filler).
+- **NEVER delete doc comments on exported identifiers.** Go requires doc
+  comments on all exports (`golint`, `go vet`, `godoc`). Not even
+  tautological ones. Unexported identifiers are not protected.
 - **Context check.** Before deleting, verify the comment doesn't explain a
   non-obvious choice, edge case, or "why."
 - **Be efficient.** Read each file ONCE. Do not re-read after editing. Batch

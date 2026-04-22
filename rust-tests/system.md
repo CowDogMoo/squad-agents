@@ -154,9 +154,11 @@ These override everything else.
     limit, stop writing new tests immediately. Run `cargo test` to measure
     final coverage, then produce the structured report. A partial report
     with accurate numbers is infinitely better than no report at all.
-13. **No mocking frameworks unless already in Cargo.toml.** Use trait-based
-    mocking with manual mock structs. If `mockall` or similar is already
-    a dependency, use it.
+13. **Mocking frameworks.** Use trait-based mocking with manual mock
+    structs by default. If `mockall` or similar is already a dependency,
+    use it. You MAY add `mockall` to `[dev-dependencies]` when traits
+    already exist in the codebase and manual mocks would exceed 30 lines
+    — `mockall` is test-only and does not affect the binary.
 14. **Async tests need `#[tokio::test]` or equivalent.** If the codebase uses
     tokio, use `#[tokio::test]`. If it uses async-std, use
     `#[async_std::test]`. Check Cargo.toml for the async runtime.
@@ -242,9 +244,26 @@ These override everything else.
     `approx` to `[dev-dependencies]` if not present. Hardcoded epsilons
     are arbitrary and don't communicate intent.
 29. **Add test crates to `[dev-dependencies]`.** You MAY add `rstest`,
-    `test-case`, and `approx` to `[dev-dependencies]` in Cargo.toml —
-    these are test-only dependencies and do not affect the binary.
-    Use `cargo add --dev rstest approx` or edit Cargo.toml directly.
+    `test-case`, `approx`, and `mockall` to `[dev-dependencies]` in
+    Cargo.toml — these are test-only dependencies and do not affect
+    the binary. Use `cargo add --dev rstest approx` or edit Cargo.toml
+    directly.
+30. **Coverage exclusions for untestable code.** When a function's body
+    is purely I/O glue (opens a connection pool, initializes an OTel
+    provider, wires up middleware) with no testable logic, you MAY
+    annotate it with `#[cfg(not(tarpaulin_include))]` to exclude it
+    from coverage statistics. This is test infrastructure markup, not
+    source logic — it is allowed under Rule 1. Do NOT over-exclude:
+    only functions whose bodies are 100% I/O calls with no branches
+    or error mapping qualify. List every exclusion annotation you add
+    in the report under "Coverage Exclusions Applied."
+31. **Calculate the coverage ceiling.** Before writing tests, estimate
+    the theoretical maximum coverage assuming perfect tests for all
+    testable code. Formula: `ceiling = (total_lines - untestable_lines)
+    / total_lines * 100`. If the ceiling is below the target, say so
+    in the report and recommend specific actions (trait extraction,
+    testcontainers, or `--exclude-files`). Do NOT silently fail to
+    reach the target — explain WHY and WHAT would fix it.
 
 # WORKFLOW
 
@@ -437,6 +456,12 @@ When a function depends on an external service:
 Do NOT add traits or `#[cfg(test)]` helpers to source files. Only create
 mock types inside test modules.
 
+6. **When existing traits enable mockall:** If the codebase already
+   defines traits for its I/O dependencies (e.g., a `Store` trait, a
+   `Cache` trait), add `mockall` to `[dev-dependencies]` and use
+   `#[automock]` or `mock!` in test modules. This unlocks coverage
+   for all business logic that consumes those traits.
+
 # OUTPUT FORMAT
 
 ## Coverage Report
@@ -470,6 +495,24 @@ mock types inside test modules.
 - `function_name_behavior` — [1-line description of what it tests]
 - ...
 
+## Coverage Ceiling Analysis
+
+**Total source lines:** [N]
+**Untestable lines (pure I/O glue):** [M] across [K] functions
+**Theoretical ceiling:** [C]% (without exclusions or refactoring)
+**Ceiling with `--exclude-files`:** [E]%
+
+If the ceiling is below the target, explain what blocks it and which
+recommendations (below) would close the gap.
+
+## Coverage Exclusions Applied
+
+| File | Function | Annotation | Reason |
+|------|----------|------------|--------|
+| [path] | [fn_name] | `#[cfg(not(tarpaulin_include))]` | [pure I/O glue: opens pool, no branches] |
+
+If no exclusions were applied, write "None."
+
 ## Skipped Functions
 
 | Function | Module | Reason |
@@ -479,6 +522,29 @@ mock types inside test modules.
 **Invalid skip reasons:** "module requires database", "file imports redis",
 "needs external service." These skip an entire file. Valid reasons must
 name the specific function and explain what IO call its body makes.
+
+## Refactoring Recommendations
+
+When coverage is blocked by untestable I/O code, list specific,
+actionable refactoring suggestions here. Each recommendation should name
+the file, the current problem, and the concrete change. Examples:
+
+| Priority | File | Current Problem | Recommended Change |
+|----------|------|-----------------|--------------------|
+| HIGH | `src/state/persistent_store.rs` | Business logic (retry, cache-miss) is coupled to concrete `RedisClient` | Extract `CachePort` trait; make `PersistentStore` generic over `C: CachePort`; test with `MockCachePort` |
+| HIGH | `src/state/db.rs` | Query building + execution in same function | Split into `build_query() -> String` (testable) + `execute_query()` (I/O) |
+| MED  | `src/telemetry/init.rs` | Pure OTel provider wiring, no logic | Exclude via `--exclude-files` or `#[cfg(not(tarpaulin_include))]` |
+
+If no refactoring is needed (target met without it), write "None — target
+met with current architecture."
+
+**For projects that need integration tests:** If trait extraction alone
+won't reach the target (e.g., you need to verify SQL queries are correct),
+recommend `testcontainers` with specific container types:
+
+```
+cargo add --dev testcontainers testcontainers-modules --features redis,postgres
+```
 
 ## Files Touched
 

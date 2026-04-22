@@ -25,6 +25,14 @@ Read them, find the pure logic (query builders, data transforms,
 validation, type conversions, formatters), and test it. Only skip the
 specific functions that require a live connection.
 
+When traits already exist for I/O dependencies, use mockall to test
+business logic that consumes them. You may add mockall to dev-dependencies.
+
+Calculate the coverage ceiling before writing tests. If the ceiling is
+below target, report it with specific recommendations (trait extraction,
+--exclude-files, testcontainers). You may add #[cfg(not(tarpaulin_include))]
+to pure I/O glue functions (no branches, no error mapping).
+
 Run 'cargo test' after each batch of tests.
 
 IMPORTANT CONSTRAINTS (repeat from system prompt):

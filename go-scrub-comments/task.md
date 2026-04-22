@@ -28,6 +28,13 @@ THE 5 DELETION CATEGORIES:
    `// Marshal to pretty JSON`, `// Ensure output directory exists`,
    `// Required flags`, `// Optional flags`, `// Register shell completions`,
    `// Write schema file`. "Aids scanning" is NOT a reason to keep narration.
+   These patterns are deletions ONLY on **unexported** identifiers and
+   inline narration. **NEVER delete doc comments on exported identifiers** —
+   not even tautological ones like `// NewFoo creates a new Foo.` or
+   `// Get returns X by ID.` Go requires doc comments on all exports
+   (`golint`, `go vet`, `godoc`); deleting them creates linter violations.
+   The `go-doc-comments` agent improves weak doc comments; this agent
+   must leave them alone.
 2. **LLM-generated** — exhibits 3+ LLM tell categories (e.g., "crucial,"
    "leverage," "Moreover," "This function provides a robust mechanism")
 3. **Adds nothing useful** — filler (e.g., "Config is a struct that holds data,"
@@ -74,6 +81,7 @@ DELETION RULES:
 
 ABSOLUTE PROHIBITIONS:
 
+- Do NOT delete doc comments on exported identifiers — NEVER, not even tautologies
 - Do NOT delete comments that explain "why"
 - Do NOT delete concurrency safety notes
 - Do NOT delete convention markers (TODO, FIXME, etc.)
