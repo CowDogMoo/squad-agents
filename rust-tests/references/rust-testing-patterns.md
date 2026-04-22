@@ -60,8 +60,11 @@ mod tests {
 
 - **`use super::*`** to import from the parent module.
 - **`#[cfg(test)]`** ensures test code is excluded from release builds.
-- Unit tests can access `pub(crate)` and `pub(super)` items.
-- Unit tests CANNOT access private items from other modules.
+- Unit tests can access **private** items from the parent module via
+  `use super::*` (child modules can see ancestor items). This is how
+  Rust enables testing private functions — it's intentional and idiomatic.
+- Unit tests can also access `pub(crate)` and `pub(super)` items.
+- Unit tests CANNOT access private items from **other** modules.
 
 ## Parameterized Tests with `rstest`
 
@@ -92,7 +95,146 @@ Do NOT use loop-based table tests (iterating over a `Vec<Case>`). Loop
 cases are invisible to `cargo test` output and a failure in one case
 stops remaining cases from running.
 
-### When to Use `rstest`
+### Named Cases
+
+Add descriptive names to cases for clearer test output:
+
+```rust
+#[rstest]
+#[case::zero_base(0, 0)]
+#[case::one_base(1, 1)]
+#[case::fib_two(2, 1)]
+fn fibonacci(#[case] input: u32, #[case] expected: u32) {
+    assert_eq!(expected, fib(input));
+}
+```
+
+### Value Lists (Cartesian Product)
+
+`#[values]` generates all combinations of arguments:
+
+```rust
+#[rstest]
+fn valid_names(
+    #[values("John", "alice", "My_Name")] name: &str,
+    #[values(14, 50, 100)] age: u8,
+) {
+    assert!(is_valid(name, age));
+}
+// Generates 9 tests: John/14, John/50, ..., My_Name/100
+```
+
+### Fixtures
+
+Reusable test setup via `#[fixture]`:
+
+```rust
+#[fixture]
+fn test_config() -> Config {
+    Config::builder().timeout(30).build().unwrap()
+}
+
+#[rstest]
+fn service_starts(test_config: Config) {
+    let svc = Service::new(test_config);
+    assert!(svc.is_running());
+}
+```
+
+Override fixture defaults with `#[with]`:
+
+```rust
+#[rstest]
+fn custom_user(#[with("Bob")] user: User) {
+    assert_eq!(user.name(), "Bob");
+}
+```
+
+### File-Based Testing
+
+Generate tests from files matching glob patterns:
+
+```rust
+#[rstest]
+fn valid_configs(
+    #[files("testdata/*.toml")] #[exclude("invalid")] path: PathBuf,
+) {
+    let config = Config::from_file(&path);
+    assert!(config.is_ok());
+}
+```
+
+### Async with Timeout
+
+```rust
+#[rstest]
+#[timeout(Duration::from_millis(100))]
+#[tokio::test]
+async fn fast_response(test_config: Config) {
+    let result = fetch(&test_config).await;
+    assert!(result.is_ok());
+}
+```
+
+### Magic `FromStr` Conversion
+
+rstest auto-converts string literals to types implementing `FromStr`:
+
+```rust
+#[rstest]
+#[case("resources/data", 42)]
+fn count_lines(#[case] path: PathBuf, #[case] expected: usize) {
+    // "resources/data" auto-converts to PathBuf
+    assert_eq!(count(&path), expected);
+}
+```
+
+### Template Reuse with `rstest_reuse`
+
+Share case sets across multiple test functions:
+
+```rust
+use rstest_reuse::{self, *, template};
+
+#[template]
+#[rstest]
+#[case(2, 2)]
+#[case(4, 4)]
+fn valid_pairs(#[case] a: u32, #[case] b: u32) {}
+
+#[apply(valid_pairs)]
+fn equality(#[case] a: u32, #[case] b: u32) {
+    assert_eq!(a, b);
+}
+```
+
+## Parameterized Tests with `test-case`
+
+`test-case` is an alternative to rstest with simpler syntax for
+straightforward cases. Add to `[dev-dependencies]`:
+
+```rust
+use test_case::test_case;
+
+#[test_case("30s" => Duration::from_secs(30) ; "seconds")]
+#[test_case("5m"  => Duration::from_secs(300) ; "minutes")]
+fn parse_duration(input: &str) -> Duration {
+    my_crate::parse_duration(input).unwrap()
+}
+
+#[test_case("" ; "empty string")]
+#[test_case("abc" ; "non-numeric")]
+#[should_panic]
+fn parse_duration_invalid(input: &str) {
+    my_crate::parse_duration(input).unwrap();
+}
+```
+
+**rstest vs test-case:** rstest is stronger for fixtures, async, and
+complex setups. test-case is simpler when you just need input/output
+pairs. Both generate independent tests visible in `cargo test` output.
+
+### When to Use Parameterized Tests
 
 - 2+ test cases for the same function
 - Testing different input/output combinations
@@ -100,7 +242,7 @@ stops remaining cases from running.
 
 ### When NOT to Use Parameterized Tests
 
-- Single test case
+- Single test case — just write a normal `#[test]`
 - Tests requiring different setup/teardown per case
 - Tests with complex assertions that vary per case
 
@@ -138,6 +280,24 @@ fn app_processes_valid_config() {
 
 ## Error Testing
 
+### Result-Returning Tests
+
+Since Rust 2018, tests can return `Result<(), E>`, enabling the `?`
+operator for cleaner error propagation instead of `.unwrap()` chains:
+
+```rust
+#[test]
+fn parse_and_transform() -> Result<(), Box<dyn std::error::Error>> {
+    let val = parse("42")?;
+    let transformed = transform(val)?;
+    assert_eq!(transformed, expected);
+    Ok(())
+}
+```
+
+Do NOT combine `#[should_panic]` with Result return types — the
+compiler disallows it.
+
 ### Basic Error Test
 
 ```rust
@@ -154,7 +314,7 @@ fn parse_invalid_returns_error() {
 #[test]
 fn parse_empty_returns_empty_error() {
     let result = parse("");
-    assert!(matches!(result, Err(ParseError::Empty)));
+    assert_matches!(result, Err(ParseError::Empty));
 }
 
 #[test]
@@ -162,6 +322,19 @@ fn parse_invalid_returns_format_error() {
     let err = parse("!!!").unwrap_err();
     assert!(matches!(err, ParseError::InvalidFormat { .. }));
     assert!(err.to_string().contains("invalid format"));
+}
+```
+
+### Concise Error Checks with `is_err_and`
+
+`Result::is_err_and()` combines error existence and property checks
+in a single expression:
+
+```rust
+#[test]
+fn not_found_error_kind() {
+    let result = lookup("missing");
+    assert!(result.is_err_and(|e| e.kind() == ErrorKind::NotFound));
 }
 ```
 
@@ -175,6 +348,11 @@ fn get_out_of_bounds_panics() {
     get_item(&items, 10);
 }
 ```
+
+**Anti-pattern:** Do NOT use `#[should_panic]` with `unwrap()` to test
+error paths. If unrelated code panics before reaching the `unwrap()`,
+the test falsely passes. Prefer `assert!(result.is_err())` or
+`assert_matches!` for error testing instead.
 
 ## Async Tests
 
@@ -353,6 +531,121 @@ proptest! {
 to a file (typically `proptest-regressions/`). Commit this to source
 control so regressions are caught in CI.
 
+## Doc Tests
+
+Code examples in `///` doc comments are compiled and run as tests by
+`cargo test`. They serve as both documentation and regression tests.
+
+```rust
+/// Parses a duration string like "30s" or "5m".
+///
+/// # Examples
+///
+/// ```
+/// use my_crate::parse_duration;
+/// use std::time::Duration;
+///
+/// let d = parse_duration("30s").unwrap();
+/// assert_eq!(d, Duration::from_secs(30));
+/// ```
+pub fn parse_duration(s: &str) -> Result<Duration, ParseError> {
+    // ...
+}
+```
+
+### Key Rules
+
+- If no `fn main` is present, rustdoc wraps the example in one.
+- Lines prefixed with `#` execute but are hidden in rendered docs —
+  use for boilerplate like error handling or imports.
+- Fenced code blocks (triple backticks) are more idiomatic than
+  indented blocks.
+- `cargo nextest` does NOT run doc tests — run `cargo test --doc`
+  separately.
+
+### Doc Test Attributes
+
+| Attribute | Behavior |
+|-----------|----------|
+| `ignore` | Skip the test entirely |
+| `no_run` | Compile but don't execute |
+| `should_panic` | Must compile but panic at runtime |
+| `compile_fail` | Must fail to compile |
+
+```rust
+/// ```no_run
+/// loop { println!("runs forever"); }
+/// ```
+
+/// ```compile_fail
+/// let x = 5;
+/// x += 2; // won't compile — x isn't mut
+/// ```
+```
+
+## Snapshot Testing with `insta`
+
+Snapshot tests capture complex outputs (JSON, YAML, formatted text)
+and compare against stored reference files. Useful for testing
+serialization, report generation, or any structured output.
+
+```rust
+use insta::assert_yaml_snapshot;
+
+#[test]
+fn report_snapshot() {
+    let report = generate_report(&data);
+    assert_yaml_snapshot!(report);
+}
+```
+
+### Workflow
+
+- First run creates `.snap` files with the captured output.
+- `cargo insta review` opens an interactive TUI to approve/reject
+  changes.
+- `cargo insta accept` accepts all pending changes.
+- Commit `.snap` files to source control.
+
+**Anti-pattern:** Do not blindly accept all snapshot changes — review
+each one. Snapshots are only as good as the reviews.
+
+Insta supports redaction of dynamic values (timestamps, UUIDs) to
+prevent false failures.
+
+## Enhanced Assertion Output
+
+### `pretty_assertions`
+
+Drop-in replacement for `assert_eq!` that shows colorful diffs on
+failure. Add to `[dev-dependencies]`:
+
+```rust
+use pretty_assertions::assert_eq;
+
+#[test]
+fn complex_struct_equality() {
+    assert_eq!(actual, expected); // shows diff on failure
+}
+```
+
+### `similar-asserts`
+
+Alternative that uses the `similar` library for diffing. Supports
+comparing either `Debug` or `Serialize` representations:
+
+```rust
+use similar_asserts::assert_eq;
+
+#[test]
+fn large_output_comparison() {
+    assert_eq!(actual, expected);
+}
+```
+
+Both are test-only dependencies and safe to add to
+`[dev-dependencies]`.
+
 ## Coverage
 
 ### Tools
@@ -389,9 +682,36 @@ Linux-only CI environments.
 ### What Coverage Doesn't Measure
 
 - Code correctness (100% coverage ≠ bug-free)
+- Whether tests actually check behavior (weak assertions pass coverage)
 - Edge case completeness
 - Error message quality
 - Performance characteristics
+
+### Mutation Testing with `cargo-mutants`
+
+Coverage measures "was this code reached?" Mutation testing measures
+"do tests actually check this code's behavior?" It injects small bugs
+(flips operators, replaces return values, removes calls) and verifies
+at least one test fails for each mutation.
+
+```bash
+cargo install cargo-mutants
+cargo mutants              # run against the whole crate
+cargo mutants -f src/parser.rs  # run against one file
+```
+
+**Outcomes:**
+
+| Result | Meaning |
+|--------|---------|
+| Caught | A test failed — good |
+| Missed | No test caught the mutation — gap |
+| Unviable | Mutation didn't compile — skip |
+| Timeout | Test hung — possibly an infinite loop |
+
+Use mutation testing to complement coverage, especially for code with
+high coverage but weak assertions. "Missed" mutants point to tests
+that execute the code but don't actually verify its behavior.
 
 ## Common Patterns
 
@@ -743,11 +1063,17 @@ assert_eq!(actual, expected);              // Equality
 assert_ne!(actual, unexpected);            // Inequality
 assert!(condition);                        // Boolean
 assert!(matches!(val, Pattern { .. }));    // Pattern matching
+assert_matches!(val, Pattern { .. });      // Better — prints Debug on fail
 assert!(result.is_ok());                   // Result OK
 assert!(result.is_err());                  // Result Err
 assert!(option.is_some());                // Option Some
 assert!(option.is_none());                // Option None
 ```
+
+Prefer `assert_matches!` over `assert!(matches!(...))` — the former prints
+the debug representation of the actual value on failure; the latter only
+says "assertion failed." Available via `use std::assert_matches::assert_matches`
+(nightly) or the `assert_matches` crate (stable).
 
 ### Float Comparisons
 

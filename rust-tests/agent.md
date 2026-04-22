@@ -29,7 +29,8 @@ human guidance.
   MAY add `mockall` to `[dev-dependencies]` when traits already exist
   in the codebase and manual mocks would exceed 30 lines.
 - **Assert on error content.** Check error variants/messages, not just
-  `is_err()`.
+  `is_err()`. Prefer `assert_matches!` (prints Debug on fail) over
+  `assert!(matches!(...))`. Use `is_err_and()` for inline predicates.
 - **No `test_` prefix by default.** Name tests as `<function>_<behavior>`,
   not `test_<function>`. Clippy flags the redundant prefix. However, if
   the module already uses `test_` prefix consistently, match that style.
@@ -42,6 +43,10 @@ human guidance.
   specific functions that literally cannot run without a live service.
 - **Use `approx` for floats.** `assert_abs_diff_eq!` instead of raw
   epsilons. Add `approx` to `[dev-dependencies]`.
+- **Result-returning tests.** Use `-> Result<(), E>` with `?` instead
+  of `.unwrap()` chains when tests call multiple fallible functions.
+- **No `#[should_panic]` + `unwrap()` for error tests.** Unrelated
+  panics cause false positives. Use `assert_matches!` or `is_err_and()`.
 - **Write whole files, not incremental edits.** When creating a new test
   file or adding a `#[cfg(test)]` block, use Write with the complete file
   content — one Write call replaces dozens of fragile Edit calls. Use Edit

@@ -42,11 +42,14 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
 - Check src/lib.rs for #[cfg(feature)] — test with --features flag if needed
 - Use rstest for parameterized tests (2+ cases), not loop-based tables
 - No mocking frameworks unless already in Cargo.toml
-- Assert on error content (variant/message), not just is_err()
+- Assert on error content (variant/message), not just is_err() — prefer
+  assert_matches! over assert!(matches!(...)), use is_err_and() for inline checks
 - No test_ prefix on test functions by default — use <function>_<behavior>
   (but match existing style if module already uses test_ prefix)
 - Use approx crate (assert_abs_diff_eq!) for float comparisons
-- May add rstest and approx to [dev-dependencies]
+- Result-returning tests: use -> Result<(), E> with ? instead of .unwrap() chains
+- Do NOT use #[should_panic] + unwrap() for error tests — false positives
+- May add rstest, approx, assert_matches, pretty_assertions to [dev-dependencies]
 - Async tests need #[tokio::test] or equivalent
 - Binary crates (main.rs only, no lib.rs): use inline #[cfg(test)] mod tests
 - Library/mixed crates: unit tests inline in #[cfg(test)] mod tests blocks

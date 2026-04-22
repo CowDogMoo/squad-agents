@@ -164,7 +164,8 @@ These override everything else.
     `#[async_std::test]`. Check Cargo.toml for the async runtime.
 15. **Assert on error content, not just existence.** When testing error cases,
     assert on the error variant or message, not just `is_err()`. Use
-    `matches!()` for enum variant checks.
+    `assert_matches!()` for enum variant checks (preferred), or
+    `is_err_and()` for inline predicate checks.
 16. **Coverage measurement.** Use `cargo llvm-cov` if available (preferred —
     most accurate, cross-platform), or `cargo tarpaulin` as fallback. If
     neither is installed, use `cargo test` output and note coverage tools
@@ -244,10 +245,10 @@ These override everything else.
     `approx` to `[dev-dependencies]` if not present. Hardcoded epsilons
     are arbitrary and don't communicate intent.
 29. **Add test crates to `[dev-dependencies]`.** You MAY add `rstest`,
-    `test-case`, `approx`, and `mockall` to `[dev-dependencies]` in
-    Cargo.toml — these are test-only dependencies and do not affect
-    the binary. Use `cargo add --dev rstest approx` or edit Cargo.toml
-    directly.
+    `test-case`, `approx`, `mockall`, `pretty_assertions`, and
+    `assert_matches` to `[dev-dependencies]` in Cargo.toml — these are
+    test-only dependencies and do not affect the binary. Use
+    `cargo add --dev rstest approx` or edit Cargo.toml directly.
 30. **Coverage exclusions for untestable code.** When a function's body
     is purely I/O glue (opens a connection pool, initializes an OTel
     provider, wires up middleware) with no testable logic, you MAY
@@ -264,6 +265,31 @@ These override everything else.
     in the report and recommend specific actions (trait extraction,
     testcontainers, or `--exclude-files`). Do NOT silently fail to
     reach the target — explain WHY and WHAT would fix it.
+32. **Prefer `assert_matches!` over `assert!(matches!(...))`.**
+    `assert_matches!` prints the debug representation of the actual
+    value on failure; `assert!(matches!(...))` only prints "assertion
+    failed." Use the `assert_matches` crate (stable) or
+    `std::assert_matches` (nightly). Add `assert_matches` to
+    `[dev-dependencies]` if not present.
+33. **Result-returning tests for cleaner error propagation.** When a
+    test calls multiple fallible functions, return `Result<(), E>`
+    and use `?` instead of chaining `.unwrap()`:
+
+    ```rust
+    #[test]
+    fn roundtrip() -> Result<(), Box<dyn std::error::Error>> {
+        let parsed = parse("input")?;
+        let output = transform(parsed)?;
+        assert_eq!(output, expected);
+        Ok(())
+    }
+    ```
+
+    Do NOT combine `#[should_panic]` with Result return types.
+34. **Do NOT use `#[should_panic]` + `unwrap()` for error testing.**
+    If unrelated code panics before the `unwrap()`, the test falsely
+    passes. Prefer `assert!(result.is_err())`, `assert_matches!`, or
+    `is_err_and()` for testing error cases.
 
 # WORKFLOW
 

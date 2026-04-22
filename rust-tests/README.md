@@ -13,7 +13,7 @@ coverage even if the target is already met.
 
 - Measures baseline coverage with `cargo llvm-cov` or `cargo tarpaulin`
 - Discovers untested modules and functions
-- Writes table-driven unit tests and integration tests
+- Writes parameterized unit tests (rstest/test-case) and integration tests
 - Supports async tests with `#[tokio::test]`
 - Uses trait-based mocking (no external mocking frameworks required)
 - Per-module coverage targeting
@@ -123,11 +123,17 @@ mod tests {
     }
 
     #[rstest]
-    #[case("")]
-    #[case("#fff")]
-    #[case("#zzzzzz")]
-    fn parse_hex_color_invalid(#[case] input: &str) {
-        assert!(parse_hex_color(input).is_err());
+    #[case("", ColorError::InvalidLength)]
+    #[case("#fff", ColorError::InvalidLength)]
+    #[case("#zzzzzz", ColorError::InvalidHex)]
+    fn parse_hex_color_invalid(
+        #[case] input: &str,
+        #[case] expected: ColorError,
+    ) {
+        assert!(matches!(
+            parse_hex_color(input),
+            Err(ref e) if *e == expected
+        ));
     }
 }
 ```
