@@ -368,6 +368,7 @@ jobs:
 
       - name: Check prompt file line counts
         run: |
+          shopt -s nullglob
           failed=0
           SYSTEM_MAX=300
           AGENT_MAX=50
