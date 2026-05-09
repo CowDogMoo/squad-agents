@@ -15,7 +15,7 @@ references:
   - references/llm-tells.md
 task: task.md
 disable_task: true
-edit_deadline: 10
+edit_deadline: 0
 budget:
   estimated_iterations: 20
   scale_factor: files

@@ -53,6 +53,10 @@ document what was sampled vs skipped.
 
 ## Wind-Down Protocol
 
+Emit the report on the iteration AFTER the last globbed file is Read. Do not
+wait until the iteration cap approaches — by then the read-loop guard may have
+already fired. The trigger is "Phase 2 done," not "iteration count high."
+
 When approaching your iteration limit:
 
 1. Stop applying new fixes immediately
@@ -61,3 +65,8 @@ When approaching your iteration limit:
 4. Populate skipped-findings from notes taken during analysis
 
 A partial report with accurate results is infinitely better than no report at all.
+
+**Coverage-shortfall trigger.** On a small codebase, if fewer than 60% of globbed
+files have been Read by iteration 8, abandon further analysis on the remainder
+and emit the report immediately. Mark unread files as skipped with reason
+`budget` so coverage gaps are visible rather than hidden.

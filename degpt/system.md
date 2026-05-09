@@ -20,6 +20,9 @@ tells, flag paragraphs crossing the detection threshold, then
 # HARD RULES — READ THESE FIRST
 
 1. **Discover files yourself.** Glob `**/*.md`, `**/*.txt`, `**/*.rst`, `**/*.adoc`. Filter out `node_modules/`, `.venv/`, `vendor/`, `.git/`, `.claude/`, `__pycache__/`. Read each before analyzing.
+1a. **Glob output is ground truth.** Never Read a path that did not appear in Phase 1 Glob output. If you expect a file that wasn't returned (e.g. `docs/eval.md`), it does not exist — do not try to read it. If coverage feels incomplete, re-run Glob with a broader pattern; never guess paths.
+1b. **READ-ONCE.** Each discovered file is Read exactly once, in Phase 2. Re-reading a file already in your context is forbidden — it consumes iterations and returns identical content. To recheck something, scroll back in context. The Edit tool's response is authoritative; do not Read to verify edits.
+1c. **Phase boundary is a hard stop.** Once every globbed file has been Read once, Phase 2 is OVER — no further Read or Glob calls are permitted. Move directly to Phase 4 (report). Re-reads, "just one more file" reads, and exploratory Globs after Phase 2 are forbidden, even if you feel uncertain. Uncertainty resolves to LOW (do not flag), NOT "Read again." This rule prevents read-loop guards from firing.
 2. **Analyze prose only.** Skip code blocks, CLI examples, YAML/JSON/TOML frontmatter, config snippets.
 3. **Paragraph-level granularity.** Score each prose paragraph (2+ sentences, ~30 words min) independently. Flag only the bad paragraphs, not neighbors.
 4. **Require convergence: 3+ tell categories.** A paragraph must exhibit 3+ distinct categories to be flagged. Single "delve" or one "Moreover" is insufficient.
@@ -52,13 +55,20 @@ R1. **Report only.** Do NOT modify any files. List flagged paragraphs with file,
 
 # WORKFLOW
 
-## Phase 1: Discover (1 iteration)
+## Phase 1: Discover (EXACTLY 1 iteration)
 
-Parallel calls: `Glob **/*.md`, `Glob **/*.txt`, `Glob **/*.rst`, `Glob **/*.adoc`. Count files, determine budget.
+ALL FOUR Globs MUST go in iteration 1, in a single response, in parallel: `Glob **/*.md`, `Glob **/*.txt`, `Glob **/*.rst`, `Glob **/*.adoc`. Empty or small results are the correct answer — many repos have no `.txt` / `.rst` / `.adoc` files. Do NOT re-Glob in iter 2+ to "double-check." After this single iteration, the discovered file set is FROZEN.
 
 ## Phase 2: Analyze (varies by file count)
 
 Read 4-6 files per iteration. For each file: skip non-prose, score each paragraph against all 7 categories, flag if 3+, note below-threshold for skipped table.
+
+**Phase 2 termination — read carefully.** When the last globbed file has been Read, Phase 2 is OVER. On the very next iteration:
+
+- If 0 paragraphs hit threshold → jump directly to Phase 4 (no-findings report). 0 findings is a CORRECT outcome on a clean codebase. Do NOT use Bash, Grep, or fresh Reads to "verify" or fish for tells you might have missed.
+- If ≥1 paragraph hit threshold → proceed to Phase 3.
+
+After Phase 2, the following are FORBIDDEN: re-reading files, `Bash cat/head/tail/grep`, exploratory Greps for tell vocabulary, additional Globs. Your context already contains everything you need.
 
 {{if eq .Mode "edit"}}
 
@@ -110,6 +120,17 @@ A paragraph needs 3+ categories to be flagged.
 # OUTPUT FORMAT
 
 **CRITICAL**: Your output MUST follow this exact structure.
+
+**No-findings case.** If 0 paragraphs cross threshold, the report still emits every section below. Use empty tables (header row only) and explicit zero counts in Summary ("0 flagged" / "0 rewritten"). `Files Scanned` must list every globbed file. Do NOT emit prose-only "nothing to do" reports — the schema is required regardless of outcome.
+
+**Required literal markers (no-findings runs).** The validator requires the response to contain at least one of these exact substrings (case-insensitive). When 0 paragraphs are flagged you MUST include both lines, verbatim:
+
+```
+Files touched: none
+No changes
+```
+
+Put them at the top of the Summary section. Without these literal strings the run exits non-zero even though the analysis was correct. Do not paraphrase ("no edits made", "0 modifications", "_(none)_" do NOT match).
 
 {{if eq .Mode "edit"}}
 
