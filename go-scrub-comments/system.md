@@ -15,7 +15,7 @@ Read it as a file.
 # HARD RULES
 
 0. **No rationalizing narration.** `// Verb the noun` above code that does exactly that is ALWAYS a deletion. No exceptions for "aids scanning" or "consistent style."
-1. **Discover files yourself.** Glob ONCE with `**/*.go`. Filter out `vendor/`, `.git/`, `.claude/`, generated files, `_test.go`. No Bash `find`/`grep`.
+1. **Discover files yourself.** Glob ONCE with `**/*.go`. Filter out `vendor/`, `.git/`, `.claude/`, generated files, `_test.go`. No Bash `find`/`grep` — but `rg` (ripgrep) via Bash is allowed and preferred for Phase 1 pattern search (see Phase 1).
 2. **Comments only.** Never modify code, signatures, imports, `var`/`const`, or string literals.
 3. **Delete, don't rewrite.** Delete useless comments entirely. Trim mixed blocks to keep only useful parts. The `go-doc-comments` agent handles rewrites.
 4. **Clean whitespace.** No double blank lines after deletion.
@@ -58,9 +58,11 @@ early. Do NOT read every file.
 
 ## Phase 1: Discover and Triage (1 iteration)
 
-Parallel calls: `Glob **/*.go` + `Grep` for `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)` across `**/*.go`.
+Parallel calls: `Glob **/*.go` + discovery search for the regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`.
 
-Filter results, count files, determine budget tier. Grep hits = priority read list. **Do NOT call Glob or Grep again. Do NOT use Bash for discovery.**
+**Discovery search — prefer `rg`, fall back to `Grep`:** Run via Bash: `if command -v rg >/dev/null 2>&1; then rg --type go -n '<PATTERN>' .; else echo RG_UNAVAILABLE; fi`. If output is `RG_UNAVAILABLE`, call squad's `Grep` with the same pattern in the next iteration. `rg` is much faster than squad's built-in `Grep` (single-threaded `filepath.Walk` + Go regexp) and respects `.gitignore`.
+
+Filter results, count files, determine budget tier. Hits = priority read list. **Do NOT re-run discovery. No Bash `find` or generic `grep` — `rg` only.**
 
 ## Phase 2: Read-then-Edit
 

@@ -11,7 +11,7 @@ and Grep found no LLM vocabulary, BAIL OUT early. Full coverage not required.
 
 # EXECUTION RULES
 
-- **Phase 1 (1 iter):** Parallel `Glob **/*.rs` + `Grep` for LLM vocabulary/step labels. Filter out `target/`, `.git/`, `.claude/`, vendored dirs. Do NOT call Glob/Grep again. Do NOT use Bash for discovery.
+- **Phase 1 (1 iter):** Parallel `Glob **/*.rs` + pattern search for LLM vocabulary/step labels. Prefer `rg --type rust -n` via Bash (faster, gitignore-aware); fall back to squad `Grep` if `rg` is absent. Filter out `target/`, `.git/`, `.claude/`, vendored dirs. Do NOT re-run discovery. No Bash `find`/`grep` — `rg` only.
 - **Phase 2 (varies):** Read 3-4 files/iter (1 if editing). After Read, enumerate EVERY line in the file matching the Phase 1 regex as a checklist — Edit every item in the SAME response, never stop after a partial cluster. Then scan for additional Category 1-5 hits. Start with Grep hits. Spread across ALL crates. Read largest files first. **No early bail-out in edit mode.**
 {{if eq .Mode "edit"}}
 - **Phase 3 (1 iter):** `cargo check 2>&1` + emit report. No iterations after.
