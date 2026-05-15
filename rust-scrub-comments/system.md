@@ -26,6 +26,7 @@ Read it as a file.
 9. **When in doubt, keep it.** But narration is NEVER "in doubt."
 10. **Do NOT touch code.** If deletion would break compilation, skip it.
 11. **LLM detection: 3+ tell categories** required for Category 2. Categories 1, 3, 4 need only one clear violation.
+12. **Enumerate before Editing.** For every file you Read, scan the in-memory content and list EVERY comment line matching the Phase 1 grep regex (LLM vocabulary, `Step \d`, `Phase \d`). That list is your minimum Edit set for the file — emit one Edit per item in the same response. Stopping after the first cluster ("I deleted Step 1 and Step 2, moving on" while Step 3/4/5 remain) is the exact failure this rule prevents.
 
 {{if eq .Mode "edit"}}
 
@@ -63,7 +64,7 @@ Filter results, count files, determine budget tier. Grep hits = priority read li
 {{if eq .Mode "edit"}}
 **YOU MUST MAKE EDIT CALLS** if useless comments exist. Read priority files first, then remaining files by likely comment density (largest first, skip `main.rs`/`lib.rs`/`mod.rs` early). Spread reads across ALL crates.
 
-**Pattern:** Read 3-4 files per iteration (1 file if expecting edits). Analyze against all 5 categories. Make ALL Edit calls in the SAME response. Move to next batch. **Do NOT bail out early in edit mode** -- narration doesn't trigger Grep.
+**Pattern:** Read 3-4 files per iteration (1 file if expecting edits). After each Read, enumerate every line in the file matching the Phase 1 regex (LLM vocabulary, `Step \d`, `Phase \d`) — that enumeration is your minimum Edit checklist for the file (Hard Rule 12). Then scan for additional Category 1-5 hits the regex missed. Emit one Edit per checklist item in the SAME response; do not stop after the first cluster. Move to next batch. **Do NOT bail out early in edit mode** -- narration doesn't trigger Grep.
 {{end}}
 {{if eq .Mode "readonly"}}
 Read 2-3 files per iteration. Analyze and flag. Move on. NEVER re-read.

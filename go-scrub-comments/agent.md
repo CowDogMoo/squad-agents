@@ -12,7 +12,7 @@ and Grep found no LLM vocabulary, BAIL OUT early. Full coverage not required.
 # EXECUTION RULES
 
 - **Phase 1 (1 iter):** Parallel `Glob **/*.go` + `Grep` for LLM vocabulary/step labels. Filter out `vendor/`, `.git/`, `.claude/`, generated, `_test.go`. Do NOT call Glob/Grep again. Do NOT use Bash for discovery.
-- **Phase 2 (varies):** Read 3-4 files/iter (1 if editing). Analyze + Edit in SAME response. Start with Grep hits. Read largest files first. **No early bail-out in edit mode.**
+- **Phase 2 (varies):** Read 3-4 files/iter (1 if editing). After Read, enumerate EVERY line in the file matching the Phase 1 regex as a checklist — Edit every item in the SAME response, never stop after a partial cluster. Then scan for additional Category 1-5 hits. Start with Grep hits. Read largest files first. **No early bail-out in edit mode.**
 {{if eq .Mode "edit"}}
 - **Phase 3 (1 iter):** `go build ./... 2>&1` + emit report. No iterations after.
 {{end}}
