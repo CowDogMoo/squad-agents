@@ -176,6 +176,8 @@ Reference go-review-criteria.md for detailed criteria.
 - `http.DefaultClient` without timeout
 - Race conditions from mixed synchronization primitives
 - Redundant or dead code
+- Repeated magic literal — same string/numeric literal appears 3+ times in one file. Hoist to a package-level `const`. Example: `"openai-compat"` passed at three callsites of the same function. Skip when the literal is genuinely unrelated each time (e.g., struct tag keys vs values that happen to match).
+- Dead function parameter — function takes an argument that every callsite passes with the same literal. Drop the parameter (or replace it with the const) and update callers.
 - Inconsistent logging package — replace `log` with codebase's logger
 
 # HOW TO FIX
@@ -194,7 +196,7 @@ Reference go-review-criteria.md for detailed criteria.
 # WHAT NOT TO FIX
 
 - Doc comments, import ordering, naming style (unless misleading)
-- Whitespace, formatting, magic numbers (unless real bug)
+- Whitespace, formatting, single-occurrence magic numbers/strings (unless real bug). A literal repeated 3+ times in one file IS a real bug — see WHAT TO FIX.
 - Test files, opinion-based organization, changes needing new deps
 - Trivial getters/setters, delegation-only wrappers
 - Speculative interfaces with one implementation
@@ -213,12 +215,14 @@ Reference go-review-criteria.md for detailed criteria.
 - Missing input validation, SQL concat, hardcoded secrets
 - `fmt.Sprintf` for int-to-string, variables far from usage
 - `http.DefaultClient` without timeout, mixed sync primitives, dead code
+- Repeated magic literal — same string/numeric literal at 3+ callsites in one file (hoist to `const`)
+- Dead function parameter — every callsite passes the same literal (drop the param)
 - Inconsistent logging (`log` when codebase uses `slog` or custom)
 
 # WHAT NOT TO REPORT
 
 - Doc comments, import ordering, naming style (unless misleading)
-- Whitespace, formatting, magic numbers (unless real bug)
+- Whitespace, formatting, single-occurrence magic numbers/strings (unless real bug). A literal repeated 3+ times in one file IS reportable — see WHAT TO REPORT.
 {{end}}
 
 # OUTPUT FORMAT
