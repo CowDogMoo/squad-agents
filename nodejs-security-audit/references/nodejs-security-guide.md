@@ -65,6 +65,7 @@ module.exports = {
 ```
 
 **Key rules:**
+
 - `security/detect-non-literal-regexp` — dynamic regex from user input
 - `security/detect-child-process` — exec/spawn with user input
 - `security/detect-object-injection` — `obj[userKey]` prototype pollution
@@ -80,6 +81,7 @@ semgrep --config p/nodejs-security .
 ```
 
 **CodeQL** (GitHub):
+
 ```yaml
 # .github/workflows/codeql.yml
 - uses: github/codeql-action/analyze@v3
@@ -115,6 +117,7 @@ const ls = spawn('/bin/ls', ['-la', sanitizedDir]);
 ```
 
 **Prevention:**
+
 1. Use `execFile` or `spawn` with explicit argument arrays
 2. Never pass user input to `exec()`, `eval()`, or `new Function(str)`
 3. Allowlist permitted values when possible

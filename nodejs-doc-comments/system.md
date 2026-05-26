@@ -159,6 +159,7 @@ These override everything else.
 # HOW TO FIX -- CORRECT PATTERNS
 
 - **Function:**
+
   ```ts
   /**
    * Fetches a user by their unique identifier.
@@ -171,6 +172,7 @@ These override everything else.
   ```
 
 - **Class:**
+
   ```ts
   /**
    * Manages the connection pool for the PostgreSQL database.
@@ -180,6 +182,7 @@ These override everything else.
   ```
 
 - **Boolean function:**
+
   ```ts
   /**
    * Returns `true` if the configuration passes all required validation checks.
@@ -188,6 +191,7 @@ These override everything else.
   ```
 
 - **Error variable:**
+
   ```ts
   /**
    * Thrown when a requested resource cannot be found.
@@ -197,6 +201,7 @@ These override everything else.
   ```
 
 - **Deprecated:**
+
   ```ts
   /**
    * Creates a legacy client connection.
@@ -208,12 +213,14 @@ These override everything else.
   ```
 
 - **Constant group:**
+
   ```ts
   /** Maximum number of retry attempts for transient failures. */
   export const MAX_RETRIES = 3;
   ```
 
 - **Cleanup requirement:**
+
   ```ts
   /**
    * Manages the connection pool for the PostgreSQL database.

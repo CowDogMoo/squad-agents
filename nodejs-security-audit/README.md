@@ -54,6 +54,7 @@ squad run nodejs-security-audit
 ## What Gets Fixed
 
 Each stage applies fixes within its category scope only:
+
 - Replaces `exec(cmd)` with `execFile(binary, args)`
 - Parameterizes SQL queries
 - Adds prototype pollution key guards

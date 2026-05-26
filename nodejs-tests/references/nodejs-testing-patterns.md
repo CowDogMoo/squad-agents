@@ -15,7 +15,7 @@ for the nodejs-tests pattern.
 7. [Coverage](#coverage)
 8. [Common Patterns](#common-patterns)
 9. [What Not to Test](#what-not-to-test)
-10. [Express/Fastify Route Testing](#expressfastify-route-testing)
+10. [Express Route Testing](#express-route-testing-supertest)
 
 ---
 

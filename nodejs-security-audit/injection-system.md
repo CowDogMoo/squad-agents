@@ -178,12 +178,15 @@ Do NOT report or fix:
 - **XSS (client):** Use `textContent` instead of `innerHTML`. Use React JSX
   expressions `{userInput}` instead of `dangerouslySetInnerHTML`.
 - **Prototype pollution:** Validate keys before assignment:
+
   ```ts
   const ALLOWED_KEYS = new Set(['name', 'email']);
   if (ALLOWED_KEYS.has(key)) obj[key] = val;
   ```
+
   Or use `Object.create(null)` for dictionaries.
 - **Input validation:** Use Zod, Joi, or Yup at route entry points:
+
   ```ts
   const schema = z.object({ id: z.string().uuid() });
   const { id } = schema.parse(req.params);

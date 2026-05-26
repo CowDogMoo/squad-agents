@@ -168,37 +168,48 @@ Do NOT report or fix:
 # HOW TO FIX -- CORRECT PATTERNS
 
 - **Path traversal:** Validate that the resolved path stays within the base:
+
   ```ts
   import path from 'path';
   const BASE = path.resolve('/var/www/files');
   const resolved = path.resolve(BASE, userInput);
   if (!resolved.startsWith(BASE + path.sep)) throw new Error('Invalid path');
   ```
+
 - **Weak crypto — random token:** Replace `Math.random()` with:
+
   ```ts
   import { randomBytes } from 'crypto';
   const token = randomBytes(32).toString('hex');
   ```
+
 - **Weak crypto — hashing:** Replace MD5/SHA-1 with `sha256`:
+
   ```ts
   crypto.createHash('sha256').update(data).digest('hex');
   ```
+
 - **Hardcoded secret:** Replace with `process.env.SECRET_NAME ?? ''`.
 - **SSRF:** Validate URL host against an allowlist before making request:
+
   ```ts
   const ALLOWED_HOSTS = new Set(['api.example.com']);
   const url = new URL(userInput);
   if (!ALLOWED_HOSTS.has(url.hostname)) throw new Error('Host not allowed');
   ```
+
 - **TLS skip verify:** Remove `rejectUnauthorized: false` or guard it behind
   a `NODE_ENV !== 'production'` check.
 - **Insecure temp file:** Use `os.tmpdir()` with `crypto.randomBytes`:
+
   ```ts
   import os from 'os';
   import { randomBytes } from 'crypto';
   const tmpPath = path.join(os.tmpdir(), `upload-${randomBytes(8).toString('hex')}`);
   ```
+
 - **Error info leak:** Return generic message to client:
+
   ```ts
   catch (err) {
     logger.error({ err }, 'internal error');
