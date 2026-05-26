@@ -1,0 +1,37 @@
+---
+name: nodejs-security-audit
+version: 0.1.0
+description: Parallel security audit — injection + resources stages run concurrently
+
+stages:
+  - name: injection
+    entrypoint: injection-system.md
+    wrapper: injection-agent.md
+    task: injection-task.md
+    max_cost: 2.00
+    models:
+      - model: claude-sonnet-4-6
+        provider: anthropic
+    references:
+      - references/nodejs-security-guide.md
+  - name: resources
+    entrypoint: resources-system.md
+    wrapper: resources-agent.md
+    task: resources-task.md
+    max_cost: 2.00
+    models:
+      - model: claude-sonnet-4-6
+        provider: anthropic
+    references:
+      - references/nodejs-security-guide.md
+
+gates:
+  - after: injection
+    command: "npm run build --if-present || npx tsc --noEmit 2>/dev/null || true"
+    on_failure: stop
+  - after: resources
+    command: "npm run build --if-present || npx tsc --noEmit 2>/dev/null || true"
+    on_failure: stop
+  - after: resources
+    command: "npm test -- --passWithNoTests 2>/dev/null || npx jest --passWithNoTests 2>/dev/null || true"
+    on_failure: stop

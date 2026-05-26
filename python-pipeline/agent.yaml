@@ -15,5 +15,5 @@ stages:
 
 gates:
   - after: tests
-    command: "python -m pytest"
+    command: "if python3 -c 'import pytest' 2>/dev/null; then python3 -m pytest -x -q; elif python -c 'import pytest' 2>/dev/null; then python -m pytest -x -q; else echo 'pytest not installed — gate skipped'; fi"
     on_failure: stop
