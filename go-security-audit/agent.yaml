@@ -8,7 +8,7 @@ stages:
     entrypoint: injection-system.md
     wrapper: injection-agent.md
     task: injection-task.md
-    max_cost: 2.00
+    max_cost: 5.00
     models:
       - model: claude-sonnet-4-6
         provider: anthropic
@@ -18,7 +18,7 @@ stages:
     entrypoint: resources-system.md
     wrapper: resources-agent.md
     task: resources-task.md
-    max_cost: 2.00
+    max_cost: 5.00
     models:
       - model: claude-sonnet-4-6
         provider: anthropic
