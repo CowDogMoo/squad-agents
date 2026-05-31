@@ -48,6 +48,16 @@ squad agents list
 squad run --agent go-review
 ```
 
+### New to Squad?
+
+Squad ships four concepts for composing AI work — **Agent**, **Skill**,
+**Task tool**, and **Pipeline**. The canonical reference (with decision
+flowcharts for which to reach for and when) is
+[`squad/docs/agents-and-skills.md`](https://github.com/cowdogmoo/squad/blob/main/docs/agents-and-skills.md).
+This repo ships agents and pipelines today; skills can live alongside
+them in `.squad/skills/` per the open
+[Agent Skills standard](https://agentskills.io).
+
 ## Available Agents
 
 ### Go Agents
@@ -84,38 +94,68 @@ squad run --agent go-review
 | [ansible-review](./ansible-review)     | Playbook/role best practices and security |
 | [ansible-molecule](./ansible-molecule) | Molecule test verification depth          |
 
-### Pipeline Agents
+### Pipelines
 
-Orchestrators that chain multiple agents sequentially with context passing:
+Multi-stage orchestrators declared with `stages:` + `depends_on` + `gates:`
+in `agent.yaml`. Each stage is a separate run with its own context; gates
+verify before the next stage spends tokens. Use a pipeline when the
+workflow is fixed and repeatable; reach for the Task tool from inside a
+single agent when delegation is dynamic. See
+[the decision guide](https://github.com/cowdogmoo/squad/blob/main/docs/agents-and-skills.md#decision-guide).
 
-| Agent                                | Description                 | Children                                         |
-| ------------------------------------ | --------------------------- | ------------------------------------------------ |
-| [go-pipeline](./go-pipeline)         | Full Go review pipeline     | go-review, go-tests, go-doc-comments, go-cobra   |
-| [python-pipeline](./python-pipeline) | Full Python review pipeline | python-review, python-tests, python-doc-comments |
-| [rust-pipeline](./rust-pipeline)     | Full Rust review pipeline   | rust-review, rust-tests, rust-doc-comments       |
+| Agent                                          | Description                                       | Children                                         |
+| ---------------------------------------------- | ------------------------------------------------- | ------------------------------------------------ |
+| [go-pipeline](./go-pipeline)                   | Full Go review pipeline                           | go-review, go-tests, go-doc-comments, go-cobra   |
+| [python-pipeline](./python-pipeline)           | Full Python review pipeline                       | python-review, python-tests, python-doc-comments |
+| [rust-pipeline](./rust-pipeline)               | Full Rust review pipeline                         | rust-review, rust-tests, rust-doc-comments       |
+| [go-security-audit](./go-security-audit)       | Parallel injection + resources audit (inline)     | inline stages                                    |
+| [nodejs-security-audit](./nodejs-security-audit) | Parallel injection + resources audit (inline)   | inline stages                                    |
 
 ### Specialized Agents
 
-| Agent            | Description                                                     |
-| ---------------- | --------------------------------------------------------------- |
-| [degpt](./degpt) | Detects and rewrites LLM-generated prose to sound human-written |
+| Agent                                | Description                                                                       |
+| ------------------------------------ | --------------------------------------------------------------------------------- |
+| [degpt](./degpt)                     | Detects and rewrites LLM-generated prose to sound human-written                   |
+| [weekly-planner](./weekly-planner)   | Inline-prompt agent that turns a Google Doc planner into Google Calendar events   |
+| [grocery-runner](./grocery-runner)   | Single-stage pipeline with a `pre_gates:` prelude and chrome MCP for cart-filling |
+
+### Skills
+
+Skills are on-demand capabilities a running agent loads mid-task (see the
+open [Agent Skills standard](https://agentskills.io) and Squad's
+[four-concept overview](https://github.com/cowdogmoo/squad/blob/main/docs/agents-and-skills.md#skills)).
+This repo does not ship any skills today — when you need one, scaffold it
+with `squad skill new <name>` into either:
+
+- `.squad/skills/<name>/SKILL.md` — repo scope, checked into git, shared
+  with the team
+- `$XDG_CONFIG_HOME/squad/skills/<name>/SKILL.md` — global scope,
+  personal across projects
+
+A skill is the right choice when the capability is one *piece* of a
+larger task and might be reused by multiple agents. For full agents
+delegated to at runtime, use the **Task tool** (`Task(agent=..., prompt=...)`)
+from inside another agent. For fixed multi-stage workflows, use a
+**Pipeline** (above).
 
 ## Features
 
-| Feature                    | Description                                                    |
-| -------------------------- | -------------------------------------------------------------- |
-| **Multi-Language**         | Go, Python, Rust, and Ansible agents                           |
-| **Autonomous Fixing**      | Agents discover, fix, and verify in a single run               |
-| **Mode Support**           | Edit mode (autonomous fixes) and readonly mode (analysis only) |
-| **Pipeline Orchestration** | Chain agents with context passing to avoid redundant work      |
-| **Modular Prompts**        | Composable system/agent/task prompt architecture               |
-| **Budget Controls**        | Iteration limits, scale factors, and token budgets             |
-| **CI/CD Validation**       | Automated agent structure and metadata validation              |
-| **Template System**        | Scaffold new agents from built-in templates                    |
+| Feature                    | Description                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| **Multi-Language**         | Go, Python, Rust, Node.js, and Ansible agents                                               |
+| **Autonomous Fixing**      | Agents discover, fix, and verify in a single run                                            |
+| **Mode Support**           | Edit mode (autonomous fixes) and readonly mode (analysis only)                              |
+| **Pipeline Orchestration** | Multi-stage `stages:` + `depends_on` + `gates:` to chain agents and verify between them     |
+| **Task Tool Delegation**   | Agents can spawn child agent runs via `Task(agent=..., prompt=...)` for isolated sub-jobs   |
+| **Skills (open standard)** | Agents load on-demand playbooks via `Skill(name)` per [agentskills.io](https://agentskills.io) |
+| **Modular Prompts**        | Composable system/agent/task prompt architecture (or single inline `prompt:` for one-shots) |
+| **Budget Controls**        | Iteration limits, scale factors, and token budgets                                          |
+| **CI/CD Validation**       | Automated agent structure and metadata validation                                           |
+| **Template System**        | Scaffold new agents from built-in templates                                                 |
 
 ## Agent Structure
 
-Each agent directory contains:
+Most agents in this repo use the three-file split:
 
 ```text
 agent-name/
@@ -125,6 +165,13 @@ agent-name/
 ├── task.md         # Task instructions and constraints
 └── references/     # Knowledge base documents (criteria, patterns, guides)
 ```
+
+Self-contained one-shot agents can use an inline `prompt:` field in
+`agent.yaml` instead — see [`weekly-planner/agent.yaml`](./weekly-planner/agent.yaml).
+Pipelines use a `stages:` block instead of `entrypoint`/`wrapper` —
+see [`go-pipeline/agent.yaml`](./go-pipeline/agent.yaml). The full
+shape reference is upstream at
+[`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md).
 
 ### Agent Manifest (agent.yaml)
 
@@ -223,11 +270,11 @@ squad agents update              # Pull latest from all repos
 
 ## Creating Custom Agents
 
-Use the `_templates/` directory as a starting point:
+Use the `_includes/` directory as a starting point:
 
 ```bash
 # Copy a template
-cp -r _templates/basic my-agent
+cp -r _includes/basic my-agent
 
 # Edit the manifest
 vim my-agent/agent.yaml

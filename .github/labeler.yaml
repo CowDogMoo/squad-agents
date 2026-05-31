@@ -10,7 +10,7 @@ area/agents:
 
 area/templates:
   - changed-files:
-      - any-glob-to-any-file: "_templates/**/*"
+      - any-glob-to-any-file: "_includes/**/*"
 
 area/docs:
   - changed-files:

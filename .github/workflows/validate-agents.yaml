@@ -15,7 +15,7 @@ on:
       - '**/agent.md'
       - '**/task.md'
       - '**/references/**'
-      - '_templates/**'
+      - '_includes/**'
       - '.github/workflows/validate-agents.yaml'
   push:
     branches:
@@ -26,7 +26,7 @@ on:
       - '**/agent.md'
       - '**/task.md'
       - '**/references/**'
-      - '_templates/**'
+      - '_includes/**'
       - '.github/workflows/validate-agents.yaml'
   workflow_dispatch:
 
@@ -53,7 +53,7 @@ jobs:
       - name: Find all agents
         id: find-agents
         run: |
-          agents=$(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+          agents=$(find . -name 'agent.yaml' -not -path './_includes/*' -type f)
           echo "Found agents:"
           echo "$agents"
           {
@@ -96,7 +96,7 @@ jobs:
             fi
 
             echo "::endgroup::"
-          done < <(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+          done < <(find . -name 'agent.yaml' -not -path './_includes/*' -type f)
 
           if [ $failed -eq 1 ]; then
             echo "::error::One or more agents are missing required files"
@@ -107,7 +107,7 @@ jobs:
       - name: Validate YAML syntax
         run: |
           pip install yamllint
-          find . -name 'agent.yaml' -not -path './_templates/*' | while read -r file; do
+          find . -name 'agent.yaml' -not -path './_includes/*' | while read -r file; do
             echo "Checking YAML syntax: $file"
             yamllint -d "{extends: relaxed, rules: {line-length: {max: 120}}}" "$file"
           done
@@ -143,7 +143,7 @@ jobs:
 
           agent_files = sorted(
               p for p in Path('.').rglob('agent.yaml')
-              if '_templates' not in p.parts
+              if '_includes' not in p.parts
           )
 
           for agent_file in agent_files:
@@ -253,7 +253,7 @@ jobs:
 
           agent_files = sorted(
               p for p in Path('.').rglob('agent.yaml')
-              if '_templates' not in p.parts
+              if '_includes' not in p.parts
           )
 
           for agent_file in agent_files:
@@ -420,7 +420,7 @@ jobs:
               check_limit "$dir/agent.md" $AGENT_MAX "agent wrapper" || failed=1
               check_limit "$dir/task.md" $TASK_MAX "task file" || failed=1
             fi
-          done < <(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+          done < <(find . -name 'agent.yaml' -not -path './_includes/*' -type f)
 
           if [ $failed -eq 1 ]; then
             echo "::error::One or more prompt files exceed line count limits"
@@ -481,7 +481,7 @@ jobs:
               check_section "$f" '^#.*EXECUTION RULES' "EXECUTION RULES" || failed=1
               check_section "$f" '^#.*OUTPUT COMPLIANCE' "OUTPUT COMPLIANCE" || failed=1
             done
-          done < <(find . -name 'agent.yaml' -not -path './_templates/*' -type f)
+          done < <(find . -name 'agent.yaml' -not -path './_includes/*' -type f)
 
           if [ $failed -eq 1 ]; then
             echo "::error::One or more prompt files are missing required sections"

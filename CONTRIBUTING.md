@@ -21,7 +21,7 @@ git clone https://github.com/cowdogmoo/squad-agents.git
 cd squad-agents
 
 # Copy a template
-cp -r _templates/basic my-agent
+cp -r _includes/basic my-agent
 
 # Or fork an existing agent
 cp -r go-review my-agent
