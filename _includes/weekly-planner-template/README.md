@@ -18,14 +18,16 @@ Each run:
 It does **not** do the GROCERIES table writeback that the personal
 weekly-planner agent does — that's a more opinionated feature tied to
 recipe-URL extraction. If you want it, layer the
-[`extract-recipe-grocery-list`](https://github.com/cowdogmoo/squad-skills/tree/main/extract-recipe-grocery-list)
-skill on top once this basic version is working.
+`extract-recipe-grocery-list` skill on top once this basic version is
+working. (That skill lives in a separate personal-skills tree — author
+your own equivalent, or point your squad config at the personal tree.)
 
 ## Prerequisites
 
 - A Google Doc planner with the schema documented in the
-  [`bootstrap-weekly-planner-doc`](https://github.com/cowdogmoo/squad-skills/tree/main/bootstrap-weekly-planner-doc)
-  skill (run that skill's `scripts/setup.py` to create one).
+  `bootstrap-weekly-planner-doc` skill (run that skill's
+  `scripts/setup.py` to create one). The skill lives in a separate
+  personal-skills tree.
 - A Google Calendar you have write access to.
 - A Google Drive + Calendar MCP server. The Google-hosted MCP endpoints
   (`calendarmcp.googleapis.com`, `drivemcp.googleapis.com`) are
@@ -88,5 +90,8 @@ https://github.com/cowdogmoo/squad-agents/issues.
 
 ## Related
 
-- [`bootstrap-weekly-planner-doc`](https://github.com/cowdogmoo/squad-skills/tree/main/bootstrap-weekly-planner-doc) skill — creates the Google Doc this agent reads from.
-- [`extract-recipe-grocery-list`](https://github.com/cowdogmoo/squad-skills/tree/main/extract-recipe-grocery-list) skill — parses recipe URLs into a deduplicated grocery list (the next layer if you want GROCERIES table writeback).
+- `bootstrap-weekly-planner-doc` skill (personal-skills tree) — creates
+  the Google Doc this agent reads from.
+- `extract-recipe-grocery-list` skill (personal-skills tree) — parses
+  recipe URLs into a deduplicated grocery list (the next layer if you
+  want GROCERIES table writeback).

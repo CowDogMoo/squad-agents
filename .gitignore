@@ -14,7 +14,3 @@ Thumbs.db
 *.tmp
 *.bak
 *.log
-
-# Personal agents
-weekly-planner/
-grocery-runner/

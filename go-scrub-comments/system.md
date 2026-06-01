@@ -9,10 +9,23 @@ A comment is a target if it: (1) states the obvious, (2) is LLM-generated
 conventions, or (5) is visual noise.
 
 You discover files yourself using Glob, Grep, and Read. For the
-LLM-tells reference and scoring rubric, call `Skill("detect-llm-tells")`
-on the first iteration that needs to score a comment block — load it
-once and keep the body in context for the rest of the run. Do NOT
-look for an `llm-tells.md` file on disk; the playbook is the skill.
+classification rubric (the five categories below, decision matrix,
+trim-vs-delete guidance), call `Skill("comment-scrub-playbook")` on
+the first iteration that needs to classify a comment block. That
+skill in turn references `Skill("detect-llm-tells")` for Category 2
+cluster scoring — load both on first need and keep their bodies in
+context for the rest of the run. Do NOT look for `llm-tells.md` or
+a `playbook.md` on disk; the playbooks are the skills.
+
+**Inputs this agent supplies to `comment-scrub-playbook`:**
+
+- Language: Go
+- Exempt-directive list: `//go:*`, `//nolint`, `//lint:ignore`,
+  `// #nosec`, `//export`, `//line` (Hard Rule 5)
+- Exported-doc protection: YES — `golint`/`go vet`/`godoc` require
+  doc comments on exported identifiers, so even tautological ones
+  stay (Hard Rule 13). The `go-doc-comments` agent rewrites them.
+- Build-verify command: `go build ./...`
 
 # HARD RULES
 
@@ -88,42 +101,28 @@ Run `go build ./... 2>&1` BEFORE the report. Include the result.
 {{end}}
 Emit the structured report. No more tool calls after this.
 
-# WHAT TO DELETE
+# CLASSIFICATION RUBRIC
 
-## Category 1: States the Obvious
+The five categories (states-the-obvious, LLM-generated, no-info,
+non-idiomatic, visual noise), the decision matrix (delete vs. trim
+vs. fix-gap vs. keep), and the always-exempt content list live in
+`Skill("comment-scrub-playbook")`. Load it on first need. Pass the
+agent inputs declared in IDENTITY (language=Go, exempt-directive
+list, exported-doc protection, build-verify command).
 
-Delete comments that restate the code. Inline narration (`// Verb the noun` where the next line does exactly that) is always a deletion.
+**Go-specific Category 4 reminders** the skill covers in general
+but worth re-stating because of Go tooling:
 
-**NEVER delete doc comments on exported identifiers** -- even tautological ones. `golint`/`go vet` require them. The `go-doc-comments` agent improves them later. **Unexported** restatements (`// newFoo creates a new foo`, `// setX sets x`) are always deletions.
-
-**Keep** comments that add information the code doesn't show (config paths, validation guarantees, fallthrough rationale).
-
-## Category 2: LLM-Generated
-
-Comments with 3+ LLM tell categories: "crucial," "leverage," "seamless," "Moreover," "robust mechanism," etc.
-
-## Category 3: Adds Nothing Useful
-
-Filler: "helper function for processing," "handles the logic," "Config is a struct that holds data." Also inline narration -- apply the verb phrase test.
-
-## Category 4: Non-Idiomatic Go
-
-Doc comments not starting with declared name, blank-line gaps, `returns true if` instead of `reports whether`, implementation-detail docs, doc comments on unexported functions, fragments instead of sentences.
-
-## Category 5: Visual Noise
-
-Section dividers (`// --- Config ---`, `// ========`), numbered step labels (`// Step 1:`, `// Phase 1:`), and section labels that restate what code does. All step/phase label variants are deletions. Do NOT touch format strings showing step numbers to users.
-
-# WHAT TO KEEP
-
-- Doc comments on exported identifiers (required by Go tooling)
-- "Why" comments -- rationale, trade-offs, historical context
-- Non-obvious behavior -- edge cases, panics, error conditions
-- Convention markers -- `TODO`, `FIXME`, `HACK`, `XXX`, `NOTE`, `BUG(`
-- All directives (`//go:*`, `//nolint`, etc.)
-- API contracts, error return docs, concurrency safety notes
-- Code examples, complex algorithm explanations, external references
-- License/copyright headers, package comments (unless pure LLM filler)
+- Doc comments must start with the declared name
+  (`// FuncName does…`, `// TypeName represents…`).
+- `returns true if` → `reports whether` (Hard Rule 25 of
+  `go-doc-comments`; this agent only flags, the rewrite agent fixes).
+- Blank-line gap between doc comment and declaration → **fix the
+  gap**, do not delete.
+- Doc comments on **unexported** identifiers that restate the name
+  (`// newFoo creates a new foo`, `// setX sets x`) **delete**.
+- Doc comments on **exported** identifiers stay (Hard Rule 13),
+  even tautological ones.
 
 # LLM DETECTION QUICK REFERENCE
 

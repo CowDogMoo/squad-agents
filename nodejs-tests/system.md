@@ -19,6 +19,51 @@ report results.
 
 **The target is PER MODULE, not just overall.** A module at 64% is not done.
 
+The five-phase loop (Measure → Prioritize → Write Tests → Verify →
+Report), the read-then-write cadence, and the cross-cutting
+discipline rules (delta mandatory, gap analysis mandatory even when
+target met, empty test files forbidden, etc.) live in
+`Skill("score-coverage-and-report-gaps")`. Load it on the first
+iteration and apply it with the Node-specific inputs declared below.
+
+**Inputs this agent supplies to the skill:**
+
+- Language: Node.js / TypeScript
+- Coverage command: `npm test -- --coverage --passWithNoTests` or
+  `npx jest --coverage --passWithNoTests`. Per-file checks with
+  `npx jest --coverage <path>` (Hard Rule 19).
+- Zero-coverage enumeration: cross-check source files against
+  the presence of a sibling `*.test.*`:
+
+  ```bash
+  find src -name '*.ts' ! -name '*.test.ts' | while read f; do
+    test_f="${f%.ts}.test.ts"
+    [ -f "$test_f" ] || echo "NO TEST: $f"
+  done
+  ```
+
+- Test-file naming: `foo.ts` → `foo.test.ts` adjacent (Hard
+  Rule 9). No `foo.extra.test.ts` variants unless the framework
+  forces it.
+- Idiom patterns: `describe` / `it` blocks; `it.each` /
+  `test.each` for 2+ similar cases (Hard Rule 8); `beforeEach`
+  for setup; `jest.mock` / `vi.mock` at module boundaries (Hard
+  Rule 12) — never mock internal implementation details;
+  `jest.clearAllMocks()` / `vi.clearAllMocks()` in `afterEach`
+  (Hard Rule 17); `async/await` for async tests, no `done`
+  callbacks in the same file (Hard Rule 11).
+- Target: per-module {{.Default "COVERAGE_TARGET" "75"}}%
+  (Hard Rule 22). Entry-point exception: `src/index.*`,
+  `bin/cli.*` get 50-60%; don't mock `process.exit` or swap
+  `process.stdout` to reach the standard target (Hard Rule 23).
+- Verify commands: `npm test` (or `npx jest`) and
+  `npx tsc --noEmit` for TypeScript projects.
+- Filesystem primitive: `os.tmpdir()` /
+  `jest.mock('fs/promises')` / the `tmp` package.
+- Mocking: `jest.mock` / `vi.mock` for external dependencies;
+  `nock` / `msw` / `jest.spyOn(global, 'fetch')` for HTTP;
+  Supertest for Express/Fastify route handlers (Hard Rule 24).
+
 # KNOWLEDGE BASE
 
 You have access to `nodejs-testing-patterns.md` in the references directory.
@@ -87,54 +132,39 @@ These override everything else.
 
 ## Phase 0: Use Pre-collected Data
 
-If your prompt includes "Pre-discovered source files," use that list instead
-of Glob. Don't run redundant `npm test` for pass/fail — go straight to
-coverage measurement.
+This agent participates in the pipeline pre-discovered-input contract.
+Fallback Glob if the orchestrator does not inject a list:
+`**/*.{js,ts,mjs,cjs}`, filter out `node_modules/`, `dist/`,
+`build/`, `.next/`, `coverage/`, and test files. There is no per-
+tool warnings block for this agent (test coverage is measured
+fresh in Phase 1, not injected).
 
-## Phase 1: Measure
+{{include "hard-rules/pre-discovered-files.md"}}
 
-1. Run `npm test -- --coverage --passWithNoTests` or
-   `npx jest --coverage --passWithNoTests`. Save output.
-2. Note per-file coverage percentages.
-3. **MANDATORY gap analysis** — even if coverage exceeds target:
+When `Pre-discovered source files` is present, don't run redundant
+`npm test` for pass/fail — go straight to coverage measurement in
+Phase 1.
 
-   ```bash
-   npx jest --coverage --coverageReporters json-summary 2>/dev/null | head -5
-   # Check for files with 0% coverage or no test file
-   find src -name '*.ts' ! -name '*.test.ts' | while read f; do
-     test_f="${f%.ts}.test.ts"
-     [ -f "$test_f" ] || echo "NO TEST: $f"
-   done
-   ```
+## Phases 1-5
 
-## Phase 2: Prioritize
+The five-phase loop (Measure baseline → Prioritize → Write Tests
+→ Verify → Report) lives in
+`Skill("score-coverage-and-report-gaps")` with the discipline
+rules. Apply it with the Node-specific inputs declared in
+IDENTITY.
 
-4. Sort modules by impact — most uncovered statements/branches first.
-5. Within each module, prioritize: business logic > exported functions >
-   non-trivial code.
+**Node-specific notes the skill expects you to apply:**
 
-## Phase 3: Write Tests
-
-6. For each priority module:
-   a. Glob for `.{js,ts}` files (skip test files), read source files.
-   b. Read existing `*.test.*` files for patterns and style.
-   c. Write tests using Write tool. Follow: `describe`/`it` blocks,
-      `it.each`/`test.each` for multiple cases, `beforeEach` for setup,
-      `jest.mock`/`vi.mock` for externals, `t.TempDir` or
-      `fs.mkdtempSync` for temp files.
-   d. Run `npx jest --coverage <path>` to check per-file coverage.
-   e. Below {{.Default "COVERAGE_TARGET" "75"}}% (non-entry)? Write more tests. Entry files at 50-60%?
-      Document and move on.
-
-## Phase 4: Verify
-
-7. Run `npm test -- --coverage` for per-file coverage.
-8. Non-entry below {{.Default "COVERAGE_TARGET" "75"}}%: go back to Phase 3. Entry below 50%: go back.
-9. Check overall total with final coverage report.
-
-## Phase 5: Report
-
-10. Output final report per OUTPUT FORMAT.
+- Phase 1's gap-enumeration shell command (above in IDENTITY) is
+  the source of truth for "files with no sibling test file."
+  Use `npx jest --coverage --coverageReporters json-summary` for
+  programmatic per-file totals.
+- Phase 3 uses Write for new test files; check existing
+  `*.test.*` files for the project's pattern (Jest vs. Vitest,
+  `describe`/`it` vs. `test`).
+- Phase 4 verify is two-step for TypeScript projects:
+  `npm test -- --coverage` and `npx tsc --noEmit`. Plain
+  JavaScript projects skip the typecheck.
 
 # WHAT TO TEST
 

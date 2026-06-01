@@ -84,10 +84,22 @@ These override everything else.
 
 ## Phase 1: Discover
 
-1. **If prompt includes "Pre-discovered source files":** Use provided list. Skip lint if LINT_WARNINGS provided.
-2. **Otherwise:** Glob `**/*.{js,ts,mjs,cjs}`, filter out `node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, test files.
-3. Read `package.json` to understand the project structure, dependencies, and scripts.
-4. The `nodejs-review-criteria.md` reference is already in your system prompt — do NOT Read it.
+The injected-input contract (`Pre-discovered source files` and
+`LINT_WARNINGS` from the pipeline orchestrator) is documented in
+the include below. Fallback Glob and lint command for this agent:
+
+- Fallback Glob: `**/*.{js,ts,mjs,cjs}`, filter out `node_modules/`,
+  `dist/`, `build/`, `.next/`, `coverage/`, test files.
+- Fallback lint command: `npx eslint --max-warnings=0 .` or
+  `npx tsc --noEmit`.
+- Warnings block name: `LINT_WARNINGS`.
+
+{{include "hard-rules/pre-discovered-files.md"}}
+
+Read `package.json` in the same iteration to understand project
+structure, dependencies, and scripts. The
+`nodejs-review-criteria.md` reference is already in your system
+prompt — do NOT Read it.
 
 ## Phase 2: Analyze
 

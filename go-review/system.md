@@ -81,9 +81,19 @@ These override everything else.
 
 ## Phase 1: Discover
 
-1. **If prompt includes "Pre-discovered source files":** Use provided list. Skip `go vet`/`golangci-lint` if LINT_WARNINGS provided.
-2. **Otherwise:** Glob `**/*.go`, filter out `_test.go` and `vendor/`.
-3. The `go-review-criteria.md` reference is already in your system prompt — do NOT Read it.
+The injected-input contract (`Pre-discovered source files` and
+`LINT_WARNINGS` from the pipeline orchestrator) is documented in
+the include below. Fallback Glob and lint command for this agent:
+
+- Fallback Glob: `**/*.go`, filter out `_test.go` and `vendor/`.
+- Fallback lint command: `go vet ./...` (and `golangci-lint run` if
+  available).
+- Warnings block name: `LINT_WARNINGS`.
+
+{{include "hard-rules/pre-discovered-files.md"}}
+
+The `go-review-criteria.md` reference is already in your system
+prompt — do NOT Read it.
 
 ## Phase 2: Analyze
 

@@ -116,8 +116,6 @@ single agent when delegation is dynamic. See
 | Agent                                | Description                                                                       |
 | ------------------------------------ | --------------------------------------------------------------------------------- |
 | [degpt](./degpt)                     | Detects and rewrites LLM-generated prose to sound human-written                   |
-| [weekly-planner](./weekly-planner)   | Inline-prompt agent that turns a Google Doc planner into Google Calendar events   |
-| [grocery-runner](./grocery-runner)   | Single-stage pipeline with a `pre_gates:` prelude and chrome MCP for cart-filling |
 
 ### Agent Templates
 
@@ -126,15 +124,29 @@ Starter templates under [`_includes/`](./_includes/) that you copy into a new ag
 | Template                                                                  | Description                                                                                                                                                                                              |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [basic](./_includes/basic)                                                | Minimal three-file agent (system.md + agent.md + task.md) for a review-style workflow                                                                                                                    |
-| [weekly-planner-template](./_includes/weekly-planner-template)            | Generic Google Doc planner → Google Calendar events; takes `PlannerDocId` / `CalendarId` / `AttendeeEmails` / `Timezone` as vars. Pairs with the `bootstrap-weekly-planner-doc` skill to create the doc. |
+| [weekly-planner-template](./_includes/weekly-planner-template)            | Generic Google Doc planner → Google Calendar events; takes `PlannerDocId` / `CalendarId` / `AttendeeEmails` / `Timezone` as vars. Pairs with the personal-skills `bootstrap-weekly-planner-doc` skill to create the doc. |
 
 ### Skills
 
 Skills are on-demand capabilities a running agent loads mid-task (see the
 open [Agent Skills standard](https://agentskills.io) and Squad's
 [four-concept overview](https://github.com/cowdogmoo/squad/blob/main/docs/agents-and-skills.md#skills)).
-This repo does not ship any skills today — when you need one, scaffold it
-with `squad skill new <name>` into either:
+
+Agents in this repo load skills from the sibling
+[squad-skills](https://github.com/cowdogmoo/squad-skills) repository via
+`Skill("<name>")` calls in their `system.md`. Active wirings:
+
+- `degpt`, `go-scrub-comments`, `rust-scrub-comments` →
+  [`detect-llm-tells`](https://github.com/cowdogmoo/squad-skills/tree/main/detect-llm-tells)
+- `go-scrub-comments`, `rust-scrub-comments` →
+  [`comment-scrub-playbook`](https://github.com/cowdogmoo/squad-skills/tree/main/comment-scrub-playbook)
+- `go-doc-comments`, `python-doc-comments`, `rust-doc-comments`,
+  `nodejs-doc-comments` →
+  [`doc-comments-discovery-and-fix-loop`](https://github.com/cowdogmoo/squad-skills/tree/main/doc-comments-discovery-and-fix-loop)
+- `go-tests`, `python-tests`, `rust-tests`, `nodejs-tests` →
+  [`score-coverage-and-report-gaps`](https://github.com/cowdogmoo/squad-skills/tree/main/score-coverage-and-report-gaps)
+
+To scaffold a new skill of your own, run `squad skill new <name>` into either:
 
 - `.squad/skills/<name>/SKILL.md` — repo scope, checked into git, shared
   with the team
@@ -176,8 +188,9 @@ agent-name/
 ```
 
 Self-contained one-shot agents can use an inline `prompt:` field in
-`agent.yaml` instead — see [`weekly-planner/agent.yaml`](./weekly-planner/agent.yaml).
-Pipelines use a `stages:` block instead of `entrypoint`/`wrapper` —
+`agent.yaml` instead — see the upstream `squad/docs/creating-agents.md`
+for examples. Pipelines use a `stages:` block instead of
+`entrypoint`/`wrapper` —
 see [`go-pipeline/agent.yaml`](./go-pipeline/agent.yaml). The full
 shape reference is upstream at
 [`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md).

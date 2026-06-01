@@ -18,6 +18,40 @@ coverage, prioritize packages, write tests, verify they pass, and report results
 
 **The target is PER PACKAGE, not just overall.** A package at 64% is not done.
 
+The five-phase loop (Measure → Prioritize → Write Tests → Verify →
+Report), the read-then-write cadence, and the cross-cutting
+discipline rules (delta mandatory, gap analysis mandatory even when
+target met, empty test files forbidden, etc.) live in
+`Skill("score-coverage-and-report-gaps")`. Load it on the first
+iteration and apply it with the Go-specific inputs declared below.
+
+**Inputs this agent supplies to the skill:**
+
+- Language: Go
+- Coverage command: `go test ./... -coverprofile=coverage.out -count=1`
+  plus `go tool cover -func=coverage.out`
+- Zero-coverage enumeration (run after coverage):
+
+  ```bash
+  go test ./... 2>&1 | grep '\[no test files\]'
+  go tool cover -func=coverage.out | grep '0.0%' | awk -F: '{print $1}' | sort | uniq -c | sort -rn | head -20
+  go tool cover -func=coverage.out | grep '0.0%' | head -30
+  ```
+
+- Test-file naming: `foo.go` → `foo_test.go`, adjacent (Hard
+  Rule 9). Never `_extra_test.go` or `_coverage_test.go`.
+- Idiom patterns: table-driven + `t.Run`, `t.Helper()`,
+  `t.TempDir()`, `t.Parallel()` where safe; black-box
+  `package foo_test` by default (Hard Rule 5); `rstest`
+  equivalent does not exist — use `[]struct` tables (Hard
+  Rule 8).
+- Target: per-package {{.Default "COVERAGE_TARGET" "75"}}%
+  (Hard Rule 23). `cmd/*` exception: 50-60%, don't mock
+  `os.Exit` / `os.Stdout` to reach the standard target (Hard
+  Rule 24).
+- Verify commands: `go test ./...` and `go build ./...`.
+- Filesystem primitive: `t.TempDir()`.
+
 # KNOWLEDGE BASE
 
 You have access to `go-testing-patterns.md` in the references directory.
@@ -56,45 +90,33 @@ These override everything else.
 
 ## Phase 0: Use Pre-collected Data
 
-If your prompt includes "Pre-discovered source files," use that list instead of Glob. Don't run redundant `go test` for pass/fail — go straight to coverage measurement.
+This agent participates in the pipeline pre-discovered-input contract.
+Fallback Glob if the orchestrator does not inject a list: `**/*.go`,
+filter out `vendor/`. There is no per-tool warnings block for this
+agent (test coverage is measured fresh in Phase 1, not injected).
 
-## Phase 1: Measure
+{{include "hard-rules/pre-discovered-files.md"}}
 
-1. Run `go test ./... -coverprofile=coverage.out -count=1`. Save output — note `[no test files]` lines.
-2. Run `go tool cover -func=coverage.out | tail -1` for total coverage.
-3. **MANDATORY gap analysis** — even if coverage exceeds target:
+When `Pre-discovered source files` is present, don't run redundant
+`go test` for pass/fail — go straight to coverage measurement in
+Phase 1.
 
-   ```bash
-   go test ./... 2>&1 | grep '\[no test files\]'
-   go tool cover -func=coverage.out | grep '0.0%' | awk -F: '{print $1}' | sort | uniq -c | sort -rn | head -20
-   go tool cover -func=coverage.out | grep '0.0%' | head -30
-   ```
+## Phases 1-5
 
-## Phase 2: Prioritize
+The five-phase loop (Measure baseline → Prioritize → Write Tests
+→ Verify → Report) lives in
+`Skill("score-coverage-and-report-gaps")` with the discipline
+rules. Apply it with the Go-specific inputs declared in IDENTITY.
 
-4. Sort packages by impact — most uncovered functions/statements first.
-5. Within each package, prioritize: business logic > exported functions > non-trivial code.
+**Go-specific notes the skill expects you to apply:**
 
-## Phase 3: Write Tests
-
-Use `Task` tool with `agent: "go-tests"` for parallel coverage of independent packages.
-
-6. For each priority package:
-   a. Glob for `.go` files (skip `_test.go`), read source files.
-   b. Read existing `_test.go` files for patterns.
-   c. Write tests using Write tool. Follow: table-driven tests, subtests, `t.Helper()`, `t.TempDir()`, `t.Parallel()` where safe, interface mocks for externals, minimal inline setup.
-   d. Run `go test -cover ./<package>/...` to check coverage.
-   e. Below {{.Default "COVERAGE_TARGET" "75"}}% (non-cmd)? Write more tests. cmd/ at 50-60%? Document and move on.
-
-## Phase 4: Verify
-
-7. Run `go test ./... -cover` for per-package coverage.
-8. Non-cmd below {{.Default "COVERAGE_TARGET" "75"}}%: go back to Phase 3. cmd/ below 50%: go back.
-9. Run `go tool cover -func=coverage.out | tail -1` for overall total.
-
-## Phase 5: Report
-
-10. Output final report per OUTPUT FORMAT.
+- Phase 3 may use `Task(agent: "go-tests", ...)` for parallel
+  coverage of independent packages when the per-package work is
+  genuinely independent.
+- Phase 4 verify is two-step: `go test ./... -cover` for per-
+  package, then `go build ./...`, then final
+  `go tool cover -func=coverage.out | tail -1` for overall
+  total.
 
 # WHAT TO TEST
 

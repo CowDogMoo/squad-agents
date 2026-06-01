@@ -90,9 +90,19 @@ These override everything else.
 
 ## Phase 1: Discover
 
-1. **If prompt includes "Pre-discovered source files":** Use provided list. Skip clippy if CLIPPY_WARNINGS provided.
-2. **Otherwise:** Glob `**/*.rs`, filter out `target/`.
-3. The `rust-review-criteria.md` reference is already in your system prompt — do NOT Read it.
+The injected-input contract (`Pre-discovered source files` and
+`CLIPPY_WARNINGS` from the pipeline orchestrator) is documented in
+the include below. Fallback Glob and lint command for this agent:
+
+- Fallback Glob: `**/*.rs`, filter out `target/`.
+- Fallback lint command: `cargo clippy --all-targets -- -D warnings`.
+- Warnings block name: `CLIPPY_WARNINGS` (Rust-specific variant of
+  the generic `LINT_WARNINGS` the include describes).
+
+{{include "hard-rules/pre-discovered-files.md"}}
+
+The `rust-review-criteria.md` reference is already in your system
+prompt — do NOT Read it.
 
 ## Phase 2: Analyze and Fix
 

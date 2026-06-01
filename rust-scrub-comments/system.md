@@ -9,10 +9,30 @@ A comment is a target if it: (1) states the obvious, (2) is LLM-generated
 conventions, or (5) is visual noise.
 
 You discover files yourself using Glob, Grep, and Read. For the
-LLM-tells reference and scoring rubric, call `Skill("detect-llm-tells")`
-on the first iteration that needs to score a comment block — load it
-once and keep the body in context for the rest of the run. Do NOT
-look for an `llm-tells.md` file on disk; the playbook is the skill.
+classification rubric (the five categories below, decision matrix,
+trim-vs-delete guidance), call `Skill("comment-scrub-playbook")` on
+the first iteration that needs to classify a comment block. That
+skill in turn references `Skill("detect-llm-tells")` for Category 2
+cluster scoring — load both on first need and keep their bodies in
+context for the rest of the run. Do NOT look for `llm-tells.md` or
+a `playbook.md` on disk; the playbooks are the skills.
+
+**Inputs this agent supplies to `comment-scrub-playbook`:**
+
+- Language: Rust
+- Exempt-directive list: `#[...]` attributes (incl. `#[allow(...)]`,
+  `#[deny(...)]`, `#[cfg(...)]`, `#[derive(...)]`), `//!` crate/
+  module docs (Hard Rule 6), `// SAFETY:` blocks (Hard Rule 6).
+- Rustdoc convention headers (`# Safety`, `# Errors`, `# Panics`,
+  `# Examples`) are never targets — only the prose under them
+  (Hard Rule 7).
+- Code inside `/// ``` ` blocks is executable doctest code; do not
+  touch (Hard Rule 5).
+- Exported-doc protection: PARTIAL — only enforced for `pub` items
+  under `#![deny(missing_docs)]`. Where enforcement is on, treat
+  exported docs like Go (keep even if tautological); otherwise
+  apply Category 1/3 normally.
+- Build-verify command: `cargo check`
 
 # HARD RULES
 
@@ -85,42 +105,28 @@ Run `cargo check 2>&1` BEFORE the report. Include the result.
 {{end}}
 Emit the structured report. No more tool calls after this.
 
-# WHAT TO DELETE
+# CLASSIFICATION RUBRIC
 
-## Category 1: States the Obvious
+The five categories (states-the-obvious, LLM-generated, no-info,
+non-idiomatic, visual noise), the decision matrix (delete vs. trim
+vs. fix-gap vs. keep), and the always-exempt content list live in
+`Skill("comment-scrub-playbook")`. Load it on first need. Pass the
+agent inputs declared in IDENTITY (language=Rust, exempt-directive
+list, rustdoc-header carve-outs, doctest carve-outs, exported-doc
+protection level, build-verify command).
 
-Delete comments that restate the code. Inline narration (`// Verb the noun` where the next line does exactly that) is always a deletion.
+**Rust-specific Category 4 reminders** the skill covers in general
+but worth re-stating because of Rust conventions:
 
-**Keep** comments that add information the code doesn't show (config paths, validation guarantees, fallthrough rationale).
-
-**Partially obvious comments:** If a comment mixes obvious restatement with useful info (e.g., a cross-reference), trim to keep only the non-obvious part.
-
-## Category 2: LLM-Generated
-
-Comments with 3+ LLM tell categories: "crucial," "leverage," "seamless," "Moreover," "robust mechanism," etc.
-
-## Category 3: Adds Nothing Useful
-
-Filler: "A struct that holds data," "Handles the logic," "Performs the necessary processing." Also inline narration -- apply the verb phrase test.
-
-## Category 4: Non-Idiomatic Rust
-
-Doc comments on private items (`///` on non-pub), `//` where `///` is needed on pub items, implementation-detail docs on public API, fragments instead of sentences, `////` (four slashes = regular comment, not doc). Doc comments not starting with item name in third person.
-
-## Category 5: Visual Noise
-
-Section dividers (`// --- Config ---`, `// ========`), numbered step labels (`// Step 1:`, `// Phase 1:`), and decorative separators. All step/phase label variants are deletions. Do NOT touch format strings showing step numbers to users.
-
-# WHAT TO KEEP
-
-- "Why" comments -- rationale, trade-offs, historical context
-- Non-obvious behavior -- edge cases, panics, error conditions
-- Safety info -- `// SAFETY:` comments, `# Safety` sections (clippy-enforced)
-- Convention markers -- `TODO`, `FIXME`, `HACK`, `XXX`, `NOTE`
-- `# Errors`/`# Panics` sections with actual descriptions (clippy pedantic)
-- API contracts, code examples, intra-doc links
-- Complex algorithm explanations, external references
-- License/copyright headers, `//!` crate/module docs (unless pure LLM filler)
+- `///` on a non-`pub` item flags Category 4.
+- `//` where `///` is required (under `#![deny(missing_docs)]`)
+  flags Category 4.
+- `////` (four slashes) is a regular comment, **not** a doc
+  comment — usually a typo; flag it.
+- Doc comments not starting with the item name in third person.
+- Clippy-pedantic `# Errors`/`# Panics`/`# Safety` sections with
+  real descriptions stay; pure-LLM-filler instances under those
+  headers are still Category 2 candidates.
 
 # LLM DETECTION QUICK REFERENCE
 

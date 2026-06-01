@@ -36,6 +36,51 @@ coverage, prioritize modules, write tests, verify they pass, and report results.
 
 **The target is PER MODULE, not just overall.** A module at 64% is not done.
 
+The five-phase loop (Measure → Prioritize → Write Tests → Verify →
+Report), the read-then-write cadence, and the cross-cutting
+discipline rules (delta mandatory, gap analysis mandatory even when
+target met, empty test modules forbidden, etc.) live in
+`Skill("score-coverage-and-report-gaps")`. Load it on the first
+iteration and apply it with the Rust-specific inputs declared below.
+
+**Inputs this agent supplies to the skill:**
+
+- Language: Rust
+- Coverage command: `cargo llvm-cov` (preferred) or
+  `cargo tarpaulin`. Falls back to `cargo test` output if
+  neither tool is available (Hard Rule 16).
+- Zero-coverage enumeration: from `cargo llvm-cov` per-function
+  report; cross-check against modules with no `#[cfg(test)] mod
+  tests` block.
+- Test-file naming and placement: **inline `#[cfg(test)] mod
+  tests` at the bottom of the source file** (Hard Rule 5).
+  **NEVER create `tests/` directory or `tests/*.rs` files**
+  (Hard Rule 6).
+- Idiom patterns: `rstest` or `test-case` for parameterized
+  tests (Hard Rule 7); no `test_` prefix — use
+  `<function>_<behavior>` (Hard Rule 27); `#[track_caller]` on
+  helpers (Hard Rule 19); `approx` for float comparisons (Hard
+  Rule 28); `assert_matches!` over `assert!(matches!(...))`
+  (Hard Rule 32); `Result`-returning tests with `?` (Hard Rule
+  33).
+- Target: per-module {{.Default "COVERAGE_TARGET" "75"}}%
+  (Hard Rule 23).
+- Verify commands: `cargo test` and `cargo build --tests`. For
+  feature-gated modules, also `cargo test --features <flag>`
+  (Hard Rule 8). Use `cargo nextest run` if available (Hard
+  Rule 16a) — but always run `cargo test --doc` separately.
+- Filesystem primitive: `tempfile::tempdir()` (Hard Rule 21).
+- Mocking: trait-based manual mocks by default; may add
+  `mockall` to `[dev-dependencies]` when traits exist and manual
+  mocks would exceed 30 lines (Hard Rule 13).
+- **Revert mechanism: Edit-to-undo, NOT git.** Hard Rule 22
+  forbids `git stash` and `git checkout`. They destroy prior
+  agents' changes.
+- Coverage exclusions: may add
+  `#[cfg(not(tarpaulin_include))]` to pure-I/O glue functions
+  with no branches (Hard Rule 30). List exclusions in the
+  report.
+
 # KNOWLEDGE BASE
 
 You have access to `rust-testing-patterns.md` in the references directory.
@@ -85,38 +130,40 @@ These override everything else.
 
 ## Phase 0: Use Pre-collected Data
 
-If prompt includes pre-discovered files: use that list, skip Glob/cargo test/coverage tool checks. Read 2-3 files in iteration 1, write tests in iteration 2.
+This agent participates in the pipeline pre-discovered-input contract.
+Fallback Glob if the orchestrator does not inject a list: `**/*.rs`,
+filter out `target/`. There is no per-tool warnings block for this
+agent (test coverage is measured fresh in Phase 1, not injected).
 
-## Phase 1: Measure (standalone only)
+{{include "hard-rules/pre-discovered-files.md"}}
 
-1. Glob for .rs files. Read 2-3 source files in same iteration.
-2. Run coverage tools if available.
-3. **MANDATORY gap analysis:** Identify modules with no tests, untested public functions, untested error paths.
+When `Pre-discovered source files` is present, skip Glob and skip
+coverage-tool availability checks — read 2-3 files in iteration 1,
+write tests in iteration 2.
 
-## Phase 2: Prioritize
+## Phases 1-5
 
-4. Strict priority: 0% coverage files first > files below target > already-tested files last. Within untested files, find pure logic (query builders, transforms, validation) even in I/O-heavy modules.
-5. Within each module: business logic > public functions > non-trivial code.
+The five-phase loop (Measure baseline → Prioritize → Write Tests
+→ Verify → Report) lives in
+`Skill("score-coverage-and-report-gaps")` with the discipline
+rules. Apply it with the Rust-specific inputs declared in
+IDENTITY.
 
-## Phase 3: Write Tests
+**Rust-specific notes the skill expects you to apply:**
 
-Write whole files. Read in parallel batches of 3-5 per iteration. Read a module, write its tests, move to the next.
-
-6. For each priority module:
-   a. Read source file and existing tests.
-   b. Write tests using Write tool. Inline `#[cfg(test)] mod tests` blocks. Follow: parameterized tests, descriptive names (no `test_` prefix), `#[track_caller]` on helpers, `tempfile` for filesystem, trait-based mocks.
-   c. Run `cargo test` to verify.
-   d. Below {{.Default "COVERAGE_TARGET" "75"}}%? Write more tests until target or all testable code covered.
-
-## Phase 4: Verify
-
-7. Run `cargo test`. For feature-gated modules, also run `cargo test --features <flag>`.
-8. Measure final coverage if tools available.
-9. Modules below {{.Default "COVERAGE_TARGET" "75"}}%: back to Phase 3. All meeting threshold: proceed.
-
-## Phase 5: Report
-
-10. Output final report per OUTPUT FORMAT.
+- Phase 2 within an I/O-heavy module: find the pure logic first
+  (query builders, data transforms, validation, type
+  conversions, config parsing, error types, scoring/aggregation)
+  and test that. Skip only specific I/O-bound functions, not
+  whole files (the skill's anti-goal section is explicit on this).
+- Phase 3 writes whole files via Write (Hard Rule 23a). Use Edit
+  only for small additions (≤30 lines) to existing blocks. If
+  Edit deletes code, restore immediately (Hard Rule 26).
+- Phase 4 verify includes `cargo test`, `cargo build --tests`,
+  and `cargo test --features <flag>` for feature-gated modules.
+- Phase 5 report includes a Coverage Ceiling Analysis
+  (`ceiling = (total - untestable) / total * 100`; Hard Rule 31)
+  and any Coverage Exclusions Applied (Hard Rule 30).
 
 # WHAT TO TEST
 

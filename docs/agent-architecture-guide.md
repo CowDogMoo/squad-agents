@@ -23,13 +23,12 @@ so guidance doesn't drift.
   [`go-security-audit`](../go-security-audit)) — `agent.yaml` with a
   `stages:` block, `depends_on` ordering, and `gates:` for verification
   between stages.
-- **Inline-prompt agents** (e.g. [`weekly-planner`](../weekly-planner))
-  — `agent.yaml` with a top-level `prompt:` field instead of the
-  three-file split. A supported leaf-agent shape for self-contained
-  one-shot agents.
-- **Pipelines with `pre_gates:` and `mcp_servers:`** (e.g.
-  [`grocery-runner`](../grocery-runner)) — supported per-stage fields
-  for deterministic preludes and stage-scoped MCP servers.
+- **Inline-prompt agents** — `agent.yaml` with a top-level `prompt:`
+  field instead of the three-file split. A supported leaf-agent shape
+  for self-contained one-shot agents.
+- **Pipelines with `pre_gates:` and `mcp_servers:`** — supported
+  per-stage fields for deterministic preludes and stage-scoped MCP
+  servers.
 
 For when to pick each, follow the decision flowchart in
 [`agents-and-skills.md`](https://github.com/cowdogmoo/squad/blob/main/docs/agents-and-skills.md#decision-guide).

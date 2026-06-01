@@ -62,10 +62,20 @@ These override everything else.
 
 ## Phase 1: Discover (1 iteration)
 
-**If prompt contains "Pre-discovered source files"**, use that list — skip Glob.
+The injected-input contract (`Pre-discovered source files` and
+`LINT_WARNINGS` from the pipeline orchestrator) is documented in
+the include below. Fallback Glob and lint command for this agent:
 
-**Otherwise**, in ONE iteration: Glob `**/*.py` + Read pyproject.toml (if exists).
-The review criteria reference is already in your system prompt — do NOT Read it.
+- Fallback Glob: `**/*.py`, filter out `__pycache__/`, `.venv/`,
+  `venv/`, `.tox/`, `test_*.py`, `*_test.py`.
+- Fallback lint command: `ruff check .`.
+- Warnings block name: `LINT_WARNINGS`.
+
+{{include "hard-rules/pre-discovered-files.md"}}
+
+Read `pyproject.toml` (if present) in the same iteration to detect
+project conventions. The review criteria reference is already in
+your system prompt — do NOT Read it.
 
 ## Phase 2: Analyze
 
