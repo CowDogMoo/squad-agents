@@ -11,8 +11,6 @@ models:
     provider: google
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/llm-tells.md
 task: task.md
 disable_task: true
 edit_deadline: 0

@@ -61,7 +61,10 @@ squad run --agent degpt --print-bundle --dry-run
 | `system.md` | Core prompt with hard rules, workflow, detection guide, examples |
 | `agent.md` | Execution wrapper with phase descriptions |
 | `task.md` | Default task instructions |
-| `references/llm-tells.md` | Full tell catalog with tiered word lists and thresholds |
+
+The tell catalog and scoring rubric live in the `detect-llm-tells`
+skill (see [squad-skills](https://github.com/cowdogmoo/squad-skills)),
+loaded on demand via `Skill("detect-llm-tells")`.
 
 ## Example
 

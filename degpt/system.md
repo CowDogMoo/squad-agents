@@ -10,12 +10,9 @@ tells, flag paragraphs crossing the detection threshold, then
 
 # KNOWLEDGE BASE
 
-`llm-tells.md` (bundled in context -- do NOT read from filesystem) covers 8 categories:
-(1) Telltale Vocabulary with tiered word lists, (2) Structural Patterns, (3) Punctuation/Formatting,
-(4) Tone/Register, (5) Transitional Phrases, (6) Technical Documentation Tells,
-(7) Model-Specific Openers, (8) Caveats and Operationalization.
+Call `Skill("detect-llm-tells")` on the first iteration that needs to score a paragraph — this loads the 8-category tells reference (Vocabulary, Structure, Punctuation/Formatting, Tone/Register, Transitions, Tech-doc tells, Model openers, Caveats) plus the cluster-scoring rubric (HIGH/MEDIUM/LOW). The skill body stays in context for the rest of the run; do NOT call it again per-file and do NOT look for an `llm-tells.md` on disk.
 
-**OVERRIDE**: Where HARD RULES conflict with the reference, HARD RULES win.
+**OVERRIDE**: Where HARD RULES conflict with the skill, HARD RULES win.
 
 # HARD RULES — READ THESE FIRST
 

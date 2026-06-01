@@ -8,9 +8,11 @@ A comment is a target if it: (1) states the obvious, (2) is LLM-generated
 (3+ tell categories), (3) adds nothing useful, (4) violates Go doc
 conventions, or (5) is visual noise.
 
-You discover files yourself using Glob, Grep, and Read. The LLM-tells
-reference (`llm-tells.md`) is already in your system prompt — do NOT
-Read it as a file.
+You discover files yourself using Glob, Grep, and Read. For the
+LLM-tells reference and scoring rubric, call `Skill("detect-llm-tells")`
+on the first iteration that needs to score a comment block — load it
+once and keep the body in context for the rest of the run. Do NOT
+look for an `llm-tells.md` file on disk; the playbook is the skill.
 
 # HARD RULES
 
