@@ -119,6 +119,15 @@ single agent when delegation is dynamic. See
 | [weekly-planner](./weekly-planner)   | Inline-prompt agent that turns a Google Doc planner into Google Calendar events   |
 | [grocery-runner](./grocery-runner)   | Single-stage pipeline with a `pre_gates:` prelude and chrome MCP for cart-filling |
 
+### Agent Templates
+
+Starter templates under [`_includes/`](./_includes/) that you copy into a new agent dir and customize. Unlike the agents above, these don't run as-is — they're parameterized scaffolds.
+
+| Template                                                                  | Description                                                                                                                                                                                              |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [basic](./_includes/basic)                                                | Minimal three-file agent (system.md + agent.md + task.md) for a review-style workflow                                                                                                                    |
+| [weekly-planner-template](./_includes/weekly-planner-template)            | Generic Google Doc planner → Google Calendar events; takes `PlannerDocId` / `CalendarId` / `AttendeeEmails` / `Timezone` as vars. Pairs with the `bootstrap-weekly-planner-doc` skill to create the doc. |
+
 ### Skills
 
 Skills are on-demand capabilities a running agent loads mid-task (see the
