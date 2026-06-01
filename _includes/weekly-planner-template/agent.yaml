@@ -25,11 +25,13 @@ prompt: |
   Mon-Sat week. Today is Sunday; the week you're processing covers the seven
   days starting tomorrow.
 
-  The planner is a single rolling doc with multiple weeks stacked top-to-bottom.
-  Each week has a heading like
-  `WEEKLY FAMILY PLANNER · Week of <Month> <Day>, <Year>`. Pick the heading
-  whose date is the **highest** (most recent) — not the first occurrence in
-  the doc and not the last. This is robust to weeks being added in any order.
+  The planner is a single rolling doc with weeks stacked top-to-bottom.
+  Each week's section starts with a 9-row × 8-column planner table whose
+  row 0 spans the full width as a heading cell containing
+  `WEEKLY FAMILY PLANNER  ·  Week of <Month> <Day>, <Year>`. (Two spaces
+  on each side of the `·` U+00B7 middle dot — NOT a hyphen or em dash.)
+  Pick the heading whose date is the **highest** (most recent) — not the
+  first occurrence in the doc and not the last.
 
   Doc file_id: `{{.PlannerDocId}}`
 
@@ -61,41 +63,53 @@ prompt: |
   1. Call `mcp__gdrive__read_file_content` with the file_id above. The
      response is HTML; rolling docs with many weeks can exceed a single
      fetch — paginate if the tool reports more bytes than were returned.
-  2. Find every heading matching `WEEKLY FAMILY PLANNER · Week of <Month> <Day>, <Year>`.
-     (The separator is `·` U+00B7 / middle dot — NOT a hyphen or em dash.)
-     Parse the date out of each heading. Year is in the heading; use it,
-     do not guess.
-  3. Pick the heading whose parsed date is the **highest**. Read the
-     7-column table immediately following that heading.
-  4. **Date check (sets EVENTS_OK).** Extract the seven column headers from
-     that table (e.g. "MONDAY June 8"). Convert each to YYYY-MM-DD using the
-     year from the week heading. Compare to TARGET_WEEK.
+  2. Walk every table in the doc body and look at its row 0, column 0
+     cell. Match against `WEEKLY FAMILY PLANNER  ·  Week of <Month> <Day>, <Year>`.
+     The heading lives INSIDE the planner table, not as a paragraph above
+     it. Parse the date out of the heading text. Year is present; use it,
+     don't guess.
+  3. Pick the table whose row-0 heading date is the **highest**. This is
+     the current week's planner table; the GROCERIES table follows it.
+  4. **Date check (sets EVENTS_OK).** Read row 1 of the planner table —
+     columns 1-7 hold the day-of-week headers like `SUNDAY June 7`,
+     `MONDAY June 8`, …, `SATURDAY June 13`. Column 0 of row 1 is
+     decorative; skip it. Convert each `<WEEKDAY> <Month> <Day>` to
+     `YYYY-MM-DD` using the year from row 0. Compare against TARGET_WEEK.
 
      - If ALL SEVEN match exactly → `EVENTS_OK = true`.
      - If ANY date differs → `EVENTS_OK = false`. Note in the summary:
        "Section covers <range>, not TARGET_WEEK <range> — calendar events
-       skipped." This is the expected outcome for manual mid-week runs that
-       are rebuilding a past week.
-  5. If no `WEEKLY FAMILY PLANNER · Week of` heading exists at all, STOP
-     and report: "Planner doc is empty / has no week sections."
+       skipped." This is the expected outcome for manual mid-week runs
+       that are rebuilding a past week.
+  5. If no planner table with a matching row-0 heading exists, STOP and
+     report: "Planner doc is empty / has no week sections."
 
   ## Step 2: parse rows into events
 
-  Resolve the actual calendar date for each column from the column header.
+  In rows 2-8 of the planner table, column 0 holds the row label (e.g.,
+  `⚑ Commitments`, `🍽️ Dinner`, `📌 Notes`) and columns 1-7 hold one cell
+  per weekday. Map column → date using the headers you parsed in Step 1.4.
+
   Create events from these rows by default:
 
-  - **Commitments** — the primary signal. Cell text like "Therapy at 4:00pm"
-    or "Dentist 2pm" → create a TIMED event at that time, 1 hour duration
-    unless context suggests otherwise. Cell text without a time
-    (e.g. just "Doctor visit") → create an ALL-DAY event.
-  - **Dinner** — create an ALL-DAY event titled "Dinner: {cell text}".
+  - **Commitments** (`⚑ Commitments` or whatever the user renamed it to) —
+    the primary signal. Cell text like `Therapy at 4:00pm` or `Dentist 2pm`
+    → TIMED event at that time, 1-hour default duration. Cell text without
+    a time (e.g. just `Doctor visit`) → ALL-DAY event.
+  - **Dinner** (`🍽️ Dinner`) — ALL-DAY event titled `Dinner: <cell text>`.
     Skip if empty. See dinner-specific handling below.
-  - **Notes** — REFERENCE row, do NOT create events from it.
-  - **Childcare** — REFERENCE row, do NOT create events from it.
+  - **Notes** (`📌 Notes`) — REFERENCE row, do NOT create events.
+  - **Childcare** (`👶 Childcare`) — REFERENCE row, do NOT create events.
 
-  If your doc has additional rows beyond these (Iris outings, dog walks,
-  whatever), add parsing rules here. If you don't have those rows, the
-  default set above is sufficient.
+  The template ships with additional household-specific rows (`🌿 Iris Outing`,
+  `🥄 Iris Solids`, `🐾 Dog Exercise`) carried over from its source. If they
+  match your household, add parsing rules for them here (typically ALL-DAY
+  events titled `<Row label minus emoji>: <cell text>`). If they don't,
+  delete those rows from the doc and remove any references here.
+
+  Match rows by **substring of the label text** (case-insensitive) rather
+  than exact emoji prefix — that way renaming `⚑ Commitments` to
+  `📝 Commitments` doesn't break parsing.
 
   ### Dinner row — recipe links and freezer reminders (optional)
 
