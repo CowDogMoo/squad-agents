@@ -39,13 +39,18 @@ a `playbook.md` on disk; the playbooks are the skills.
     natural place to call the skill is in iteration 2 — same response as your
     first Reads — so its body is in context before any Edits are emitted.
 
-0. **No rationalizing narration.** `// Verb the noun` above code that does exactly that is ALWAYS a deletion. No exceptions for "aids scanning" or "consistent style."
+0. **Narration is a CANDIDATE, not an automatic delete.** `// Verb the noun` above code that does exactly that is a *candidate* for cleanup, but the default action is **trim or keep**, not full-delete. Many codebases prefer the narration even when redundant (scanning, code-review headers, generated diff context). Deleting requires positive evidence the comment adds zero value.
 
-   **MANDATORY per-Edit trim test** (apply BEFORE every Edit): strip the function-name restatement; if anything remains conveying a *why*, edge case, spec/format, platform behavior, default, error policy, algorithm detail, or cross-reference → emit a **TRIM** (Edit replacing the block with the remaining content), NOT a full delete. Single-line `// fname verbs the noun.` is the only shape that's safely a full delete without thinking.
+   **MANDATORY per-Edit trim test** (apply BEFORE every Edit):
+   1. Strip the function-name restatement (the "Verb the noun" sentence).
+   2. Is **anything** left that conveys a *why*, edge case, spec/format, platform behavior, default, error policy, algorithm detail, cross-reference, or non-obvious constraint? → emit a **TRIM** (Edit replacing the block with the remaining content). Do NOT full-delete.
+   3. If nothing remains: this is the only shape where full-delete is safe — a strictly single-line `// fname verbs the noun.` with no other content. **Even then, prefer keeping it** unless you also have a signal that the surrounding comments in the file are being aggressively scrubbed (e.g., the user explicitly asked for full narration removal).
 
    **High-signal "trim, don't delete" phrases — if any appear, the block trims:** `Returns 0/nil/"" for/when/if ...`, `On Windows/Darwin/Linux ...`, `By default ...`, `Errors are downgraded ...`, `Walks up / Falls back / Capped at ...`, `Supports ...`, `... so that ...`, `... because ...`, references to other functions/types/files/specs.
 
-   **Report integrity:** if your report has `## Comments Trimmed: None` while any `## Comments Deleted` entry had one of those signals, you violated this rule. Reclassify *before* emitting Edits.
+   **Default policy when in doubt: KEEP.** The cost of an over-deletion (loss of useful context, dev reverts your commit) is higher than the cost of leaving a redundant single-line comment in place.
+
+   **Report integrity:** if your report has `## Comments Trimmed: None` while any `## Comments Deleted` entry had one of the high-signal phrases, you violated this rule. Reclassify *before* emitting Edits.
 1. **Discover files yourself.** Glob ONCE with `**/*.go`. Filter out `vendor/`, `.git/`, `.claude/`, generated files, `_test.go`. No Bash `find`/`grep` — but `rg` (ripgrep) via Bash is allowed and preferred for Phase 1 pattern search (see Phase 1).
 2. **Comments only.** Never modify code, signatures, imports, `var`/`const`, or string literals.
 3. **Delete, don't rewrite.** Delete useless comments entirely. Trim mixed blocks to keep only useful parts. The `go-doc-comments` agent handles rewrites.
@@ -126,7 +131,7 @@ Phase 1 runs **two** parallel discovery searches plus `Glob` to build PRIORITY. 
 
 **Search A — LLM vocabulary (low recall, low false-positive rate):** regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`.
 
-**Search B — structural narration on unexported funcs (high recall, high precision for go-scrub):** PCRE2 regex `// ([a-z][a-zA-Z]+) [a-z]+s? [a-z][^.\n]*\.\nfunc \1\(` — matches a doc comment whose first word equals the unexported function name beneath it (the "Verb the noun" pattern). This is the single highest-yield pattern in Go.
+**Search B — structural narration on unexported funcs and methods (high recall, high precision for go-scrub):** PCRE2 regex `// ([a-z][a-zA-Z]+) [a-z]+s? [a-z][^.\n]*\.\nfunc (\(\w+ \*?\w+\) )?\1\(` — matches a doc comment whose first word equals the unexported function-or-method name beneath it (the "Verb the noun" pattern). The optional `(\w+ \*?\w+)` group covers method receivers like `func (s *Store) save() error`. This is the single highest-yield pattern in Go.
 
 **Discovery commands — prefer `rg`, fall back to `Grep`:** Run via Bash in parallel:
 
@@ -163,7 +168,7 @@ After Glob and both `rg` searches return, your first Phase 2 response should dec
 
 **Pattern:** Read 4-6 files per iteration via parallel Read calls in the SAME response (1 file if you're about to Edit). After each Read, enumerate every line matching either Search A or Search B's regex — that enumeration is your minimum Edit checklist for the file (Hard Rule 14). Then scan for additional Category 1-5 hits the regexes missed.
 
-**Before emitting each Edit, run the per-Edit trim test from Hard Rule 0.** For multi-line comment blocks especially: if step 2 of the test returns YES (any "why"/edge-case/platform/spec/algorithm/cross-reference content), the Edit MUST be a trim (replacing the block with the remaining content), not a full delete. Default assumption for a multi-line block above an unexported function: it almost certainly has a "why" that should be trimmed-to, not deleted. Single-line `// fname verbs the noun.` is the only shape that's safely a full delete without thinking.
+**Before emitting each Edit, run the per-Edit trim test from Hard Rule 0.** Default action is KEEP. Only trim if step 2 returns YES (a "why"/edge-case/platform/spec/algorithm/cross-reference is present alongside narration). Only full-delete if the block is a strictly single-line `// fname verbs the noun.` AND the user's prompt explicitly requested narration removal. For multi-line blocks: TRIM, never full-delete — the second-and-later lines virtually always contain "why" content the narration is wrapping.
 
 Emit one Edit per checklist item in the SAME response; do not stop after the first cluster.
 {{end}}
