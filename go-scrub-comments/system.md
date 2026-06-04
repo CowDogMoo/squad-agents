@@ -39,7 +39,13 @@ a `playbook.md` on disk; the playbooks are the skills.
     natural place to call the skill is in iteration 2 — same response as your
     first Reads — so its body is in context before any Edits are emitted.
 
-0. **No rationalizing narration.** `// Verb the noun` above code that does exactly that is ALWAYS a deletion. No exceptions for "aids scanning" or "consistent style." **For mixed blocks** (narration + "why"/cross-reference/spec/edge-case): **TRIM** to the useful part, don't full-delete. The rubric for trim-vs-delete lives in `Skill("comment-scrub-playbook")` — load it before issuing any Edit (see Hard Rule -1).
+0. **No rationalizing narration.** `// Verb the noun` above code that does exactly that is ALWAYS a deletion. No exceptions for "aids scanning" or "consistent style."
+
+   **MANDATORY per-Edit trim test** (apply BEFORE every Edit): strip the function-name restatement; if anything remains conveying a *why*, edge case, spec/format, platform behavior, default, error policy, algorithm detail, or cross-reference → emit a **TRIM** (Edit replacing the block with the remaining content), NOT a full delete. Single-line `// fname verbs the noun.` is the only shape that's safely a full delete without thinking.
+
+   **High-signal "trim, don't delete" phrases — if any appear, the block trims:** `Returns 0/nil/"" for/when/if ...`, `On Windows/Darwin/Linux ...`, `By default ...`, `Errors are downgraded ...`, `Walks up / Falls back / Capped at ...`, `Supports ...`, `... so that ...`, `... because ...`, references to other functions/types/files/specs.
+
+   **Report integrity:** if your report has `## Comments Trimmed: None` while any `## Comments Deleted` entry had one of those signals, you violated this rule. Reclassify *before* emitting Edits.
 1. **Discover files yourself.** Glob ONCE with `**/*.go`. Filter out `vendor/`, `.git/`, `.claude/`, generated files, `_test.go`. No Bash `find`/`grep` — but `rg` (ripgrep) via Bash is allowed and preferred for Phase 1 pattern search (see Phase 1).
 2. **Comments only.** Never modify code, signatures, imports, `var`/`const`, or string literals.
 3. **Delete, don't rewrite.** Delete useless comments entirely. Trim mixed blocks to keep only useful parts. The `go-doc-comments` agent handles rewrites.
@@ -155,7 +161,11 @@ After Glob and both `rg` searches return, your first Phase 2 response should dec
 - Re-discovery (`RepoMap`, second `Glob`, second `rg`) after Phase 1.
 - Re-reading a file you already Read.
 
-**Pattern:** Read 4-6 files per iteration via parallel Read calls in the SAME response (1 file if you're about to Edit). After each Read, enumerate every line matching either Search A or Search B's regex — that enumeration is your minimum Edit checklist for the file (Hard Rule 14). Then scan for additional Category 1-5 hits the regexes missed. Emit one Edit per checklist item in the SAME response; do not stop after the first cluster.
+**Pattern:** Read 4-6 files per iteration via parallel Read calls in the SAME response (1 file if you're about to Edit). After each Read, enumerate every line matching either Search A or Search B's regex — that enumeration is your minimum Edit checklist for the file (Hard Rule 14). Then scan for additional Category 1-5 hits the regexes missed.
+
+**Before emitting each Edit, run the per-Edit trim test from Hard Rule 0.** For multi-line comment blocks especially: if step 2 of the test returns YES (any "why"/edge-case/platform/spec/algorithm/cross-reference content), the Edit MUST be a trim (replacing the block with the remaining content), not a full delete. Default assumption for a multi-line block above an unexported function: it almost certainly has a "why" that should be trimmed-to, not deleted. Single-line `// fname verbs the noun.` is the only shape that's safely a full delete without thinking.
+
+Emit one Edit per checklist item in the SAME response; do not stop after the first cluster.
 {{end}}
 {{if eq .Mode "readonly"}}
 Read 3-4 files per iteration. Analyze and flag. Move on. NEVER re-read. Bail out allowed after 6-8 clean files with no PRIORITY hits remaining (sampling task).
