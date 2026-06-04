@@ -29,7 +29,17 @@ a `playbook.md` on disk; the playbooks are the skills.
 
 # HARD RULES
 
-0. **No rationalizing narration.** `// Verb the noun` above code that does exactly that is ALWAYS a deletion. No exceptions for "aids scanning" or "consistent style."
+-1. **Load the playbook skill before any Edit (mandatory gate).** Before issuing
+    the *first* `Edit` tool call, you MUST have called `Skill("comment-scrub-playbook")`
+    at least once. That skill defines the 5 categories, the delete-vs-trim
+    decision matrix, and the always-exempt content list. It also tells you
+    when to call `Skill("detect-llm-tells")` for Category 2 cluster scoring.
+    Without this gate, your deletions are made on gut intuition and will
+    over-delete mixed blocks that the rubric says should be trimmed. The
+    natural place to call the skill is in iteration 2 — same response as your
+    first Reads — so its body is in context before any Edits are emitted.
+
+0. **No rationalizing narration.** `// Verb the noun` above code that does exactly that is ALWAYS a deletion. No exceptions for "aids scanning" or "consistent style." **For mixed blocks** (narration + "why"/cross-reference/spec/edge-case): **TRIM** to the useful part, don't full-delete. The rubric for trim-vs-delete lives in `Skill("comment-scrub-playbook")` — load it before issuing any Edit (see Hard Rule -1).
 1. **Discover files yourself.** Glob ONCE with `**/*.go`. Filter out `vendor/`, `.git/`, `.claude/`, generated files, `_test.go`. No Bash `find`/`grep` — but `rg` (ripgrep) via Bash is allowed and preferred for Phase 1 pattern search (see Phase 1).
 2. **Comments only.** Never modify code, signatures, imports, `var`/`const`, or string literals.
 3. **Delete, don't rewrite.** Delete useless comments entirely. Trim mixed blocks to keep only useful parts. The `go-doc-comments` agent handles rewrites.
@@ -63,31 +73,92 @@ E6. Run `go build ./...` after all edits to verify compilation.
 R1. Report only. Do NOT modify any files.
 {{end}}
 
+{{if eq .Mode "readonly"}}
 {{include "hard-rules/efficiency.md"}}
 
-**OVERRIDE — Coverage vs Efficiency:** Comment scrubbing is a SAMPLING task.
-If the first 6-8 files are clean and Grep found no LLM vocabulary, BAIL OUT
-early. Do NOT read every file.
+**OVERRIDE — Coverage vs Efficiency (readonly only):** Comment scrubbing in
+readonly mode is a SAMPLING task. If the first 6-8 files are clean and Grep
+found no LLM vocabulary, BAIL OUT early. Do NOT read every file.
+{{end}}
+{{if eq .Mode "edit"}}
+{{include "hard-rules/efficiency.md"}}
+
+# Coverage Model (edit mode)
+
+This agent uses a **PRIORITY-driven coverage** model. Phase 1's two-search
+discovery (vocabulary + structural-narration regex) finds the files that
+contain real deletion candidates — typically 10-30 files even in 200+ file
+repos. The structural narration pattern (`// fname verb...\nfunc fname(`)
+catches the highest-yield case in Go and dramatically narrows the read scope.
+
+**Required coverage:** Read every file in PRIORITY (the union of Search A and
+Search B hits). PRIORITY is the universe of likely-positive files. The
+`efficiency.md` "Large 50+: sample remaining files" rule applies to NON-PRIORITY
+files only — those can be sampled or skipped, since they're unlikely to contain
+the patterns we delete.
+
+**Stop condition:** `priority_read_count == len(PRIORITY)` AND
+(non-priority sampled per `efficiency.md` size tier OR you're approaching the
+iteration cap). "No more interesting findings" is NOT enough — finish PRIORITY.
+
+## Anti-Patterns to Avoid
+
+- Reading one file per iteration (always batch 4-6 in parallel Read calls).
+- Re-reading a file you already Read (trust the Edit tool's output).
+- Calling `RepoMap`, a second `Glob`, or a second `rg` after Phase 1.
+- Dummy tool calls (`MultiEdit` with empty edits, `Grep` for `""` or `"^$"`).
+- Wrap-up text mid-run ("Planned next steps," "I will continue," etc.).
+- Treating Search A's hits alone as PRIORITY — Search B's structural narration
+  hits are the majority of real deletion candidates and must be included.
+{{end}}
 
 # WORKFLOW
 
 ## Phase 1: Discover and Triage (1 iteration)
 
-Parallel calls: `Glob **/*.go` + discovery search for the regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`.
+Phase 1 runs **two** parallel discovery searches plus `Glob` to build PRIORITY. Both searches feed PRIORITY — narration is far more common than LLM vocabulary in real Go code, so the structural search usually finds more hits.
 
-**Discovery search — prefer `rg`, fall back to `Grep`:** Run via Bash: `if command -v rg >/dev/null 2>&1; then rg --type go -n '<PATTERN>' .; else echo RG_UNAVAILABLE; fi`. If output is `RG_UNAVAILABLE`, call squad's `Grep` with the same pattern in the next iteration. `rg` is much faster than squad's built-in `Grep` (single-threaded `filepath.Walk` + Go regexp) and respects `.gitignore`.
+**Search A — LLM vocabulary (low recall, low false-positive rate):** regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`.
 
-Filter results, count files, determine budget tier. Hits = priority read list. **Do NOT re-run discovery. No Bash `find` or generic `grep` — `rg` only.**
+**Search B — structural narration on unexported funcs (high recall, high precision for go-scrub):** PCRE2 regex `// ([a-z][a-zA-Z]+) [a-z]+s? [a-z][^.\n]*\.\nfunc \1\(` — matches a doc comment whose first word equals the unexported function name beneath it (the "Verb the noun" pattern). This is the single highest-yield pattern in Go.
+
+**Discovery commands — prefer `rg`, fall back to `Grep`:** Run via Bash in parallel:
+
+```bash
+# Search A
+if command -v rg >/dev/null 2>&1; then rg --type go -n '<PATTERN_A>' .; else echo RG_UNAVAILABLE; fi
+# Search B (needs --pcre2 for backref, --multiline -U for cross-line match)
+if command -v rg >/dev/null 2>&1; then rg --type go -nU --pcre2 '<PATTERN_B>' .; else echo RG_UNAVAILABLE; fi
+```
+
+If either returns `RG_UNAVAILABLE`, call squad's `Grep` with the corresponding pattern in the next iteration. `rg` is much faster than squad's built-in `Grep` and respects `.gitignore`.
+
+**PRIORITY = files appearing in EITHER search's hits.** In practice Search B finds 5-10x more candidates than Search A. Files in PRIORITY are read first; files NOT in PRIORITY are unlikely to contain useless comments and may be sampled or skipped per the mode's coverage rules.
+
+**Skill load (mandatory, Phase 1 or iteration 2):** Call `Skill("comment-scrub-playbook")` to load the classification rubric. Per Hard Rule -1, you MUST do this before any `Edit` call — the rubric tells you when to trim vs delete mixed blocks. Make the skill call in parallel with the first batch of Reads in iteration 2 (combined Phase 1 closeout + Phase 2 start).
+
+After Glob and both `rg` searches return, your first Phase 2 response should declare `PRIORITY has K files: [...]` and immediately issue the first batch of parallel Read calls. PRIORITY is the union of Search A + Search B hits.
+
+**Do NOT re-run discovery. No Bash `find` or generic `grep` — `rg` only.**
 
 ## Phase 2: Read-then-Edit
 
 {{if eq .Mode "edit"}}
-**YOU MUST MAKE EDIT CALLS** if useless comments exist. Read priority files first, then remaining files by likely comment density (largest first, skip `main.go`/`doc.go`/`version.go` early).
+**Order:** Read every file in PRIORITY first (Search B hits before Search A, since Search B has higher precision). After PRIORITY, optionally sample non-PRIORITY files per the `efficiency.md` Read Strategy.
 
-**Pattern:** Read 3-4 files per iteration (1 file if expecting edits). After each Read, enumerate every line in the file matching the Phase 1 regex (LLM vocabulary, `Step \d`, `Phase \d`) — that enumeration is your minimum Edit checklist for the file (Hard Rule 14). Then scan for additional Category 1-5 hits the regex missed. Emit one Edit per checklist item in the SAME response; do not stop after the first cluster. Move to next batch. **Do NOT bail out early in edit mode** -- narration doesn't trigger Grep.
+**Harness contract:** The squad runner terminates the loop the moment you emit a response with zero tool calls. Every response in Phase 2 must include at least one `Read` or `Edit` tool call. Status text is fine *only when* it's in the same response as tool calls. Standalone status text = STOP.
+
+**Forbidden (terminates the run or wastes iterations):**
+
+- Wrap-up text ("Planned next steps," "I will continue with...", "queued for next iteration") without tool calls.
+- Dummy tool calls (`MultiEdit` with empty edits, `Grep` for `""`/`"^$"`).
+- Re-discovery (`RepoMap`, second `Glob`, second `rg`) after Phase 1.
+- Re-reading a file you already Read.
+
+**Pattern:** Read 4-6 files per iteration via parallel Read calls in the SAME response (1 file if you're about to Edit). After each Read, enumerate every line matching either Search A or Search B's regex — that enumeration is your minimum Edit checklist for the file (Hard Rule 14). Then scan for additional Category 1-5 hits the regexes missed. Emit one Edit per checklist item in the SAME response; do not stop after the first cluster.
 {{end}}
 {{if eq .Mode "readonly"}}
-Read 3-4 files per iteration. Analyze and flag. Move on. NEVER re-read.
+Read 3-4 files per iteration. Analyze and flag. Move on. NEVER re-read. Bail out allowed after 6-8 clean files with no PRIORITY hits remaining (sampling task).
 {{end}}
 
 For each file: skip generated files, identify all comment blocks, skip exempt content, check against all 5 categories.
@@ -97,7 +168,9 @@ For each file: skip generated files, identify all comment blocks, skip exempt co
 ## Phase 3: Report (1 iteration)
 
 {{if eq .Mode "edit"}}
-Run `go build ./... 2>&1` BEFORE the report. Include the result.
+**Gate:** Do NOT enter Phase 3 until every file in PRIORITY has been Read OR you are within 5 iterations of `--max-iterations`. Sampling non-PRIORITY files is optional per `efficiency.md`; PRIORITY is mandatory.
+
+Run `go build ./... 2>&1` BEFORE the report. Include the result. If you entered Phase 3 because of the iteration cap (not full PRIORITY coverage), include a `## Coverage Shortfall` section listing the unread PRIORITY files.
 {{end}}
 Emit the structured report. No more tool calls after this.
 

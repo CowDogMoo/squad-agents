@@ -16,6 +16,6 @@ wrapper: agent.md
 task: task.md
 disable_task: true
 budget:
-  estimated_iterations: 20
+  estimated_iterations: 30
   scale_factor: files
-  files_per_iteration: 4
+  files_per_iteration: 5

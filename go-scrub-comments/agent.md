@@ -6,21 +6,27 @@ without human guidance.
 
 {{include "hard-rules/efficiency.md"}}
 
-**OVERRIDE:** Comment scrubbing is a SAMPLING task. If 6-8 files are clean
-and Grep found no LLM vocabulary, BAIL OUT early. Full coverage not required.
+{{if eq .Mode "readonly"}}
+**OVERRIDE (readonly only):** Comment scrubbing in readonly mode is a SAMPLING
+task. If 6-8 files are clean and the rg searches found no hits, BAIL OUT early.
+Full coverage not required.
+{{end}}
+{{if eq .Mode "edit"}}
+**COVERAGE MODEL (edit mode):** PRIORITY-driven. Phase 1 runs TWO `rg` searches
+(LLM vocabulary + structural narration regex `// fname...\nfunc fname(`).
+PRIORITY = union of hits. Read EVERY file in PRIORITY. Sampling non-PRIORITY
+files follows `efficiency.md`'s tier guidance. The structural regex is the
+high-yield Go pattern — do not skip Search B.
+{{end}}
 
 # EXECUTION RULES
 
-- **Phase 1 (1 iter):** Parallel `Glob **/*.go` + pattern search for LLM vocabulary/step labels. Prefer `rg --type go -n` via Bash (faster, gitignore-aware); fall back to squad `Grep` if `rg` is absent. Filter out `vendor/`, `.git/`, `.claude/`, generated, `_test.go`. Do NOT re-run discovery. No Bash `find`/`grep` — `rg` only.
-- **Phase 2 (varies):** Read 3-4 files/iter (1 if editing). After Read, enumerate EVERY line in the file matching the Phase 1 regex as a checklist — Edit every item in the SAME response, never stop after a partial cluster. Then scan for additional Category 1-5 hits. Start with Grep hits. Read largest files first. **No early bail-out in edit mode.**
-{{if eq .Mode "edit"}}
-- **Phase 3 (1 iter):** `go build ./... 2>&1` + emit report. No iterations after.
-{{end}}
-{{if eq .Mode "readonly"}}
-- **Phase 3 (1 iter):** Emit report. No iterations after.
-{{end}}
+- **Phase 1 (1 iter):** Parallel `Glob **/*.go` + Search A (LLM vocabulary regex) + Search B (PCRE2 structural narration `// ([a-z][a-zA-Z]+) [a-z]+s? [a-z][^.\n]*\.\nfunc \1\(` — needs `--pcre2 -U`). Build PRIORITY = union of A + B hits. Prefer `rg --type go` via Bash; fall back to squad `Grep` if `rg` absent. Do NOT re-run discovery.
+- **Iter 2 (skill gate):** First Phase 2 response MUST include a `Skill("comment-scrub-playbook")` call (per Hard Rule -1) alongside the first batch of Reads. The playbook defines the trim-vs-delete matrix; Edit calls made before this skill is loaded over-delete mixed narration+why blocks.
+- **Phase 2 (varies):** {{if eq .Mode "edit"}}First Phase 2 response opens with `PRIORITY has K files: [...]` text, then issues Reads. Process PRIORITY in full (Search B hits first — higher precision), then optionally sample non-PRIORITY per efficiency tier. Read 4-6 files/iter via parallel Read calls (1 if expecting Edits). Enumerate every regex-matching line per file as the minimum Edit checklist, then scan for Category 1-5 hits the regexes missed. **Harness contract:** every response MUST include real `Read` or `Edit` tool calls — a tool-call-less response ends the run. Forbidden: dummy calls (`MultiEdit` empty edits, `Grep` empty pattern), re-running discovery (`RepoMap`, second `Glob`, second `rg`), re-reading a file, "Planned next steps" wrap-ups. Stop condition: `priority_read_count == K` OR within 5 iters of cap.{{end}}{{if eq .Mode "readonly"}}Read 3-4 files/iter. After Read, enumerate regex-matching lines as flag checklist. Start with PRIORITY hits. Bail-out allowed (sampling task).{{end}}
+- **Phase 3 (1 iter):** {{if eq .Mode "edit"}}`go build ./... 2>&1` + emit report.{{end}}{{if eq .Mode "readonly"}}Emit report.{{end}} No iterations after.
 
-**Forbidden:** Multiple Globs, Bash discovery, planning iterations, re-reading files, single-file reads for clean batches, reading past 5 consecutive clean files without bailing.
+**Forbidden:** Multiple Globs, Bash discovery, planning iterations, re-reading files, single-file reads for clean batches.{{if eq .Mode "readonly"}} In readonly mode also forbidden: reading past 5 consecutive clean files without bailing.{{end}}
 
 **Required:** Glob+Grep parallel in iter 1. Read+Edit in same response. Start reading in iter 2.
 
