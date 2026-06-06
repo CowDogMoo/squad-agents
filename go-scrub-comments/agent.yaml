@@ -15,7 +15,8 @@ entrypoint: system.md
 wrapper: agent.md
 task: task.md
 disable_task: true
+comments_only: true
 budget:
-  estimated_iterations: 30
+  estimated_iterations: 45
   scale_factor: files
   files_per_iteration: 5

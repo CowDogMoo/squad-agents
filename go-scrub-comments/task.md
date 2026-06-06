@@ -1,23 +1,28 @@
-Scan all Go source files in this codebase for useless, LLM-generated, and
-non-idiomatic comments and
+Scan all non-test Go source files for useless, LLM-generated, and non-idiomatic comments and
 {{if eq .Mode "edit"}}**trim** mixed blocks to keep the useful "why" portion; **leave pure single-line narration alone** unless I have explicitly asked you to scrub or delete narration in this prompt (I have NOT){{end}}{{if eq .Mode "readonly"}}report them with confidence scores{{end}}.
 
-First iteration: parallel `Glob **/*.go` + Search A (LLM-vocabulary regex)
-and Search B (PCRE2 structural-narration regex with method-receiver support)
-— prefer `rg --type go` via Bash, fall back to squad's `Grep` if `rg` is
-absent. Do NOT re-run discovery. Start reading in iteration 2.
+WORKFLOW (sequential, one file per iteration):
 
-IMPORTANT CONSTRAINTS:
+- Iteration 1: `Glob **/*.go`.
+- Iteration 2: Bash runs BOTH `rg --type go` discovery searches in a single call — Search A (LLM-vocabulary regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`) and Search B (PCRE2 structural-narration regex with method-receiver support, needs `--pcre2 -U`). Separate from Glob. Hits define PRIORITY ORDER (Search B first, then Search A, then remaining files); they do NOT define the corpus.
+- Iterations 3..N: ONE `Read` per iteration; emit Edits for that file in the SAME iteration; narrate `Progress: K/<total> done (last: <path>, edits: M)`; advance. NEVER parallel-read. NEVER re-Read a cache-hit file.
+- Iteration N+1: `go build ./... 2>&1`, then emit the structured report.
 
-- Skip `vendor/`, `.git/`, `.github/`, `.claude/`, `_test.go`, generated files
-- NEVER delete doc comments on exported identifiers (required by `golint`/`go vet`)
-- Apply the verb phrase test on each candidate:
-  - Multi-line block with any "why"/edge-case/platform/spec/algorithm content → **TRIM** to that content (NOT full-delete)
+CONSTRAINTS:
+
+- Skip `vendor/`, `.git/`, `.github/`, `.claude/`, `_test.go`, generated files.
+- NEVER delete doc comments on exported identifiers (`golint`/`go vet`/`godoc` require them).
+- Apply the verb-phrase test on each candidate:
+  - Multi-line block with any "why"/edge-case/platform/spec/algorithm content → **TRIM** to that content (NOT full-delete).
   - Single-line pure narration with no extra content → **FLAG** in `## Comments Flagged (not deleted — no explicit intent)`. Do NOT delete; this prompt did not ask for narration removal.
-- LLM-generated requires 3+ tell categories to flag
-- Never modify code, only comments
-- Do NOT re-read files. No Bash `find`/`grep` for discovery — `rg` only.
+- LLM-generated requires 3+ tell categories.
+- Comments only — never modify code, signatures, imports, var/const, or string literals.
+- Cache-hit responses mean "already in context, move on."
+- Do NOT use additional `rg`/`Bash` searches as a substitute for Reading files. No Bash `find`/`grep` for discovery — `rg` only.
 {{if eq .Mode "edit"}}
-- Run `go build ./...` after any edits
-- If zero edits, summary must say "No changes needed"
+- Run `go build ./...` after all edits. If zero edits, summary must say "No changes needed".
 {{end}}
+
+{{include "hard-rules/efficiency.md"}}
+
+COVERAGE IS MANDATORY — full coverage, no sampling. Read EVERY non-test, non-vendor, non-generated `.go` file exactly once. The Large-tier "sample" guidance from efficiency.md does NOT apply to this agent.
