@@ -19,4 +19,4 @@ comments_only: true
 budget:
   estimated_iterations: 45
   scale_factor: files
-  files_per_iteration: 4
+  files_per_iteration: 5

@@ -1,9 +1,10 @@
-Scan all non-test Go source files for useless, LLM-generated, and non-idiomatic comments and {{if eq .Mode "edit"}}delete them{{end}}{{if eq .Mode "readonly"}}report them with confidence scores{{end}}.
+Scan all non-test Go source files for useless, LLM-generated, and non-idiomatic comments and
+{{if eq .Mode "edit"}}**trim** mixed blocks to keep the useful "why" portion; **leave pure single-line narration alone** unless I have explicitly asked you to scrub or delete narration in this prompt (I have NOT){{end}}{{if eq .Mode "readonly"}}report them with confidence scores{{end}}.
 
 WORKFLOW (sequential, one file per iteration):
 
 - Iteration 1: `Glob **/*.go`.
-- Iteration 2: Bash `rg --type go -n '(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)' .`. Separate from Glob.
+- Iteration 2: Bash runs BOTH `rg --type go` discovery searches in a single call — Search A (LLM-vocabulary regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`) and Search B (PCRE2 structural-narration regex with method-receiver support, needs `--pcre2 -U`). Separate from Glob. Hits define PRIORITY ORDER (Search B first, then Search A, then remaining files); they do NOT define the corpus.
 - Iterations 3..N: ONE `Read` per iteration; emit Edits for that file in the SAME iteration; narrate `Progress: K/<total> done (last: <path>, edits: M)`; advance. NEVER parallel-read. NEVER re-Read a cache-hit file.
 - Iteration N+1: `go build ./... 2>&1`, then emit the structured report.
 
@@ -11,13 +12,15 @@ CONSTRAINTS:
 
 - Skip `vendor/`, `.git/`, `.github/`, `.claude/`, `_test.go`, generated files.
 - NEVER delete doc comments on exported identifiers (`golint`/`go vet`/`godoc` require them).
-- Verb-phrase test: `// Verb the noun` above code that does it = DELETE.
+- Apply the verb-phrase test on each candidate:
+  - Multi-line block with any "why"/edge-case/platform/spec/algorithm content → **TRIM** to that content (NOT full-delete).
+  - Single-line pure narration with no extra content → **FLAG** in `## Comments Flagged (not deleted — no explicit intent)`. Do NOT delete; this prompt did not ask for narration removal.
 - LLM-generated requires 3+ tell categories.
 - Comments only — never modify code, signatures, imports, var/const, or string literals.
 - Cache-hit responses mean "already in context, move on."
-- Do NOT use additional `rg`/`Bash` searches as a substitute for Reading files.
+- Do NOT use additional `rg`/`Bash` searches as a substitute for Reading files. No Bash `find`/`grep` for discovery — `rg` only.
 {{if eq .Mode "edit"}}
-- Run `go build ./...` after all deletions. If zero edits, summary must say "No changes needed".
+- Run `go build ./...` after all edits. If zero edits, summary must say "No changes needed".
 {{end}}
 
 {{include "hard-rules/efficiency.md"}}
