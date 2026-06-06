@@ -65,29 +65,76 @@ R1. Report only. Do NOT modify any files.
 
 {{include "hard-rules/efficiency.md"}}
 
-**OVERRIDE — Coverage vs Efficiency:** Comment scrubbing is a SAMPLING task.
-If the first 6-8 files are clean and Grep found no LLM vocabulary, BAIL OUT
-early. Do NOT read every file.
+**COVERAGE IS MANDATORY — full coverage, no sampling.** Read EVERY non-test,
+non-vendor, non-generated `.go` file in the Glob output **exactly once**.
+The Large-tier "Sample remaining files" guidance from efficiency.md **does
+NOT apply to this agent** — you must read every file.
+
+**SEQUENTIAL WORKFLOW (CRITICAL).** You operate strictly **sequentially**:
+ONE file per iteration. NEVER issue parallel Read calls. The pattern is:
+
+1. iter N: `Read file_X` → in the SAME iteration, emit Edits for any
+   useless comments found in file_X → narrate `Progress: K/129 done
+   (last: file_X)`.
+2. iter N+1: `Read file_X+1` → Edit → narrate `Progress: K+1/129 done`.
+
+This serial workflow is mandatory because parallel batches break the
+running checklist: when 4 Reads return in parallel, the agent under-counts
+and re-reads the same files. Sequential reads make every step unambiguous.
+
+**Cache-hit semantics (CRITICAL).** Squad's Read tool returns full file
+content on the first Read of a given file. On any subsequent Read of the
+SAME file, it returns a small stub `[CACHE HIT — unchanged]` with a
+summary. The cache-hit means: **"this file's content is already in your
+conversation; do NOT re-read."** It is NOT a failure, NOT a partial
+result, and NOT a signal to retry — it is squad confirming the file is
+already accounted for.
+
+If you see CACHE HIT, immediately MOVE ON to the NEXT file. NEVER re-issue
+a Read for a cache-hit file. Re-reading is the #1 cause of agent loops.
+
+**Compaction recovery.** Rolling compaction may compress prior tool
+results. Squad's cache detects this and re-serves full content on the
+next Read — so if a file is "missing" from your context after compaction,
+the next Read of it WILL return full bytes (not a stub). Trust this.
 
 # WORKFLOW
 
-## Phase 1: Discover and Triage (1 iteration)
+## Phase 1: Discover and Triage (1-2 iterations)
 
-Parallel calls: `Glob **/*.go` + discovery search for the regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`.
+Iteration 1: `Glob **/*.go`. Iteration 2: discovery search via Bash for the regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`. Issue these as TWO separate iterations — do NOT request both in the same tool-call batch (the OpenAI integration only accepts one tool result per assistant turn).
 
 **Discovery search — prefer `rg`, fall back to `Grep`:** Run via Bash: `if command -v rg >/dev/null 2>&1; then rg --type go -n '<PATTERN>' .; else echo RG_UNAVAILABLE; fi`. If output is `RG_UNAVAILABLE`, call squad's `Grep` with the same pattern in the next iteration. `rg` is much faster than squad's built-in `Grep` (single-threaded `filepath.Walk` + Go regexp) and respects `.gitignore`.
 
 Filter results, count files, determine budget tier. Hits = priority read list. **Do NOT re-run discovery. No Bash `find` or generic `grep` — `rg` only.**
 
-## Phase 2: Read-then-Edit
+## Phase 2: Sequential Read-then-Edit (one file per iteration)
 
 {{if eq .Mode "edit"}}
-**YOU MUST MAKE EDIT CALLS** if useless comments exist. Read priority files first, then remaining files by likely comment density (largest first, skip `main.go`/`doc.go`/`version.go` early).
+**YOU MUST MAKE EDIT CALLS** if useless comments exist. Process files
+one at a time, in the order listed by the user (priority hits first if
+provided).
 
-**Pattern:** Read 3-4 files per iteration (1 file if expecting edits). After each Read, enumerate every line in the file matching the Phase 1 regex (LLM vocabulary, `Step \d`, `Phase \d`) — that enumeration is your minimum Edit checklist for the file (Hard Rule 14). Then scan for additional Category 1-5 hits the regex missed. Emit one Edit per checklist item in the SAME response; do not stop after the first cluster. Move to next batch. **Do NOT bail out early in edit mode** -- narration doesn't trigger Grep.
+**Pattern (per iteration, repeat until all files processed):**
+
+1. Single `Read path/to/file.go` — ONE file. NEVER batch parallel Reads.
+2. In the SAME assistant response, after reviewing the content:
+   - Enumerate every comment line matching the Phase 1 regex (LLM
+     vocabulary, `Step \d`, `Phase \d`) — that's your minimum Edit set.
+   - Scan for additional Category 1-5 hits the regex missed.
+   - Emit one `Edit` call per item identified. ALL edits for this file in
+     this same iteration.
+3. End the iteration with a one-line progress narration:
+   `Progress: N/TOTAL done (last: path/to/file.go, edits: K)` — replace
+   TOTAL with the actual file count from the Glob (or the count given in
+   the user prompt's file list).
+4. Move to the NEXT file in the next iteration.
+
+**Do NOT bail out early in edit mode** — coverage is mandatory.
 {{end}}
 {{if eq .Mode "readonly"}}
-Read 3-4 files per iteration. Analyze and flag. Move on. NEVER re-read.
+Read one file per iteration. Analyze, flag, narrate progress, move on.
+NEVER re-read. NEVER batch parallel Reads.
 {{end}}
 
 For each file: skip generated files, identify all comment blocks, skip exempt content, check against all 5 categories.
