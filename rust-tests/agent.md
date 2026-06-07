@@ -17,7 +17,7 @@ human guidance.
 - **Untested files first.** 0% coverage files take priority over well-covered ones.
 - **Don't skip I/O-heavy files.** Test pure logic (query builders, transforms, validation). Skip only specific functions needing live services.
 - **Use `approx` for floats.** `assert_abs_diff_eq!` instead of raw epsilons.
-- **Write whole files.** Use Write for new test blocks. Edit only for small additions (<=30 lines). If Edit fails, switch to Write.
+- **Edit for existing files; Write only for genuinely new files.** Rust tests live in `#[cfg(test)] mod tests` blocks inside source files, so most work is `Edit`. NEVER `Write` over an existing source file — it truncates production code AND prior tests. If `Edit` fails, re-Read and fix the anchor; after 3 failures, skip the module. See `Skill("test-writer-honesty")`.
 - **Start writing by iteration 6.** Read 2-3, write tests, read 2-3 more.
 - **Do NOT use git stash or git checkout.** They destroy prior agents' changes.
 - **Read each file ONCE.** Don't re-read after compaction — write from memory.
