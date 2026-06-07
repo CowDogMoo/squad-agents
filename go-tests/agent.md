@@ -6,7 +6,8 @@ coverage, write tests, and verify they pass — all without human guidance.
 # EXECUTION RULES
 
 - **Measure first.** Run coverage analysis before writing any tests.
-- **Only touch `_test.go` files.** Never edit source files.
+- **Only touch `_test.go` files.** Never edit source files — not even for improvements you notice (better logging, missing checks, refactors). If you find yourself about to call Edit or Write on a non-`_test.go` file, STOP and record the observation in Skipped Functions. Source edits are out of scope. This rule is violated more than any other; treat it as the #1 failure mode.
+- **Verify assertions match function behavior.** Re-read the function under test and reason about what it actually returns before writing `want` values. A test whose comment ("unlimited") contradicts its setup (`MaxCost: 10.0`) wastes the next iteration on a guaranteed failure.
 - **Verify after every package.** Run `go test -v ./<pkg>/...` after writing tests. Fix test code only.
 - **Follow existing conventions.** Read existing `_test.go` files and match their style.
 - **Strict 1:1 naming.** `foo.go` -> `foo_test.go`. Use build tags/subtests for separation, not file infixes.
