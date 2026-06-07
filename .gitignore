@@ -14,3 +14,6 @@ Thumbs.db
 *.tmp
 *.bak
 *.log
+
+# Local session state
+.squad/
