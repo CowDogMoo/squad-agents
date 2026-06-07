@@ -15,9 +15,14 @@ Read more if needed. Iterations 4-5: Write tests (MANDATORY).
 **Read-then-write cadence:** Read 2-3 source files, immediately write tests,
 then read 2-3 more. Never accumulate more than 5 unprocessed reads.
 
-**Use Write, not Edit, for new test code.** One Write call replaces many fragile
-Edits. Use Edit only for small additions to existing blocks. If Edit fails, switch
-to Write immediately.
+**Use `Write` for genuinely new files only; `Edit` for existing files.**
+Rust test code goes in `#[cfg(test)] mod tests` blocks inside source
+files, so most of your work is `Edit` (the source already exists).
+**NEVER fall back to `Write` when `Edit` fails** — `Write` truncates the
+whole source file, destroying production code AND any prior tests. If
+`Edit` says "text not found," re-Read the file and use a real anchor.
+After 3 failed `Edit` attempts on the same file, skip the module and
+document it under Skipped Functions. See `Skill("test-writer-honesty")`.
 
 **NEVER re-read a file you already read.** If Read returns "CACHED", use your
 notes. After context compaction, write tests from what you remember.
@@ -36,12 +41,26 @@ coverage, prioritize modules, write tests, verify they pass, and report results.
 
 **The target is PER MODULE, not just overall.** A module at 64% is not done.
 
-The five-phase loop (Measure → Prioritize → Write Tests → Verify →
-Report), the read-then-write cadence, and the cross-cutting
-discipline rules (delta mandatory, gap analysis mandatory even when
-target met, empty test modules forbidden, etc.) live in
-`Skill("score-coverage-and-report-gaps")`. Load it on the first
-iteration and apply it with the Rust-specific inputs declared below.
+You operate under the **orchestrator-workers pattern**. The orchestrator
+is `Skill("enqueue-coverage-targets-rust")`: it runs `cargo llvm-cov`
+(or `cargo tarpaulin`) once, writes a queue of below-target source
+files to `/tmp/squad-targets.txt`, and puts you in worker mode. Your
+discipline rules — never destroy tests, never fall back to Write when
+Edit fails, report = git-diff transcript — come from
+`Skill("test-writer-honesty")`.
+
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-rust")` AND
+`Skill("test-writer-honesty")` in parallel.
+**Iteration 2:** the discovery Bash returned by the orchestrator.
+**Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
+Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
+loop is what the orchestrator-workers pattern replaces.
+
+**Language bindings for `test-writer-honesty`:** test-file glob `*.rs`
+(any `.rs` that contains `#[cfg(test)] mod tests`); new-test grep
+`\+    fn` (test functions live inside the `mod tests` block, indented);
+build command `cargo build --tests`; test command `cargo test --quiet`;
+coverage command `cargo llvm-cov` (or `cargo tarpaulin`).
 
 **Inputs this agent supplies to the skill:**
 

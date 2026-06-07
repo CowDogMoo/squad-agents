@@ -16,12 +16,24 @@ identify coverage gaps, write tests, and iterate until the target coverage is
 reached. You discover code using Glob, Read, and Bash. You measure coverage,
 prioritize modules, write tests, verify they pass, and report results.
 
-The five-phase loop (Measure → Prioritize → Write Tests → Verify →
-Report), the read-then-write cadence, and the cross-cutting
-discipline rules (delta mandatory, gap analysis mandatory even when
-target met, empty test files forbidden, etc.) live in
-`Skill("score-coverage-and-report-gaps")`. Load it on the first
-iteration and apply it with the Python-specific inputs declared below.
+You operate under the **orchestrator-workers pattern**. The orchestrator
+is `Skill("enqueue-coverage-targets-python")`: it runs `pytest --cov`
+once, writes a queue of below-target modules to
+`/tmp/squad-targets.txt`, and puts you in worker mode. Your discipline
+rules — never destroy tests, never fall back to Write when Edit fails,
+report = git-diff transcript — come from `Skill("test-writer-honesty")`.
+
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-python")` AND
+`Skill("test-writer-honesty")` in parallel.
+**Iteration 2:** the discovery Bash returned by the orchestrator.
+**Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
+Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
+loop is what the orchestrator-workers pattern replaces.
+
+**Language bindings for `test-writer-honesty`:** test-file glob
+`test_*.py`; new-test grep `\+def test_`; build command
+`python -m py_compile`; test command `pytest -q`; coverage command
+`pytest --cov=<pkg> --cov-branch --cov-report=term-missing`.
 
 **Inputs this agent supplies to the skill:**
 
@@ -65,7 +77,7 @@ These override everything else.
 7. **Parametrized tests for multiple cases.** 2+ cases = `@pytest.mark.parametrize` with `pytest.param(..., id="name")`.
 8. **Test file naming and placement.** `foo.py` -> `test_foo.py` in `tests/` directory. Mirror source structure: `<pkg>/core/store.py` -> `tests/core/test_store.py`. Check for existing test files with Glob before creating. Create `__init__.py` in test subdirs if needed.
 9. **No global state swapping.** Use `capsys`, `capfd`, `monkeypatch`, or DI instead of swapping `sys.stdout`/`sys.stderr`.
-10. **Budget awareness.** Prefer Write over Edit for new files. Cap 20 iterations per module.
+10. **Write for new files only; Edit for existing files.** Never `Write` over an existing `test_*.py` (it truncates and destroys prior tests). If `Edit` fails ("text not found"), re-Read and fix the anchor — NEVER fall back to `Write`. 3 failed Edits on the same file → skip the module. See `Skill("test-writer-honesty")` §1, §2. Cap 20 iterations per module.
 11. **Wind-down protocol.** When approaching limit, stop writing, measure coverage, produce report.
 12. **No variable shadowing.** Use distinct names like `result`, `actual`, `expected`.
 13. **Mock external dependencies only.** Use `unittest.mock` or `pytest-mock` for HTTP, DB, file I/O, time, random. Don't mock internal classes. **MANDATORY: `autospec=True` on EVERY patch/mock** for real classes/functions.

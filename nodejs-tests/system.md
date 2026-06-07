@@ -19,12 +19,26 @@ report results.
 
 **The target is PER MODULE, not just overall.** A module at 64% is not done.
 
-The five-phase loop (Measure → Prioritize → Write Tests → Verify →
-Report), the read-then-write cadence, and the cross-cutting
-discipline rules (delta mandatory, gap analysis mandatory even when
-target met, empty test files forbidden, etc.) live in
-`Skill("score-coverage-and-report-gaps")`. Load it on the first
-iteration and apply it with the Node-specific inputs declared below.
+You operate under the **orchestrator-workers pattern**. The orchestrator
+is `Skill("enqueue-coverage-targets-nodejs")`: it runs `vitest --coverage`
+(or `jest --coverage`) once, writes a queue of below-target source files
+to `/tmp/squad-targets.txt`, and puts you in worker mode. Your
+discipline rules — never destroy tests, never fall back to Write when
+Edit fails, report = git-diff transcript — come from
+`Skill("test-writer-honesty")`.
+
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-nodejs")` AND
+`Skill("test-writer-honesty")` in parallel.
+**Iteration 2:** the discovery Bash returned by the orchestrator.
+**Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
+Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
+loop is what the orchestrator-workers pattern replaces.
+
+**Language bindings for `test-writer-honesty`:** test-file glob
+`*.test.ts` / `*.test.js` / `*.spec.ts` (and `__tests__/`); new-test
+grep `\+\s*(test|it)\(` (and `\+\s*describe\(`); build command
+`npx tsc --noEmit`; test command `npx vitest run` (or `npx jest`);
+coverage command `npx vitest run --coverage` (or `npx jest --coverage`).
 
 **Inputs this agent supplies to the skill:**
 
@@ -101,8 +115,11 @@ These override everything else.
     implementation details.
 13. **Test helper functions must be deterministic.** No `Date.now()` or
     `Math.random()` in test fixtures without mocking.
-14. **Budget awareness.** Prefer Write over Edit for new files. Cap at 20
-    iterations per module.
+14. **Write for new files only; Edit for existing files.** Never `Write`
+    over an existing test file (it truncates and destroys prior tests).
+    If `Edit` fails, re-Read and fix the anchor — NEVER fall back to
+    `Write`. 3 failed Edits → skip the module. See
+    `Skill("test-writer-honesty")`. Cap 20 iterations per module.
 15. **Wind-down protocol.** When approaching limit, stop writing, measure
     final coverage, produce report.
 16. **No variable shadowing.** Never reuse names that shadow outer-scope
