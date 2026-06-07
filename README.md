@@ -128,36 +128,18 @@ Starter templates under [`_includes/`](./_includes/) that you copy into a new ag
 
 ### Skills
 
-Skills are on-demand capabilities a running agent loads mid-task (see the
-open [Agent Skills standard](https://agentskills.io) and Squad's
-[four-concept overview](https://github.com/cowdogmoo/squad/blob/main/docs/agents-and-skills.md#skills)).
+Skills live in the sibling
+[squad-skills](https://github.com/cowdogmoo/squad-skills) repository —
+see that repo for the catalog, authoring guide, and the open
+[Agent Skills standard](https://agentskills.io). Agents here load them
+via `Skill("<name>")` calls in their `system.md`. Current wirings:
 
-Agents in this repo load skills from the sibling
-[squad-skills](https://github.com/cowdogmoo/squad-skills) repository via
-`Skill("<name>")` calls in their `system.md`. Active wirings:
-
-- `degpt`, `go-scrub-comments`, `rust-scrub-comments` →
-  [`detect-llm-tells`](https://github.com/cowdogmoo/squad-skills/tree/main/detect-llm-tells)
-- `go-scrub-comments`, `rust-scrub-comments` →
-  [`comment-scrub-playbook`](https://github.com/cowdogmoo/squad-skills/tree/main/comment-scrub-playbook)
+- `degpt`, `go-scrub-comments`, `rust-scrub-comments` → `detect-llm-tells`
+- `go-scrub-comments`, `rust-scrub-comments` → `comment-scrub-playbook`
 - `go-doc-comments`, `python-doc-comments`, `rust-doc-comments`,
-  `nodejs-doc-comments` →
-  [`doc-comments-discovery-and-fix-loop`](https://github.com/cowdogmoo/squad-skills/tree/main/doc-comments-discovery-and-fix-loop)
+  `nodejs-doc-comments` → `doc-comments-discovery-and-fix-loop`
 - `go-tests`, `python-tests`, `rust-tests`, `nodejs-tests` →
-  [`score-coverage-and-report-gaps`](https://github.com/cowdogmoo/squad-skills/tree/main/score-coverage-and-report-gaps)
-
-To scaffold a new skill of your own, run `squad skill new <name>` into either:
-
-- `.squad/skills/<name>/SKILL.md` — repo scope, checked into git, shared
-  with the team
-- `$XDG_CONFIG_HOME/squad/skills/<name>/SKILL.md` — global scope,
-  personal across projects
-
-A skill is the right choice when the capability is one *piece* of a
-larger task and might be reused by multiple agents. For full agents
-delegated to at runtime, use the **Task tool** (`Task(agent=..., prompt=...)`)
-from inside another agent. For fixed multi-stage workflows, use a
-**Pipeline** (above).
+  `score-coverage-and-report-gaps`
 
 ## Features
 
