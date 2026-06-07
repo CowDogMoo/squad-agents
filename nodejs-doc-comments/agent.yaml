@@ -1,0 +1,23 @@
+---
+name: nodejs-doc-comments
+version: 0.1.0
+description: Autonomous Node.js/TypeScript documentation agent that discovers exported declarations, adds or improves JSDoc comments following the JSDoc spec, and verifies compilation.
+models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
+  - model: gpt-4.1-nano
+    provider: openai
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+disable_task: true
+entrypoint: system.md
+wrapper: agent.md
+references:
+  - references/nodejs-documentation-standards.md
+task: task.md
+budget:
+  estimated_iterations: 20
+  scale_factor: files
+  files_per_iteration: 3

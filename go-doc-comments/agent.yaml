@@ -1,0 +1,23 @@
+---
+name: go-doc-comments
+version: 0.3.0
+description: Autonomous Go documentation agent that discovers exported declarations, adds or improves doc comments following the Go Doc Comments spec, and verifies compilation.
+models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
+  - model: gpt-4.1-nano
+    provider: openai
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+disable_task: true
+entrypoint: system.md
+wrapper: agent.md
+references:
+  - references/go-documentation-standards.md
+task: task.md
+budget:
+  estimated_iterations: 20
+  scale_factor: files
+  files_per_iteration: 3

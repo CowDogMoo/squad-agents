@@ -1,0 +1,21 @@
+---
+name: rust-scrub-comments
+version: 0.1.0
+description: Autonomous agent that scans Rust source files for useless, LLM-generated, and non-idiomatic comments and deletes them.
+models:
+  - model: claude-opus-4-6
+    provider: anthropic
+  - model: claude-sonnet-4-6
+    provider: anthropic
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+entrypoint: system.md
+wrapper: agent.md
+task: task.md
+disable_task: true
+budget:
+  estimated_iterations: 20
+  scale_factor: files
+  files_per_iteration: 4

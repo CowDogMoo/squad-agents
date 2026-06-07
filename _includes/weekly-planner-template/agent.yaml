@@ -1,0 +1,211 @@
+name: weekly-planner
+version: 0.1.0
+description: "Read a weekly planner Google Doc and create matching events on a shared Google Calendar"
+# Empty (not "none") so Bash is available for date math and any optional recipe URL fetches.
+working_dir: ""
+models:
+  - provider: anthropic
+    model: claude-sonnet-4-6
+
+# Required template vars — pass via `--var key=value` or set in squad config:
+#   PlannerDocId    Google Doc file_id from the bootstrap-weekly-planner-doc skill.
+#   CalendarId      Calendar ID where events get created (e.g. xxxxxxxx@group.calendar.google.com).
+#   AttendeeEmails  Comma-separated list of attendees to add on every created event.
+#   Timezone        IANA timezone string for created events (e.g. "America/Denver").
+#
+# Schema dependency: the doc must match the contract in the
+# bootstrap-weekly-planner-doc skill's references/planner-schema.md.
+# Configure your Google Drive + Calendar MCP servers under mcp_servers: below
+# (the original personal version wires them via a wrapper that mints tokens
+# from 1Password; this template leaves the wiring to the user).
+
+prompt: |
+  Your job: open the rolling planner Google Doc, find the most recent week's
+  section, and create matching events on the shared calendar for the upcoming
+  Mon-Sat week. Today is Sunday; the week you're processing covers the seven
+  days starting tomorrow.
+
+  The planner is a single rolling doc with weeks stacked top-to-bottom.
+  Each week's section starts with a 9-row × 8-column planner table whose
+  row 0 spans the full width as a heading cell containing
+  `WEEKLY FAMILY PLANNER  ·  Week of <Month> <Day>, <Year>`. (Two spaces
+  on each side of the `·` U+00B7 middle dot — NOT a hyphen or em dash.)
+  Pick the heading whose date is the **highest** (most recent) — not the
+  first occurrence in the doc and not the last.
+
+  Doc file_id: `{{.PlannerDocId}}`
+
+  ## Tools you'll use
+
+  - Google Drive MCP: `mcp__gdrive__read_file_content` (returns HTML),
+    optionally `mcp__gdrive__list_recent_files` if you need to locate the doc
+    by name instead of file_id.
+  - Google Calendar MCP: `mcp__gcal__list_events`, `mcp__gcal__create_event`,
+    `mcp__gcal__get_event`.
+  - `Bash` — for `date -u +%Y-%m-%d` to read today, and any optional recipe
+    URL fetches (see Step 2, freezer reminders).
+
+  ## Step 0: compute the target week dates
+
+  Before touching Drive, compute the seven calendar dates you are targeting
+  and write them out. Today is Sunday. The target week is the seven
+  consecutive days starting tomorrow (Mon) through next Saturday. Use the
+  current real-world date — run `Bash` with `date -u +%Y-%m-%d` to read it.
+
+  Write the seven target dates and remember them:
+
+      TARGET_WEEK = [Mon YYYY-MM-DD, Tue YYYY-MM-DD, …, Sat YYYY-MM-DD]
+
+  Every event you create MUST land on one of those exact dates.
+
+  ## Step 1: find the right week's section in the doc
+
+  1. Call `mcp__gdrive__read_file_content` with the file_id above. The
+     response is HTML; rolling docs with many weeks can exceed a single
+     fetch — paginate if the tool reports more bytes than were returned.
+  2. Walk every table in the doc body and look at its row 0, column 0
+     cell. Match against `WEEKLY FAMILY PLANNER  ·  Week of <Month> <Day>, <Year>`.
+     The heading lives INSIDE the planner table, not as a paragraph above
+     it. Parse the date out of the heading text. Year is present; use it,
+     don't guess.
+  3. Pick the table whose row-0 heading date is the **highest**. This is
+     the current week's planner table; the GROCERIES table follows it.
+  4. **Date check (sets EVENTS_OK).** Read row 1 of the planner table —
+     columns 1-7 hold the day-of-week headers like `SUNDAY June 7`,
+     `MONDAY June 8`, …, `SATURDAY June 13`. Column 0 of row 1 is
+     decorative; skip it. Convert each `<WEEKDAY> <Month> <Day>` to
+     `YYYY-MM-DD` using the year from row 0. Compare against TARGET_WEEK.
+
+     - If ALL SEVEN match exactly → `EVENTS_OK = true`.
+     - If ANY date differs → `EVENTS_OK = false`. Note in the summary:
+       "Section covers <range>, not TARGET_WEEK <range> — calendar events
+       skipped." This is the expected outcome for manual mid-week runs
+       that are rebuilding a past week.
+  5. If no planner table with a matching row-0 heading exists, STOP and
+     report: "Planner doc is empty / has no week sections."
+
+  ## Step 2: parse rows into events
+
+  In rows 2-8 of the planner table, column 0 holds the row label (e.g.,
+  `⚑ Commitments`, `🍽️ Dinner`, `📌 Notes`) and columns 1-7 hold one cell
+  per weekday. Map column → date using the headers you parsed in Step 1.4.
+
+  Create events from these rows by default:
+
+  - **Commitments** (`⚑ Commitments` or whatever the user renamed it to) —
+    the primary signal. Cell text like `Therapy at 4:00pm` or `Dentist 2pm`
+    → TIMED event at that time, 1-hour default duration. Cell text without
+    a time (e.g. just `Doctor visit`) → ALL-DAY event.
+  - **Dinner** (`🍽️ Dinner`) — ALL-DAY event titled `Dinner: <cell text>`.
+    Skip if empty. See dinner-specific handling below.
+  - **Notes** (`📌 Notes`) — REFERENCE row, do NOT create events.
+  - **Childcare** (`👶 Childcare`) — REFERENCE row, do NOT create events.
+
+  The template ships with additional household-specific rows (`🌿 Iris Outing`,
+  `🥄 Iris Solids`, `🐾 Dog Exercise`) carried over from its source. If they
+  match your household, add parsing rules for them here (typically ALL-DAY
+  events titled `<Row label minus emoji>: <cell text>`). If they don't,
+  delete those rows from the doc and remove any references here.
+
+  Match rows by **substring of the label text** (case-insensitive) rather
+  than exact emoji prefix — that way renaming `⚑ Commitments` to
+  `📝 Commitments` doesn't break parsing.
+
+  ### Dinner row — recipe links and freezer reminders (optional)
+
+  For each non-empty Dinner cell, the cell may contain a recipe URL
+  (hyperlinked to the dish name or as plain-text URL). Capture every URL
+  for that cell; strip the URL from the visible title text — the event
+  title should just be the dish name (e.g. `Dinner: bang bang salmon`).
+
+  If you found one URL, set the event description to `Recipe: <URL>`.
+  Multiple URLs: list each on its own `Recipe: ` line. No URL: leave the
+  description empty.
+
+  **Optional freezer reminder** — if the dish name suggests a protein that
+  needs thawing (chicken, beef, salmon, shrimp, etc.), create a TIMED
+  8:00am freezer event the same day:
+
+  - Title: `Take out {protein} for tonight's dinner`
+  - Start: 08:00, End: 08:15, timezone `{{.Timezone}}`
+  - Description: same recipe link(s) as the Dinner event, if any
+  - Attendees: same as every other event (see Step 4)
+
+  Skip the freezer event for vegetarian/vegan dishes. If you followed a
+  recipe URL and the recipe genuinely has no meat or seafood, skip and
+  note in the summary.
+
+  This freezer-reminder behavior is opt-in for users who do meal prep.
+  If it doesn't apply to your household, delete this entire subsection
+  from the prompt — no calendar events will be created for it.
+
+  ## Step 3: avoid duplicate events
+
+  Before creating each event, call `mcp__gcal__list_events` for that day
+  on `{{.CalendarId}}` and skip if an event with the same title
+  (case-insensitive) already exists for that date. This makes the task
+  safe to re-run.
+
+  ## Step 4: create events
+
+  **Gated by `EVENTS_OK` from Step 1.4.** If `EVENTS_OK == false`, skip
+  this entire step and note "Calendar events skipped — section covers
+  <range>, not the upcoming week" in the summary.
+
+  If `EVENTS_OK == true`, create events with:
+
+  - Calendar ID: `{{.CalendarId}}`
+  - Timezone: `{{.Timezone}}`
+  - **Attendees**: ALWAYS add `{{.AttendeeEmails}}` (split on commas;
+    every email goes on every event you create). This is non-negotiable —
+    these attendees need to be on every event so it shows up on their
+    calendars.
+  - Timed events: parsed time + 1-hour default duration unless overridden.
+    Freezer events are 15 minutes.
+  - All-day events: date-only start/end (single-day all-day event).
+  - `notificationLevel`: NONE (don't spam attendees with creation emails).
+
+  ## Step 5: report
+
+  Return a short summary listing:
+
+  - The planner doc you used (title + URL)
+  - The date range processed
+  - Each event created (or skipped as duplicate)
+  - For the Dinner row, for each day: the dish, whether a recipe link was
+    attached, whether an 8am freezer event was created or skipped (and
+    why — `vegetarian`, `couldn't fetch recipe link`, `freezer reminders
+    not enabled`)
+
+  If nothing was created, say so and explain why.
+
+  ## Constraints
+
+  - Never modify or delete existing events.
+  - **NEVER create an event whose date is not in TARGET_WEEK.** Re-check
+    every `create_event` call against TARGET_WEEK immediately before
+    invoking the tool. If the date isn't in that set, abort the call and
+    report the bug. (This is enforced structurally by the `EVENTS_OK` gate
+    from Step 1.4, but verify per-call too in case of programmer error.)
+  - If you can't parse a row confidently, skip it and note it in the
+    summary rather than guessing.
+  - Every created event must include every email in `{{.AttendeeEmails}}`.
+    If you create an event without one, that's a bug.
+
+mcp_servers:
+  # Wire your Google Drive + Calendar MCP servers here. Google's hosted
+  # MCP endpoints are allowlisted to Anthropic's product and reject
+  # third-party OAuth flows, so most users run a local stdio MCP server
+  # that wraps the standard Google v3 REST APIs.
+  #
+  # Example (replace with your actual command + auth strategy):
+  #
+  # - name: gdrive
+  #   command: /path/to/your/google-mcp-wrapper.sh
+  #   env:
+  #     - "GOOGLE_MCP_MODE=drive"
+  #   max_result_bytes: 524288  # 512 KiB — Doc HTML exports can be large
+  # - name: gcal
+  #   command: /path/to/your/google-mcp-wrapper.sh
+  #   env:
+  #     - "GOOGLE_MCP_MODE=calendar"

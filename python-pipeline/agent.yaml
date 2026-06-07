@@ -1,0 +1,19 @@
+---
+name: python-pipeline
+version: 0.3.0
+description: Sequential Python quality pipeline — review, tests, doc comments.
+
+stages:
+  - name: review
+    agent: python-review
+  - name: tests
+    agent: python-tests
+    depends_on: [review]
+  - name: docs
+    agent: python-doc-comments
+    depends_on: [tests]
+
+gates:
+  - after: tests
+    command: "if python3 -c 'import pytest' 2>/dev/null; then python3 -m pytest -x -q; elif python -c 'import pytest' 2>/dev/null; then python -m pytest -x -q; else echo 'pytest not installed — gate skipped'; fi"
+    on_failure: stop

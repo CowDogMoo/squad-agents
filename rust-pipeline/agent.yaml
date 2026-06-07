@@ -1,0 +1,25 @@
+---
+name: rust-pipeline
+version: 0.4.0
+description: Sequential Rust quality pipeline — review, tests, doc comments.
+
+stages:
+  - name: review
+    agent: rust-review
+  - name: tests
+    agent: rust-tests
+    depends_on: [review]
+  - name: docs
+    agent: rust-doc-comments
+    depends_on: [tests]
+
+gates:
+  - after: review
+    command: "cargo clippy -- -D warnings"
+    on_failure: stop
+  - after: tests
+    command: "cargo test"
+    on_failure: stop
+  - after: docs
+    command: "cargo build"
+    on_failure: stop

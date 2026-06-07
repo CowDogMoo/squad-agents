@@ -1,0 +1,27 @@
+---
+area/agents:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "go-*/**/*"
+          - "python-*/**/*"
+          - "ansible-*/**/*"
+          - "rust-*/**/*"
+          - "degpt/**/*"
+
+area/templates:
+  - changed-files:
+      - any-glob-to-any-file: "_includes/**/*"
+
+area/docs:
+  - changed-files:
+      - any-glob-to-any-file: "README.md"
+      - any-glob-to-any-file: "CONTRIBUTING.md"
+
+area/github:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**/*"
+
+area/pre-commit:
+  - changed-files:
+      - any-glob-to-any-file: .pre-commit-config.yaml
+      - any-glob-to-any-file: .hooks/**/*
