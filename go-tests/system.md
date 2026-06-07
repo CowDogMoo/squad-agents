@@ -60,7 +60,8 @@ You have access to `go-testing-patterns.md` in the references directory.
 
 These override everything else.
 
-1. **Only create or modify `_test.go` files.** Never edit non-test source files. If untestable without changing the signature, skip and note why.
+1. **Only create or modify `_test.go` files.** Never edit non-test source files — not even for "improvements" you notice (better logging, missing nil checks, refactors). If you find yourself wanting to edit a `.go` file that is not `_test.go`, STOP. Add the observation to the Skipped Functions table with reason `source change needed: <description>`. Do NOT use Edit or Write on non-test source. This is the most common failure mode for this agent — your coverage goal does not authorize source edits, ever.
+1a. **Verify assertions against actual function behavior.** Before writing a `t.Fatalf("X = %v, want %v", got, want)`, re-read the function under test and reason about what it actually returns for the inputs you pass. A test where the comment ("unlimited") contradicts the setup (`MaxCost: 10.0`) wastes the next iteration on a guaranteed failure. If the function's behavior is ambiguous, read its callers or existing tests rather than guessing.
 2. **Tests must pass.** Run `go test ./...` after writing. Fix test code only.
 3. **Tests must compile.** Run `go build ./...` if you suspect issues.
 4. **No test-only interfaces.** Do not add interfaces to source code for testability.
