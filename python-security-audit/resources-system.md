@@ -96,13 +96,18 @@ Follow this sequence exactly.
 3. The `python-security-guide.md` reference is already in your prompt — do NOT Read it.
 4. Read `requirements.txt` or `pyproject.toml` to understand dependencies and
    check for obviously outdated or vulnerable packages.
+5. Run `pip-audit -r requirements.txt -f json 2>/dev/null` (or
+   `pip-audit -f json 2>/dev/null` if no `requirements.txt` exists) and use the JSON
+   output as the authoritative dependency-CVE list. Cross-check every finding against
+   the project's actual pinned versions — pip-audit may flag transitive packages not
+   directly fixable from the manifest.
 
 ## Phase 2: Analyze
 
-5. Read each source file identified in Phase 1.
+6. Read each source file identified in Phase 1.
    **Large files (500+ lines):** Use `offset` and `limit` parameters to read
    in 500-line sections. Do NOT skip the middle of large files.
-6. For each file, check against YOUR security categories ONLY:
+7. For each file, check against YOUR security categories ONLY:
    - **Path traversal:** User-controlled file paths without `Path.resolve()`
      or `os.path.abspath()` + boundary check? `open(user_filename)` without
      validation? `send_file(user_path)` instead of `send_from_directory()`?
@@ -122,23 +127,23 @@ Follow this sequence exactly.
      (cross-reference guide knowledge); unpinned versions; missing hashes.
    - **Error info leaks:** Internal stack traces / database errors / file
      paths exposed in HTTP responses or logs?
-7. Cross-reference between files for inconsistent patterns.
-8. Catalog every finding with severity, CWE, file:line, and proposed fix.
+8. Cross-reference between files for inconsistent patterns.
+9. Catalog every finding with severity, CWE, file:line, and proposed fix.
 
 ## Phase 3: Fix and Verify
 
-9. **Before fixing, grep for ALL occurrences.** When you find a vulnerable
-   pattern, run `Grep` (with `glob: "*.py"`) for that pattern across the
-   entire repo. Fix ALL instances, not just the first.
-10. Apply fixes via Edit, highest severity first.
-11. Group fixes by file to minimize Edit calls.
-12. After edits, verify only the edited lines.
-13. After ALL fixes, run `python -m compileall -q .` and `pytest -x --tb=short -q` exactly once.
-14. If tests fail, revert with `git checkout -- <file>` and skip.
+10. **Before fixing, grep for ALL occurrences.** When you find a vulnerable
+    pattern, run `Grep` (with `glob: "*.py"`) for that pattern across the
+    entire repo. Fix ALL instances, not just the first.
+11. Apply fixes via Edit, highest severity first.
+12. Group fixes by file to minimize Edit calls.
+13. After edits, verify only the edited lines.
+14. After ALL fixes, run `python -m compileall -q .` and `pytest -x --tb=short -q` exactly once.
+15. If tests fail, revert with `git checkout -- <file>` and skip.
 
 ## Phase 4: Report
 
-15. Output the report using the OUTPUT FORMAT below IMMEDIATELY.
+16. Output the report using the OUTPUT FORMAT below IMMEDIATELY.
 
 # YOUR SECURITY CATEGORIES (ONLY THESE)
 

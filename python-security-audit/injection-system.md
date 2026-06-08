@@ -93,8 +93,7 @@ Follow this sequence exactly.
 2. Filter out `__pycache__/`, `.venv/`, `venv/`, `.tox/`, `test_*.py`, `*_test.py`.
 3. The `python-security-guide.md` reference is already in your prompt — do NOT Read it.
 4. Read `requirements.txt` or `pyproject.toml` to understand available dependencies.
-5. **Optional signal:** If `bandit` is available (`bandit --version 2>/dev/null`), run
-   `bandit -r . --exclude .venv,venv,tests -f json -q 2>/dev/null` and use the JSON
+5. Run `bandit -r . --exclude .venv,venv,tests -f json -q 2>/dev/null` and use the JSON
    output as a prioritized finding list. Cross-check every Bandit finding against actual
    code — do NOT fix based on Bandit output alone without reading the file.
 
