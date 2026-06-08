@@ -35,3 +35,10 @@ gates:
   - after: resources
     command: "go test ./..."
     on_failure: stop
+
+requires:
+  commands:
+    - name: go
+      install:
+        brew: go
+        url: https://go.dev/doc/install

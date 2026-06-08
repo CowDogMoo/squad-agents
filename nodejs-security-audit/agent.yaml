@@ -35,3 +35,10 @@ gates:
   - after: resources
     command: "npm test -- --passWithNoTests 2>/dev/null || npx jest --passWithNoTests 2>/dev/null || true"
     on_failure: stop
+
+requires:
+  commands:
+    - name: npm
+      install:
+        brew: node
+        url: https://nodejs.org/en/download

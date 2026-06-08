@@ -15,3 +15,10 @@ references:
   - references/ansible-molecule-guide.md
 task: task.md
 disable_task: true
+requires:
+  commands:
+    - name: ansible-playbook
+      install:
+        brew: ansible
+        pipx: ansible
+        url: https://docs.ansible.com/ansible/latest/installation_guide
