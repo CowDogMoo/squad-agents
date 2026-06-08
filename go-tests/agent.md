@@ -27,7 +27,11 @@ Pattern: orchestrator skill `enqueue-coverage-targets-go` + worker (you).
 (See system.md for the full set; these are the ones that have failed prior runs.)
 
 - **`_test.go` only.** Never edit source `.go`. Untestable → Skipped Functions.
+- **1:1 test filename, ENFORCED.** `<X>_test.go` requires source `<X>.go` in the same package. No `run_extra_test.go`, no `service_state_test.go` (no source), no `_extra/_more/_additional/_coverage/_supplemental/_misc_test.go`. If the natural test file is full and `Edit` fails 3×, SKIP the package — do NOT invent a sibling filename.
 - **`Edit` failed → re-Read, fix anchor, retry. NEVER fall back to `Write`.** 3 failed Edit attempts → skip the package.
+- **Before adding a new `func Test*`, scan existing `_test.go` files in the package for the same test under a different spelling.** `TestPrintMetrics_Nil` ≠ a new test if `TestPrintMetricsNil` already exists. Functional duplicates will be rejected.
+- **No contortion tests.** No field-assign-then-readback "tests" (`s := Foo{X:"y"}; if s.X != "y"`). No sentinel-existence checks (`if pkg.ErrX == nil`). No constructor echoes. No assertionless "should not panic" bodies. If the only test you can write is one of these, list the function under Skipped Functions with reason "no testable behavior."
+- **Test name must match the branch the body runs.** Naming a test `_WhenBudgetExceeded` and passing a non-wrapping `fmt.Errorf("budget exceeded")` lies — `errors.Is` will return false and the test will silently cover the early-return. Wrap the real sentinel (`%w`) or rename.
 - **Add NEW top-level `func Test*` — do not insert code into existing functions.** Prevents "t.Parallel called multiple times" and "no new variables on left side of :=".
 - **Edit's `new_string` must NOT contain `package` or `import (...)` blocks.**
 - **Symbols/import paths must come from source you read.** Don't infer from package name.
