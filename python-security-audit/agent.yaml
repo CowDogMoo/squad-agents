@@ -47,3 +47,15 @@ requires:
         pipx: pytest
         pip: pytest
         url: https://docs.pytest.org
+    - name: bandit
+      install:
+        brew: bandit
+        pipx: bandit
+        pip: bandit
+        url: https://bandit.readthedocs.io
+    - name: pip-audit
+      install:
+        brew: pip-audit
+        pipx: pip-audit
+        pip: pip-audit
+        url: https://github.com/pypa/pip-audit
