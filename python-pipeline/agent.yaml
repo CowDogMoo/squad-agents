@@ -17,3 +17,15 @@ gates:
   - after: tests
     command: "if python3 -c 'import pytest' 2>/dev/null; then python3 -m pytest -x -q; elif python -c 'import pytest' 2>/dev/null; then python -m pytest -x -q; else echo 'pytest not installed — gate skipped'; fi"
     on_failure: stop
+
+requires:
+  commands:
+    - name: python
+      install:
+        brew: python
+        url: https://www.python.org/downloads
+    - name: pytest
+      install:
+        pipx: pytest
+        pip: pytest
+        url: https://docs.pytest.org
