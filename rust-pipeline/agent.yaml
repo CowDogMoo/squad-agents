@@ -23,3 +23,10 @@ gates:
   - after: docs
     command: "cargo build"
     on_failure: stop
+
+requires:
+  commands:
+    - name: cargo
+      install:
+        brew: rust
+        url: https://www.rust-lang.org/tools/install

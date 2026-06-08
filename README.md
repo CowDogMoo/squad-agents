@@ -192,7 +192,21 @@ budget:
   estimated_iterations: 30
   scale_factor: files
   files_per_iteration: 3
+requires:
+  commands:
+    - name: go
+      install:
+        brew: go
+        url: https://go.dev/doc/install
 ```
+
+The `requires:` block declares external CLI binaries the agent invokes
+via Bash. The runner verifies each is on PATH before invoking the model
+and aborts with the install hints above on missing tools — so a missing
+dependency fails in milliseconds with actionable output instead of
+mid-run after burning tokens. See the upstream
+[`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md#declaring-tool-dependencies)
+for the full field reference.
 
 ## Mode Support
 

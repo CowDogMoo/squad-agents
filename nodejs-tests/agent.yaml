@@ -19,3 +19,9 @@ budget:
   estimated_iterations: 30
   scale_factor: files
   files_per_iteration: 2
+requires:
+  commands:
+    - name: npm
+      install:
+        brew: node
+        url: https://nodejs.org/en/download

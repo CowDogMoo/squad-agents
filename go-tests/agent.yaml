@@ -20,3 +20,9 @@ budget:
   estimated_iterations: 30
   scale_factor: files
   files_per_iteration: 2
+requires:
+  commands:
+    - name: go
+      install:
+        brew: go
+        url: https://go.dev/doc/install

@@ -19,3 +19,9 @@ budget:
   estimated_iterations: 20
   scale_factor: files
   files_per_iteration: 4
+requires:
+  commands:
+    - name: cargo
+      install:
+        brew: rust
+        url: https://www.rust-lang.org/tools/install

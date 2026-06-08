@@ -16,3 +16,10 @@ references:
   - references/go-taskfile-standards.md
 task: task.md
 disable_task: true
+requires:
+  commands:
+    - name: task
+      install:
+        brew: go-task
+        go: github.com/go-task/task/v3/cmd/task@latest
+        url: https://taskfile.dev/installation/

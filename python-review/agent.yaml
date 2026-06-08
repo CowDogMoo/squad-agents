@@ -19,3 +19,14 @@ budget:
   estimated_iterations: 20
   scale_factor: files
   files_per_iteration: 3
+requires:
+  commands:
+    - name: python
+      install:
+        brew: python
+        url: https://www.python.org/downloads
+    - name: pytest
+      install:
+        pipx: pytest
+        pip: pytest
+        url: https://docs.pytest.org
