@@ -31,9 +31,9 @@
 
 ## Files Touched
 
-- `path/to/file.go` -- [change description]
+- `path/to/file.ext` — [change description]
 
 ## Validation
 
-- `go build ./...`: PASS/FAIL
-- `go test ./...`: PASS/FAIL
+- `[verification command]`: PASS/FAIL
+- `[test command]`: PASS/FAIL/SKIPPED (not available)

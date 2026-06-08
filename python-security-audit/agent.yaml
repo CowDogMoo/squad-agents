@@ -1,0 +1,37 @@
+---
+name: python-security-audit
+version: 0.1.0
+description: Parallel security audit — injection + resources stages run concurrently
+
+stages:
+  - name: injection
+    entrypoint: injection-system.md
+    wrapper: injection-agent.md
+    task: injection-task.md
+    max_cost: 2.00
+    models:
+      - model: claude-sonnet-4-6
+        provider: anthropic
+    references:
+      - references/python-security-guide.md
+  - name: resources
+    entrypoint: resources-system.md
+    wrapper: resources-agent.md
+    task: resources-task.md
+    max_cost: 2.00
+    models:
+      - model: claude-sonnet-4-6
+        provider: anthropic
+    references:
+      - references/python-security-guide.md
+
+gates:
+  - after: injection
+    command: "python -m compileall -q -x '(\\.venv|venv|\\.tox)' . 2>/dev/null"
+    on_failure: stop
+  - after: resources
+    command: "python -m compileall -q -x '(\\.venv|venv|\\.tox)' . 2>/dev/null"
+    on_failure: stop
+  - after: resources
+    command: "pytest -x --tb=no -q 2>/dev/null; ec=$?; [ $ec -eq 0 ] || [ $ec -eq 5 ]"
+    on_failure: stop
