@@ -35,3 +35,15 @@ gates:
   - after: resources
     command: "pytest -x --tb=no -q 2>/dev/null; ec=$?; [ $ec -eq 0 ] || [ $ec -eq 5 ]"
     on_failure: stop
+
+requires:
+  commands:
+    - name: python
+      install:
+        brew: python
+        url: https://www.python.org/downloads
+    - name: pytest
+      install:
+        pipx: pytest
+        pip: pytest
+        url: https://docs.pytest.org
