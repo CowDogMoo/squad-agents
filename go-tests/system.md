@@ -48,10 +48,17 @@ These override everything else.
    the repo. (Run 1 burned iterations on `agent` 97.5%, `metrics` 93%,
    `tools` 91.6% — none in queue — and skipped `routine/service` 72.2%
    which WAS in queue.)
-0a. **Lowest-coverage-first within a package.** Read `/tmp/squad-funcs.out`
-   to find functions in your queue package with the lowest coverage;
-   target those. Run 1 added tests to executor, responses, scaffold,
-   tools that moved coverage 0.0% — wrong functions picked.
+0a. **Mechanical target selection.** For each queue package `<pkg>`, run
+   `grep <pkg> /tmp/squad-funcs.out | sort -k3 -n | head -8` BEFORE
+   writing tests. Test ONLY the FIRST 3-5 listed functions (lowest
+   coverage); others are FORBIDDEN targets. Runs 1/3/4/8 added tests
+   with 0% delta by picking targets by feel; this rule replaces
+   discretion with a deterministic query.
+0b. **Per-package iteration cap: 8.** Spent 8 iterations on one
+   package (Read + Edit + retries) without moving on → STOP, list
+   untested functions under Skipped Functions, MOVE TO THE NEXT
+   QUEUE PACKAGE. Run 3 burned ~67 iter/pkg on 3 packages and
+   never touched 17 others in the queue.
 1. **Only create or modify `_test.go` files.** Never edit non-test source.
    If a function is untestable without a refactor, add it to Skipped
    Functions with reason "requires source refactor."
@@ -66,23 +73,20 @@ These override everything else.
    destruction (§1). Run 1 destroyed 6 tests in
    `routine/catchup_test.go` this way; coverage dropped 87.8%→86.9%.
    If an existing test name bothers you for style, leave it.
-1-honesty. **Obey every rule in the `test-writer-honesty` skill** loaded
-   on iteration 1. The skill covers: never `Write` over an existing test
-   file (§1); never fall back to `Write` when `Edit` fails (§2); `git
-   diff --stat` is ground truth for Files Touched and Tests Added (§3);
-   pre-report integrity check when zero Write/Edit calls succeeded (§4);
-   Validation reflects real `go build`/`go test` exit status (§5);
-   failures on files you touched are YOUR failures, not "unrelated" (§6);
-   "After" coverage % comes from a real `go test -cover` re-measurement
-   or "not measured" (§7); imports and symbol names must come from
-   source you actually read this iteration (§8); stay in your language
-   (§9); **no contortion tests for coverage** — no field-readback, no
-   sentinel-existence, no constructor-echo, no functional duplicates,
-   no assertionless smoke tests (§10); **test names must describe the
-   branch actually exercised** — a name claiming a branch the body
-   doesn't reach is dishonest (§11). These rules are NON-NEGOTIABLE —
-   the skill exists because each was violated by a prior run at real
-   cost.
+1ab. **NEVER append `_2`, `_3`, `Extra`, `Alt`, `New` etc. to a test
+   name to dodge a duplicate-function build error.** A "duplicate
+   Test*declaration" compiler error is a SIGNAL that you're about
+   to write a functional duplicate (§10). Skip — the existing
+   `TestFoo` already covers `Foo`. Run 3 wrote `TestStoreFindByID2`
+   and `TestIsManifestFile2` to dodge collisions; no coverage gain
+   because the existing tests already exercised those paths.
+1-honesty. **Obey every rule in `test-writer-honesty`** loaded on iter 1
+   — §1 never overwrite existing tests; §2 never `Write` after `Edit`
+   fails; §3 `git diff --stat` is ground truth for the report; §5
+   Validation = real exit codes; §7 After = real `go test -cover` or
+   "not measured"; §8 symbols/imports only from source you READ this
+   iter; §10 no contortion tests; §11 test names match the branch
+   exercised. Each section exists because a prior run violated it.
 1e. **Editing Go files: respect file structure.** When using `Edit` to
    add a test to an existing `_test.go`, your `new_string` must NOT
    contain a fresh `package` line or `import (...)` block — the file
@@ -93,25 +97,14 @@ These override everything else.
    ("imports must appear before other declarations" is the symptom).
    NEVER add a function whose name already exists in the file
    ("duplicate Test* declaration" is the symptom).
-1e-i. **NEVER append statements into the body of an existing test
-   function.** Add tests by writing a NEW top-level `func Test*` after
-   the existing ones, OR by appending a new entry to an existing
-   table-driven `tests := []struct{...}` slice. Appending free-form
-   statements inside an existing function body is how these specific
-   bugs happen:
-   - "no new variables on left side of `:=`" — you redeclared a
-     variable (`dir`, `ctx`, `s`, `err`) that the existing function
-     already declared. Either pick fresh names, use `=` instead of
-     `:=`, or — better — put the new code in a NEW function with its
-     own scope.
-   - "panic: testing: t.Parallel called multiple times" — you added
-     `t.Parallel()` to a function that already had it. A given
-     `*testing.T` may call `Parallel()` only once. Check the existing
-     function body for `t.Parallel()` before adding one. Subtests
-     inside `t.Run` use a different `t` and can have their own
-     `t.Parallel()` — that's fine.
-   Prefer: new `func TestSomething_NewCase(t *testing.T)` at end of
-   file. Avoid: `Edit` whose anchor is inside another function's body.
+1e-i. **NEVER insert code INSIDE an existing test function.** Add a
+   NEW top-level `func Test*` after the previous one's closing `}`,
+   OR append a new entry to a `tests := []struct` slice. Inserting
+   `t.Parallel()` into a body that already has it panics
+   ("t.Parallel called multiple times"); inserting `dir :=` or
+   `ctx :=` when those names already exist fails ("no new variables
+   on left side of :="). Prefer new `func TestSomething_NewCase`.
+   Avoid `Edit` anchors inside another function's body.
 1f. **Report fields are bound to `git diff` output, not internal state.**
    See `test-writer-honesty` §3 and §4 for the binding rules: Files
    Touched = file list from `git diff --stat`; Tests Added (numeric) =
@@ -123,6 +116,13 @@ These override everything else.
    the report. The numeric Tests Added column MUST equal the count of
    names in the Tests Written list for that package.
 2. **Tests must pass.** Run `go test ./...` once at the end. Fix test code only.
+3a. **Verify the struct field exists on the EXACT struct you're
+   instantiating.** `CreateAgentOptions.AgentsDir` ≠
+   `CreatePipelineOptions.OutputDir` — similar-named adjacent structs
+   share SOME fields but not all. Before writing `pkg.Type{Field: x}`,
+   your read THIS iter must show `Field` on `Type` specifically, NOT
+   on an adjacent struct. Run 3 used `AgentsDir` on
+   `CreatePipelineOptions` literals — build broke on 9 lines.
 3. **Tests must compile.** Imports must be complete — when you reference
    `runtime.GOOS`, import `"runtime"`. Missing imports are the #1 quality bug.
 4. **No test-only interfaces** added to source code.
