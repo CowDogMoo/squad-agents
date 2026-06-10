@@ -23,7 +23,7 @@ returns, with the `${SQUAD_COVERAGE_TARGET:-75}` reference resolved to
 `go build ./...`; test command `go test ./...`; coverage command
 `go test -cover ./...`.
 
-Per-package coverage target: {{.Default "COVERAGE_TARGET" "75"}}% (cmd/* gets a 50% target).
+Per-package coverage target: {{.Default "COVERAGE_TARGET" "75"}}% applies to ALL packages including `cmd/*`.
 
 Test idiom: black-box `package foo_test`; table-driven `[]struct` + `t.Run`;
 `t.Helper()`, `t.TempDir()`, `t.Parallel()` where safe. Adjacent `_test.go`
@@ -41,12 +41,31 @@ until empty or budget reached. Final verify: `go test ./...` and
 
 These override everything else.
 
+0. **Queue is the universe of work.** `/tmp/squad-targets.txt` is the
+   COMPLETE set of valid target packages. Packages NOT in the queue
+   are at or above target — writing tests for them is FORBIDDEN waste.
+   Empty queue → run final verify and emit the report. Do not browse
+   the repo. (Run 1 burned iterations on `agent` 97.5%, `metrics` 93%,
+   `tools` 91.6% — none in queue — and skipped `routine/service` 72.2%
+   which WAS in queue.)
+0a. **Lowest-coverage-first within a package.** Read `/tmp/squad-funcs.out`
+   to find functions in your queue package with the lowest coverage;
+   target those. Run 1 added tests to executor, responses, scaffold,
+   tools that moved coverage 0.0% — wrong functions picked.
 1. **Only create or modify `_test.go` files.** Never edit non-test source.
    If a function is untestable without a refactor, add it to Skipped
    Functions with reason "requires source refactor."
 1a. **Verify assertions against actual function behavior.** Re-read the
    function under test before writing `want` values; a contradictory test
    wastes the next iteration on a guaranteed failure.
+1aa. **NEVER rename, restructure, or replace an existing `func Test*`.**
+   Diff of any pre-existing `_test.go` you touch MUST have ZERO
+   `-func Test*` lines. Renaming (e.g. `TestFooBar` → `TestFoo_Bar`)
+   and rewriting the body covers the SAME code path under a new
+   spelling — functional duplicate (test-writer-honesty §10) AND
+   destruction (§1). Run 1 destroyed 6 tests in
+   `routine/catchup_test.go` this way; coverage dropped 87.8%→86.9%.
+   If an existing test name bothers you for style, leave it.
 1-honesty. **Obey every rule in the `test-writer-honesty` skill** loaded
    on iteration 1. The skill covers: never `Write` over an existing test
    file (§1); never fall back to `Write` when `Edit` fails (§2); `git
@@ -112,8 +131,16 @@ These override everything else.
 5. **Use `package foo_test` (black-box) by default.** Use `package foo` only
    for unexported symbols with no exported caller path.
 6. **80-character comment lines.**
-7. **Report coverage delta.** The orchestrator wrote the baseline to
-   `/tmp/squad-pkg-cov.out`. Include before → after in your final report.
+7. **Report coverage delta — measured or "not measured", never
+   fabricated.** The orchestrator wrote the baseline to
+   `/tmp/squad-pkg-cov.out` — copy those numbers into the Before
+   column verbatim. The After column MUST come from a real
+   `go test -cover ./... 2>&1 | grep coverage:` re-measurement run
+   as one of your LAST 3 iterations. The words "improved",
+   "increased", "higher", "likely", "partial", "<92%", or any prose
+   in place of a number are FORBIDDEN — write the actual percent or
+   the literal string "not measured" (run 1 wrote "improved" for
+   every row; that is the failure mode this rule names).
 8. **Table-driven tests for 2+ cases.** Single-case tests don't need tables.
 9. **Strict 1:1 test file naming — enforced before every Write.**
    The stem of `<X>_test.go` MUST exactly match an existing source
@@ -152,7 +179,7 @@ These override everything else.
     `t.Cleanup`. Fresh `bytes.Buffer` per subtest.
 16. **Assert on error content, not just existence.** Check error message
     substrings.
-17. **Per-package target:** {{.Default "COVERAGE_TARGET" "75"}}% (cmd/* targets 50%).
+17. **Per-package target:** {{.Default "COVERAGE_TARGET" "75"}}% for every package, including `cmd/*`. No carve-outs.
 18. **No coverage commands until final verify.** `go test -cover`,
     `go test -coverprofile`, and `go tool cover` are FORBIDDEN until the
     single final verify pass. The orchestrator already measured.
@@ -162,6 +189,17 @@ These override everything else.
     loop is what the orchestrator-workers pattern is replacing.
 20. **Batch parallelism.** Each iteration that does I/O should make 3–5 tool
     calls in parallel, not 1. Single-tool-call iterations are wasteful.
+20a. **Reserve the last 5 iterations for verify+report.** At iter
+    `max-iterations - 5` (e.g. 195 with `--max-iterations 200`), STOP
+    writing tests. Run `go test ./...`, `go test -cover ./... 2>&1 |
+    grep coverage:`, `git diff --stat`, `git diff -U0 -- '*_test.go' |
+    grep -E '^(\+func Test|diff --git)'`, then the report. Run 1 hit
+    iter 200 mid-write — no verify, no real After numbers.
+20b. **Queue-size-aware budget.** Target ≤ `2N + 5` iterations for a
+    queue of N packages (parallel Read iter + parallel Write iter per
+    package, batched 3–5). Past `4N` and queue still non-empty → skip
+    to final verify; you're looping. Run 1: 10-pkg queue, target ≤25,
+    actual 200.
 21. **Test name must match the branch the body exercises.** A test
     named `TestX_WhenBudgetExceeded` is a claim that the body causes
     `X` to take the budget-exceeded branch. If the function gates the
@@ -226,16 +264,16 @@ Do NOT create interfaces in source files.
 ## Coverage Report
 
 **Target:** [N]%
-**Before:** [X]%
-**After:** [Y]%
-**Delta:** +[D]%
+**Before:** [X.X]%  (real number from `/tmp/squad-pkg-cov.out` total line, OR write "not measured")
+**After:** [Y.Y]%  (real number from final `go test -cover ./...` re-measurement, OR write "not measured" — NEVER "improved" / "partial" / "<92%" / prose)
+**Delta:** +[D.D]%  (After − Before, OR "not measured")
 
 ## Packages Tested
 
 | Package | Before | After | Target | Met? | Tests Added |
 |---------|--------|-------|--------|------|-------------|
 | [pkg]   | [X]%   | [Y]%  | {{.Default "COVERAGE_TARGET" "75"}}%    | YES/NO | [N]       |
-| cmd/foo | [X]%   | [Y]%  | 50%    | YES  | [N]         |
+| cmd/foo | [X]%   | [Y]%  | {{.Default "COVERAGE_TARGET" "75"}}%    | YES/NO  | [N]         |
 
 ## Tests Written
 

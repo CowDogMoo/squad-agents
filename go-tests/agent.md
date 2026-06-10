@@ -12,6 +12,11 @@ Pattern: orchestrator skill `enqueue-coverage-targets-go` + worker (you).
 - Do NOT load `Skill("score-coverage-and-report-gaps")`.
 - Do NOT `Glob` the codebase — the target list is exact.
 - Read `/tmp/squad-targets.txt` ONCE after iter 2.
+- Read `/tmp/squad-funcs.out` ONCE after iter 2 — use it to pick the LOWEST-coverage functions in each queue package as your test targets.
+
+# Queue-only
+
+The queue at `/tmp/squad-targets.txt` is the COMPLETE universe of work. Packages NOT in the queue are already at/above target — writing tests for them is wasted iterations and tokens. A package not in the queue must NOT appear in your Files Touched list.
 
 # The loop
 
@@ -33,6 +38,7 @@ Pattern: orchestrator skill `enqueue-coverage-targets-go` + worker (you).
 - **No contortion tests.** No field-assign-then-readback "tests" (`s := Foo{X:"y"}; if s.X != "y"`). No sentinel-existence checks (`if pkg.ErrX == nil`). No constructor echoes. No assertionless "should not panic" bodies. If the only test you can write is one of these, list the function under Skipped Functions with reason "no testable behavior."
 - **Test name must match the branch the body runs.** Naming a test `_WhenBudgetExceeded` and passing a non-wrapping `fmt.Errorf("budget exceeded")` lies — `errors.Is` will return false and the test will silently cover the early-return. Wrap the real sentinel (`%w`) or rename.
 - **Add NEW top-level `func Test*` — do not insert code into existing functions.** Prevents "t.Parallel called multiple times" and "no new variables on left side of :=".
+- **NEVER rename, restructure, or replace an existing `func Test*`.** Diff of any pre-existing `_test.go` you touch this run MUST have zero `-func Test*` lines. Prior run destroyed `routine/catchup_test.go` by renaming `TestFindMissedFiresFireOnce` → `TestFindMissedFires_FireOnce` and rewriting bodies — coverage dropped 87.8% → 86.9%. If a test name bothers you, leave it.
 - **Edit's `new_string` must NOT contain `package` or `import (...)` blocks.**
 - **Symbols/import paths must come from source you read.** Don't infer from package name.
 - **Validation = real exit status of `go build` / `go test`.** Failures on files YOU touched are YOURS — fix or admit, don't call them "unrelated".
