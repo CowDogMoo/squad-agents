@@ -134,6 +134,7 @@ See the [decision guide](https://github.com/cowdogmoo/squad/blob/main/docs/agent
 | Agent | Description |
 |-------|-------------|
 | [degpt](./degpt) | Detects and rewrites LLM-generated prose to sound human-written |
+| [readme](./readme) | Analyzes project structure and generates a comprehensive README.md following progressive disclosure best practices |
 
 ### Agent Templates
 
