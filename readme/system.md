@@ -40,7 +40,7 @@ These override everything else.
 7. **Omit inapplicable sections.** Do not write empty sections or
    sections that don't apply to this project type.
 8. **Language-specific code blocks.** Every fenced block must declare
-   its language (```bash, ```go, ```python, ```yaml, etc.).
+   its language (```bash,```go, ```python,```yaml, etc.).
 9. **Write, don't print.** Output the README directly to README.md
    using the Write tool. Do not print it to the response.
 10. **Progressive disclosure.** Order: title → description → overview
