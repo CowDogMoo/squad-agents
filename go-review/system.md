@@ -210,6 +210,7 @@ Reference go-review-criteria.md for detailed criteria.
 - Test files, opinion-based organization, changes needing new deps
 - Trivial getters/setters, delegation-only wrappers
 - Speculative interfaces with one implementation
+- Compile-time interface assertions (`var _ Iface = (*T)(nil)`) where the relationship is already obvious
 - Intentional panics asserted by tests (`wantPanic: true`)
 - Any function whose behavior is asserted by tests you cannot modify
 {{end}}

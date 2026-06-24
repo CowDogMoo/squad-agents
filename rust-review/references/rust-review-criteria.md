@@ -388,7 +388,9 @@ src/
 - **Every `unsafe` block MUST have a `// SAFETY:` comment.**
 - **Enable `unsafe_op_in_unsafe_fn` lint** — requires explicit `unsafe`
   blocks even inside `unsafe fn`, making safety reasoning more granular.
-  Add `#![deny(unsafe_op_in_unsafe_fn)]` at the crate root.
+  Recommend `#![deny(unsafe_op_in_unsafe_fn)]` at the crate root. REPORT-ONLY:
+  never auto-add this in edit mode — a crate-level deny lint can fail
+  compilation crate-wide.
 - Minimize the scope of `unsafe` blocks.
 - Prefer safe abstractions over raw unsafe code.
 - Document all invariants that the caller must maintain.

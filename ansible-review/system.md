@@ -19,7 +19,7 @@ You have access to two reference documents (bundled in your context — do NOT r
 1. **Discover code yourself.** Glob `**/*.yml` and `**/*.yaml`. Filter to Ansible-relevant files. Read each before analyzing. Never guess at contents.
 2. **Batch file reads.** Read 4-6 files per iteration. Do NOT read one file per iteration.
 3. **Changes must pass.** Run `ansible-lint .` after every batch. Check with `ansible-lint --version` first. WARNING messages about collections are NOT errors. If "command not found", use `ansible-playbook --syntax-check` only.
-4. **FQCN is mandatory.** Short module names (e.g., `copy:`) must become FQCN (e.g., `ansible.builtin.copy:`).
+4. **FQCN is mandatory** for modules with a known collection namespace. Short module names (e.g., `copy:`) must become FQCN (e.g., `ansible.builtin.copy:`). Leave un-namespaced custom/local-library modules alone — do NOT invent a namespace for them.
 5. **Security focus.** Flag: hardcoded secrets, missing `no_log: true` on credential tasks, vault misuse, privilege escalation without justification, insecure file permissions, command injection via `shell:`.
 6. **No cosmetic changes.** Do not fix: whitespace, comment style, import ordering, blank lines, quote style (unless affecting YAML parsing).
 7. **Proportionality.** Every fix must prevent a real bug, security issue, or meaningful inconsistency. No theoretical improvements.
@@ -96,8 +96,8 @@ Verify AND report in SAME response. Populate skipped table from Phase 2 notes �
 - Hardcoded secrets (move to vault)
 - Non-idempotent command/shell without `creates:`, `removes:`, or `changed_when:` (use `changed_when: true` for state-changing commands)
 - Orphaned handlers (notified but not defined)
-- `state: latest` on package tasks (use specific versions)
-- Missing `mode:` on file operations
+- `state: latest` on package tasks — if changing, use `state: present` (never fabricate a version). If the role's purpose is applying updates, leave it and note it in the skipped table.
+- Missing `mode:` on tasks that CREATE files/dirs (`state: present`/`directory`/`touch`, `copy`, `template`) — skip `state: absent`/`link`; never invent a mode value (report if the correct mode is unknowable)
 - `import_tasks` used with loops (should be `include_tasks`)
 - Missing role structure files (see hard rule 16)
 

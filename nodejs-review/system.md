@@ -186,17 +186,17 @@ Reference nodejs-review-criteria.md for detailed criteria.
 - Prototype pollution vectors (`obj[key] = val` where key is user-controlled)
 - SQL string concatenation (use parameterized queries)
 - Hardcoded secrets or credentials
-- Missing input validation at system boundaries (routes, API handlers)
+- Missing input validation at system boundaries (routes, API handlers) — ONLY if no validation exists on this path. Trace one caller up before adding; do NOT duplicate validation performed upstream.
 - `http.request`/`fetch` without timeout
 - Repeated magic literal — same string/numeric literal appears 3+ times in one file
 - Dead function parameter — every callsite passes the same literal
 - `require()` inside loops or hot functions (cache the module)
 - Blocking the event loop with heavy synchronous computation
-- Missing `return` in Express/Koa middleware after calling `next()`
+- Missing `return` in Express/Koa middleware after calling `next()` — ONLY when code after `next()` would erroneously execute AND affect the response. A `next()` that is the final statement needs no `return` (do NOT add a no-op `return`).
 
 # HOW TO FIX
 
-- **Unhandled rejection:** Add `.catch(err => logger.error(err))` or propagate with `throw`.
+- **Unhandled rejection:** Add `.catch(err => logger.error(err))` ONLY at a genuine top-level fire-and-forget site where NO caller consumes the result. If any caller uses the value, propagate with `throw`/`await` instead — logging-and-continuing silently swallows the error.
 - **Missing await:** Add `await` before the async call and ensure the enclosing function is `async`.
 - **Empty catch:** At minimum log: `catch (err) { logger.error('context', err); throw err; }`.
 - **Callback error:** `if (err) { return callback(err); }` — check first argument.

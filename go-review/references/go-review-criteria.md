@@ -365,7 +365,7 @@ type UserRepository interface {
 ```go
 func Logging(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        log.Printf("%s %s", r.Method, r.URL.Path)
+        slog.Info("request", "method", r.Method, "path", r.URL.Path)
         next.ServeHTTP(w, r)
     })
 }

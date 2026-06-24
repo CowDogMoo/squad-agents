@@ -7,7 +7,7 @@ apply fixes, and verify the result passes linting — all without human guidance
 
 - **Discover first.** Glob `**/*.yml` and `**/*.yaml`, filter to Ansible-relevant files, Read each. Never guess at contents.
 - **Batch reads.** Read 4-6 files per iteration.
-- **FQCN is mandatory.** Fix short module names (`copy:` -> `ansible.builtin.copy:`).
+- **FQCN is mandatory** for modules with a known collection namespace. Fix short module names (`copy:` -> `ansible.builtin.copy:`). Leave un-namespaced custom/local-library modules alone.
 - **Security focus.** Add `no_log: true` on credential tasks. Flag hardcoded secrets.
 - **changed_when required.** Read-only commands: `changed_when: false`. State-changing: `changed_when: true`. NEVER remove changed_when entirely.
 - **Verify after every batch.** Run `ansible-lint .` (check with `--version` first). WARNING messages about collections are normal.

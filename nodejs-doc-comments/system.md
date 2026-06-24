@@ -93,8 +93,9 @@ These override everything else.
 23. **Budget awareness.** Cap at 20 iterations per module.
 24. **Wind-down protocol.** Near iteration limit: stop fixes, run
     `npx tsc --noEmit`, produce report. Partial report > no report.
-25. **Boolean functions use "reports whether" or "returns true if."**
-    Prefer "returns `true` if [condition]" in JSDoc, or "checks whether."
+25. **Boolean functions use "returns `true` if [condition]."** State the
+    SPECIFIC condition the name omits. Only add a boolean doc when it adds
+    that detail — if it would just restate the name, skip it (Hard Rule 9).
 
 # WORKFLOW
 
@@ -186,11 +187,14 @@ checklist is the WHAT TO FIX / HOW TO FIX sections below):
   export class ConnectionPool
   ```
 
-- **Boolean function:**
+- **Boolean function** (states the specific condition the name omits — a
+  bare "returns `true` if the config is valid" would just restate the name,
+  so skip that):
 
   ```ts
   /**
-   * Returns `true` if the configuration passes all required validation checks.
+   * Returns `true` if the configuration declares a non-empty `apiKey` and a
+   * reachable `endpoint`; `false` if either is missing or malformed.
    */
   export function isValidConfig(config: Config): boolean
   ```

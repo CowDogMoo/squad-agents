@@ -175,13 +175,13 @@ Reference rust-review-criteria.md for detailed criteria.
 # WHAT TO FIX
 
 - `unwrap()` in non-test code on fallible ops — replace with `?`, `unwrap_or`, or proper handling. Exception: statically-guaranteed values
-- Missing error propagation — `let _ =` on Result values
+- Missing error propagation — `let _ =` on Result values, EXCEPT the blessed best-effort patterns (logging write failures, best-effort channel sends like `let _ = tx.send(msg)`, `Drop`-impl cleanup, `let _ = remove_file(path)` in teardown — see "Acceptable `let _ =` Patterns" in the criteria); do NOT convert those
 - Unnecessary `clone()` where borrowing suffices
-- Missing `#[must_use]` on functions with important return values
+- Missing `#[must_use]` — ONLY on functions returning a value with no side effects whose discard is provably a bug, AND not already `#[must_use]`
 - Unbounded `Vec`/`HashMap` growth from user input — DoS risk
 - Missing bounds checks on external input indexing
 - `unsafe` without `// SAFETY:` comment
-- Missing `unsafe_op_in_unsafe_fn` lint
+- Missing `unsafe_op_in_unsafe_fn` lint — REPORT-ONLY; adding a crate-level deny lint can fail compilation crate-wide, so never auto-add in edit mode
 - Missing `Send`/`Sync` bounds on cross-thread types
 - Mutex poisoning ignored — `lock().unwrap()` without handling
 - Async holding `MutexGuard` across `.await` — use `tokio::sync::Mutex`
@@ -190,14 +190,14 @@ Reference rust-review-criteria.md for detailed criteria.
 - `Box<dyn Error>` when thiserror/anyhow already in deps
 - Missing `impl Display` on custom error types
 - Inconsistent error types across module
-- `std::sync::Mutex` in async code — use `tokio::sync::Mutex`
+- `std::sync::Mutex` in async code — use `tokio::sync::Mutex` ONLY when a `std::sync::MutexGuard` is actually held across an `.await` point; verify the guard's lifetime spans an await before swapping. A std Mutex with no await in the critical section is correct — leave it.
 - Fire-and-forget `tokio::spawn` without JoinHandle tracking
-- Missing `#[non_exhaustive]` on public enums that may grow
+- Missing `#[non_exhaustive]` on public enums that may grow — REPORT-ONLY (never auto-add in edit mode); adding it is a breaking API change that conflicts with the backwards-compat hard rule
 - Silent `as` casts truncating (use `try_into()`)
 - Float-to-int `as` without `.round()` — truncates toward zero
 - `eprintln!` for logging — HIGH severity; replace with `log`/`tracing`
-- `.clone()` on Arc/Rc — use `Arc::clone(&x)` for clarity (MEDIUM)
-- `format!` for socket addresses — use `SocketAddr` directly
+- `.clone()` on Arc/Rc — use `Arc::clone(&x)` for clarity (MEDIUM); ONLY after statically confirming the receiver is an `Arc`/`Rc` by reading its declaration — do NOT rewrite a non-Arc `.clone()`
+- `format!` for socket addresses — use `SocketAddr` directly; ONLY when the value is provably an address (read the declaration) — do NOT rewrite a hostname/other string into a `SocketAddr`
 - Dead code hidden behind `#[allow(dead_code)]`
 - Hardcoded secrets, SQL string concatenation
 

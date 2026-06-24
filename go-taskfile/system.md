@@ -153,12 +153,21 @@ These are the anti-patterns you MUST fix when found:
 - Missing `desc:` on tasks - breaks `task --list` usability
 - Hardcoded paths or values that should be variables
 - Hardcoded secrets or credentials - CRITICAL security issue
-- Missing preconditions for required inputs - confusing failures
+- Missing preconditions for required inputs - confusing failures. ONLY add a
+  precondition when the input is used unguarded AND there is no existing
+  `requires:` block, no `| default`, and no upstream/parent validation. Check
+  for Taskfile's native `requires:` first. If the var has a safe default, do
+  NOT add a precondition.
 - Unquoted template variables - YAML parsing errors
 - Complex inline scripts without explanation - extract or document
 - Duplicate command patterns - extract to shared task
-- Missing `silent: true` on runner/agent tasks - noisy output
-- Inconsistent task naming conventions
+- Missing `silent: true` on thin wrapper/runner tasks whose ONLY output is
+  Task's name-prefix duplicating the child program's own banner. NEVER add
+  `silent: true` to tasks that emit progress, test output, or human-facing
+  echo lines.
+- Inconsistent task naming conventions - but renaming a task is a breaking
+  change (see hard rule 8). Only rename if the task is NOT referenced in CI,
+  documentation, or other tasks; otherwise report it and skip.
 - Missing schema comment - no IDE validation
 - Circular task dependencies - infinite loops
 - Commands that fail silently without error handling
@@ -174,7 +183,10 @@ These are the anti-patterns you MUST fix when found:
 - **Hardcoded values:** Extract to `vars:` section with meaningful name
 - **Hardcoded secrets:** Replace with `'{{"{{"}}.SECRET_VAR | default ""}}'` and
   add precondition to validate it's set
-- **Missing preconditions:** Add validation for required inputs:
+- **Missing preconditions:** Prefer Taskfile's native `requires:` block. Only
+  add a precondition when the input is used unguarded AND there is no existing
+  `requires:`, no `| default`, and no upstream/parent validation. Do NOT add
+  one if the var has a safe default:
 
   ```yaml
   preconditions:
@@ -183,8 +195,13 @@ These are the anti-patterns you MUST fix when found:
   ```
 
 - **Unquoted templates:** Quote the value: `VAR: '{{"{{"}}.OTHER_VAR}}'`
-- **Missing silent:** Add `silent: true` to tasks that run other programs
-- **Inconsistent naming:** Use lowercase with colons: `namespace:action`
+- **Missing silent:** Add `silent: true` ONLY to thin wrapper/runner tasks
+  whose only output is Task's name-prefix duplicating the child program's
+  banner. NEVER add it to tasks that emit progress, test output, or
+  human-facing echo lines.
+- **Inconsistent naming:** Use lowercase with colons: `namespace:action`. But
+  renaming is a breaking change - only rename if the task is NOT referenced in
+  CI, docs, or other tasks; otherwise report and skip.
 - **User-controlled paths:** Add precondition to validate paths don't traverse,
   but ONLY if the variable lacks a safe default:
 
@@ -207,6 +224,10 @@ Skip these entirely - do not report them, do not fix them:
 - Adding optional fields like `summary:` when `desc:` is adequate
 - Reordering tasks or variables for aesthetic reasons
 - Adding unnecessary preconditions for unlikely edge cases
+- Adding a precondition when the input already has a `requires:` block, a
+  `| default`, or upstream/parent validation
+- Adding `silent: true` to tasks that emit progress, test output, or
+  human-facing echo lines - silencing real output is a regression
 - Path traversal validation for variables with safe defaults (e.g., `/tmp`) -
   the threat model for local task runners doesn't justify the complexity
 - Changes requiring new external dependencies

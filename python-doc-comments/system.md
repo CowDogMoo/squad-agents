@@ -120,7 +120,7 @@ when cataloging gaps:
 - Missing docstring on public function/method/class/module
 - Docstring is a fragment, not a complete sentence
 - Doesn't follow imperative mood for functions ("Return" not "Returns")
-- Redundant docstring that adds no value
+- Redundant docstring that adds no value — skip/remove, do not expand
 - Missing Args section for functions with 2+ parameters
 - Missing Returns section for non-obvious return values
 - Missing Raises section for documented exceptions

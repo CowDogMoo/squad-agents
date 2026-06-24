@@ -97,17 +97,17 @@ Verify AND report in SAME response. Populate skipped table from Phase 2 notes.
 - Missing package verification — add `check_mode: true` + `failed_when`
 - Missing env var verification — add slurp + assert
 - Missing directory permission checks — add mode/owner checks
-- Dead code — remove conditions that can never be true given molecule.yml platforms
+- Dead code — remove an OS-family condition ONLY if you can PROVE it is unreachable: the platform is not reachable via env-var substitution (`MOLECULE_DISTRO`, `${...}` image interpolation) AND the role's `meta/main.yml` `galaxy_info.platforms` / `argument_specs` does NOT list that OS family. If the condition references an OS the role's meta lists as supported, it is NOT dead — leave it and note it in the skipped table. Never delete OS-family branches solely because the current molecule.yml platform list is narrower. When uncertain, do NOT delete — report only.
 
 **Config issues (fix after verification depth):**
 
 - Missing verify.yml — create with meaningful assertions
 - Missing FQCN on module names
 - verify.yml without ANY assertion tasks
-- Missing `idempotence` in test_sequence
+- Missing `idempotence` in test_sequence — add ONLY to a standard full test_sequence that lacks it. Do NOT add to custom/partial sequences (create/converge-only) or scenarios that document why idempotence is skipped (see the `molecule-idempotence-notest` tag).
 - Single platform when role supports multiple OS families
 - Missing `changed_when: false` on read-only verification commands
-- Missing `pre_build_image: true` on pre-built images
+- Missing `pre_build_image: true` — add ONLY when the platform uses a known pre-baked `*-ansible` image (e.g. `geerlingguy/docker-*-ansible`) AND the key is absent. Do NOT add to platforms using a bare base image, a `build:`/`dockerfile:` directive, or `command:`-only entries (breaks provisioning). When unclear, report — do NOT edit.
 
 # WHAT NOT TO FIX
 
@@ -124,9 +124,9 @@ Verify AND report in SAME response. Populate skipped table from Phase 2 notes.
 - **Missing verify.yml:** Create with `ansible.builtin.stat` + `ansible.builtin.assert` checking expected outcomes
 - **Weak assertions:** Add permission/mode/executable checks alongside existence checks
 - **Missing package verification:** Use `check_mode: true` + `failed_when: pkg.changed` loop
-- **Dead code:** Remove unreachable condition blocks entirely; document in Issues Skipped table
-- **Missing idempotence:** Add `idempotence` to test_sequence
-- **Missing pre_build_image:** Add `pre_build_image: true` on pre-built container images
+- **Dead code:** Remove a condition block ONLY when proven unreachable (not reachable via `MOLECULE_DISTRO`/`${...}` interpolation AND the OS family is absent from `meta/main.yml` `galaxy_info.platforms` / `argument_specs`); document in Issues Skipped table. If meta lists the OS family, leave it and report only. When uncertain, do NOT delete.
+- **Missing idempotence:** Add `idempotence` to a standard full test_sequence that lacks it. Do NOT add to custom/partial sequences (create/converge-only) or scenarios documenting why idempotence is skipped (cross-reference the `molecule-idempotence-notest` tag).
+- **Missing pre_build_image:** Add `pre_build_image: true` ONLY on platforms using a known pre-baked `*-ansible` image (e.g. `geerlingguy/docker-*-ansible`) when the key is absent. Do NOT add to bare base images, `build:`/`dockerfile:`, or `command:`-only entries. When unclear, report — do NOT edit.
 
 # OUTPUT FORMAT
 
