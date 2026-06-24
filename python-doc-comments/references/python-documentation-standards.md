@@ -760,7 +760,7 @@ convention = "google"
 ### Docstrings
 
 - [ ] Triple double quotes (`"""`)
-- [ ] All public modules, classes, and functions documented
+- [ ] All public modules, classes, and functions that need documentation are documented (trivial/self-documenting ones listed as skipped, not documented)
 - [ ] One-line format for simple cases
 - [ ] Multi-line format with summary, blank line, details
 - [ ] Args, Returns, Raises sections for functions

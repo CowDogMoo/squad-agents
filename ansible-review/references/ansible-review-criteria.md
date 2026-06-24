@@ -1162,17 +1162,25 @@ vars_files:
   ansible.builtin.command: /opt/script.sh
   ignore_errors: true
 
-# CORRECT - Handle the failure
-- name: Run script
+# CORRECT - Genuinely handle the failure (block/rescue)
+- block:
+    - name: Run script
+      ansible.builtin.command: /opt/script.sh
+  rescue:
+    - name: Recover from script failure
+      ansible.builtin.fail:
+        msg: "Script failed: {{ ansible_failed_result.stderr | default('unknown') }}"
+
+# ALSO CORRECT - failed_when with a real condition (specific rc allowed)
+- name: Run script (rc 0 or 2 are acceptable)
   ansible.builtin.command: /opt/script.sh
   register: script_result
-  failed_when: false
-
-- name: Handle script failure
-  ansible.builtin.debug:
-    msg: "Script failed with: {{ script_result.stderr }}"
-  when: script_result.rc != 0
+  failed_when: script_result.rc not in [0, 2]
 ```
+
+> **Note:** `failed_when: false` is suppression, not handling — it hides every
+> non-zero rc. Only use it when a non-zero rc is genuinely expected, and ALWAYS
+> act on the result (inspect `register` output, then `fail`/`assert` or branch).
 
 ### 8. Not Making Tasks Idempotent
 

@@ -1139,18 +1139,23 @@ from typing import Callable, TypeVar
 
 T = TypeVar('T', bound=Callable)
 
+# Narrow the catch to exceptions that are actually retriable (e.g. transient
+# network/IO errors). Catching bare `Exception` swallows bugs like TypeError.
+RETRIABLE_ERRORS = (ConnectionError, TimeoutError)
+
 def retry(max_attempts: int = 3) -> Callable[[T], T]:
-    """Retry a function on failure."""
+    """Retry a function on transient failure."""
     def decorator(func: T) -> T:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            last_error = None
+            last_error: Exception | None = None
             for attempt in range(max_attempts):
                 try:
                     return func(*args, **kwargs)
-                except Exception as e:
+                except RETRIABLE_ERRORS as e:
                     last_error = e
-            raise last_error
+            # Preserve the chain so the original traceback is not lost.
+            raise RuntimeError(f"failed after {max_attempts} attempts") from last_error
         return wrapper  # type: ignore
     return decorator
 

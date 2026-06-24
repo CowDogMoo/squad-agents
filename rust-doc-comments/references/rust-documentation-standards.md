@@ -4,9 +4,14 @@ Comprehensive reference for writing idiomatic Rust documentation.
 
 ## Core Principles
 
-- **Every public item should be documented.** `rustdoc` generates
-  documentation from `///` and `//!` comments — undocumented public items
-  produce warnings with `#![warn(missing_docs)]`.
+- **Every public item with non-obvious meaning should be documented.**
+  `rustdoc` generates documentation from `///` and `//!` comments —
+  undocumented public items produce warnings with `#![warn(missing_docs)]`.
+  For self-documenting names (`new`, `len`, `is_empty`, `Display::fmt`-style
+  `String`) the right response is to leave them undocumented (or annotate
+  with `#[allow(missing_docs)]`), NOT to add a comment that restates the
+  name — see [Mistake 2](#mistake-2-restating-the-name), which already says
+  to skip `new`.
 - **Write for the user, not the implementer.** Focus on what the item does,
   what parameters mean, and what errors can occur.
 - **The first line is the summary.** Rustdoc uses the first paragraph as the
@@ -423,7 +428,7 @@ pub mod permissions {
 
 Before finishing, verify:
 
-- [ ] Every `pub` function/method has a `///` doc comment
+- [ ] Every `pub` function/method with non-obvious meaning has a `///` doc comment (self-documenting names like `new`/`len`/`is_empty` left undocumented or `#[allow(missing_docs)]`, never a restating comment)
 - [ ] Every `pub` struct/enum/trait has a `///` doc comment
 - [ ] Every module has a `//!` doc comment
 - [ ] Every `pub unsafe fn` has a `# Safety` section

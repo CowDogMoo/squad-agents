@@ -17,7 +17,7 @@ A comprehensive guide to Go documentation comments following the official "Go Do
 
 ### The Golden Rule
 
-Doc comments appear **immediately before** top-level declarations with **no intervening blank lines**. All exported (capitalized) names must have doc comments.
+Doc comments appear **immediately before** top-level declarations with **no intervening blank lines**. All exported (capitalized) names that carry **non-obvious meaning** must have doc comments. Self-documenting names (`String`, `Len`, simple getters, trivial `New`) are intentionally left undocumented — a comment that only restates the identifier is a defect, not a fix.
 
 ### Philosophy
 
@@ -303,6 +303,12 @@ func Process(data []byte) error
 func Process(data []byte) error
 ```
 
+**Best (when the name already says it all):** add no comment. For
+self-documenting names like `String`, `Len`, or a simple getter, leaving
+the declaration undocumented is correct — list it as trivial in the
+skipped table. A lateral rewrite of an already-adequate comment is not an
+improvement either; leave it alone.
+
 ### Implementation Details
 
 **Bad:**
@@ -478,7 +484,7 @@ if err == nil {
 
 ### Before Submitting
 
-- [ ] All exported names have doc comments
+- [ ] All exported names with non-obvious meaning have doc comments (self-documenting names left undocumented)
 - [ ] Comments start with the declared name
 - [ ] Complete sentences with proper punctuation
 - [ ] No blank line between comment and declaration

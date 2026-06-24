@@ -20,7 +20,10 @@ knowledge base for the nodejs-doc-comments pattern.
 ### The Golden Rule
 
 JSDoc blocks appear **immediately before** the export/declaration with **no
-intervening blank lines**. All exported names should have JSDoc blocks.
+intervening blank lines**. All exported names that carry non-obvious meaning
+should have JSDoc blocks. Trivial getters/setters and re-exports are
+intentionally left undocumented — a block that only restates the name is a
+defect, not a fix.
 
 ### Philosophy
 
@@ -346,6 +349,11 @@ export function getUser(id: string): Promise<User> {}
 export function getUser(id: string): Promise<User> {}
 ```
 
+**Best (when the name already says it all):** add no block. For trivial
+getters/setters or re-exports, leaving the declaration undocumented is
+correct — list it as trivial in the skipped table. A lateral rewrite of an
+already-adequate block is not an improvement either; leave it alone.
+
 ### Implementation Details
 
 **Bad:**
@@ -489,7 +497,7 @@ module.exports = {
 
 ### Before Submitting
 
-- [ ] All exported names have JSDoc blocks
+- [ ] All exported names with non-obvious meaning have JSDoc blocks (trivial getters/setters/re-exports left undocumented)
 - [ ] Comments start with an action verb or noun phrase
 - [ ] Complete sentences with proper punctuation
 - [ ] No blank line between JSDoc block and declaration

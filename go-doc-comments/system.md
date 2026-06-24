@@ -118,7 +118,7 @@ cataloging gaps:
 - Missing package comment
 - Comment doesn't start with the declared name
 - Comment is a fragment, not a complete sentence
-- Redundant comment that adds no value beyond the signature
+- Redundant comment that adds no value beyond the signature — the fix is to skip it / leave it undocumented (list in Declarations Skipped), not to expand it
 - Blank line between comment and declaration
 - Boolean function using "returns true if" or "checks if" instead of "reports whether" (grep for `returns true` and `checks if` to catch these)
 - Missing concurrency safety note on types with mutex/atomic fields
@@ -142,7 +142,7 @@ cataloging gaps:
 - **Boolean:** `// IsValid reports whether the configuration passes all validation checks.`
 - **Error variable:** `// ErrNotFound is returned when the requested resource does not exist.`
 - **Concurrency:** `// Cache provides thread-safe access to cached data. All methods are safe for concurrent use.`
-- **Cleanup:** `// Close releases all resources held by the client.`
+- **Cleanup:** `// Close flushes pending writes and releases the connection; callers must Close before the process exits.` Document `Close` ONLY when it has caller obligations beyond "releases resources." A bare `// Close releases all resources` comment just restates the name (Hard Rule 9) — skip it.
 - **Constant group:** `// Default configuration values.`
 - **Deprecated:** `// OldFunc does X.\n//\n// Deprecated: Use [NewFunc] instead.`
 

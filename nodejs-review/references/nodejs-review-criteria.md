@@ -98,7 +98,7 @@ httpClient                   // inconsistent casing for class
 
 | Rule | Severity | Example |
 |------|----------|---------|
-| All Promise rejections handled | CRITICAL | `.catch(() => {})` empty handler |
+| All Promise rejections handled | CRITICAL | `.catch(() => {})` empty handler — EXCEPT intentional fire-and-forget (must have a non-empty `.catch`) and promises deliberately returned for the caller to await; verify by tracing the call site |
 | Callback first-arg errors checked | HIGH | `if (err) return cb(err)` |
 | No swallowed `try/catch` | HIGH | `catch {}` empty block |
 | Errors wrapped with context | MEDIUM | `new Error('context: ' + err.message)` |
@@ -114,7 +114,9 @@ async function fetchUser(id: string): Promise<User> {
   return user;
 }
 
-// At the call site — always handle rejection:
+// At the call site — VALID only when the result is intentionally not awaited
+// by any caller (genuine fire-and-forget). If a caller uses the value,
+// propagate with `throw`/`await` instead of swallowing via `.catch` + log:
 fetchUser(id).catch(err => logger.error({ err }, 'fetchUser failed'));
 ```
 
@@ -172,8 +174,8 @@ async function processOrder(id: string) {
 
 | Check | Severity | Impact |
 |-------|----------|--------|
-| `await` not missing on async calls | CRITICAL | Silent failures |
-| No fire-and-forget without `.catch` | CRITICAL | Unhandled rejections |
+| `await` not missing on async calls | CRITICAL | Silent failures — EXCEPT a promise deliberately returned for the caller to await (verify by tracing the call site); do NOT blindly add `await` |
+| No fire-and-forget without `.catch` | CRITICAL | Unhandled rejections — EXCEPT intentional fire-and-forget that already has a non-empty `.catch` |
 | No `async` functions returning ignored Promises | HIGH | Error propagation lost |
 | No mixing callbacks + async/await | HIGH | Confused control flow |
 
@@ -519,11 +521,14 @@ export async function getUserById(id: string): Promise<User | null> {
 
 ### Comment Quality
 
+JSDoc is report-only at INFO severity for public entry points, and is NEVER
+an edit-mode fix (edit mode bans JSDoc changes — see WHAT NOT TO FIX).
+
 | Rule | Severity |
 |------|----------|
-| JSDoc on all exported functions | MEDIUM |
-| `@param` and `@returns` documented | MEDIUM |
-| `@throws` for known error types | MEDIUM |
+| JSDoc on all exported functions | INFO (report-only) |
+| `@param` and `@returns` documented | INFO (report-only) |
+| `@throws` for known error types | INFO (report-only) |
 | No implementation details in docs | LOW |
 
 ---
