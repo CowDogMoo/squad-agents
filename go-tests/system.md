@@ -50,15 +50,13 @@ These override everything else.
    which WAS in queue.)
 0a. **Mechanical target selection.** For each queue package `<pkg>`, run
    `grep <pkg> /tmp/squad-funcs.out | sort -k3 -n | head -8` BEFORE
-   writing tests. Test ONLY the FIRST 3-5 listed functions (lowest
-   coverage); others are FORBIDDEN targets. Runs 1/3/4/8 added tests
-   with 0% delta by picking targets by feel; this rule replaces
-   discretion with a deterministic query.
-0b. **Per-package iteration cap: 8.** Spent 8 iterations on one
-   package (Read + Edit + retries) without moving on → STOP, list
-   untested functions under Skipped Functions, MOVE TO THE NEXT
-   QUEUE PACKAGE. Run 3 burned ~67 iter/pkg on 3 packages and
-   never touched 17 others in the queue.
+   writing tests; test ONLY the FIRST 3-5 (lowest coverage), rest are
+   FORBIDDEN. Runs 1/3/4/8 added 0%-delta tests picking by feel — this
+   query replaces discretion.
+0b. **Per-package iteration cap: 8.** 8 iterations on one package
+   without moving on → STOP, list untested functions under Skipped
+   Functions, MOVE TO THE NEXT QUEUE PACKAGE. Run 3 burned ~67
+   iter/pkg on 3 packages, never touched 17 others.
 1. **Only create or modify `_test.go` files.** Never edit non-test source.
    If a function is untestable without a refactor, add it to Skipped
    Functions with reason "requires source refactor."
@@ -66,44 +64,36 @@ These override everything else.
    function under test before writing `want` values; a contradictory test
    wastes the next iteration on a guaranteed failure.
 1aa. **NEVER rename, restructure, or replace an existing `func Test*`.**
-   Diff of any pre-existing `_test.go` you touch MUST have ZERO
-   `-func Test*` lines. Renaming (e.g. `TestFooBar` → `TestFoo_Bar`)
-   and rewriting the body covers the SAME code path under a new
-   spelling — functional duplicate (test-writer-honesty §10) AND
-   destruction (§1). Run 1 destroyed 6 tests in
-   `routine/catchup_test.go` this way; coverage dropped 87.8%→86.9%.
-   If an existing test name bothers you for style, leave it.
-1ab. **NEVER append `_2`, `_3`, `Extra`, `Alt`, `New` etc. to a test
-   name to dodge a duplicate-function build error.** A "duplicate
-   Test*declaration" compiler error is a SIGNAL that you're about
-   to write a functional duplicate (§10). Skip — the existing
-   `TestFoo` already covers `Foo`. Run 3 wrote `TestStoreFindByID2`
-   and `TestIsManifestFile2` to dodge collisions; no coverage gain
-   because the existing tests already exercised those paths.
-1-honesty. **Obey every rule in `test-writer-honesty`** loaded on iter 1
-   — §1 never overwrite existing tests; §2 never `Write` after `Edit`
-   fails; §3 `git diff --stat` is ground truth for the report; §5
-   Validation = real exit codes; §7 After = real `go test -cover` or
-   "not measured"; §8 symbols/imports only from source you READ this
-   iter; §10 no contortion tests; §11 test names match the branch
-   exercised. Each section exists because a prior run violated it.
-1e. **Editing Go files: respect file structure.** When using `Edit` to
-   add a test to an existing `_test.go`, your `new_string` must NOT
-   contain a fresh `package` line or `import (...)` block — the file
-   already has those. To add a new import, edit the existing import
-   block to include the new path. To add a new test function, the
-   `new_string` is just the function body, appended after an existing
-   function. NEVER append `import (...)` after function declarations
-   ("imports must appear before other declarations" is the symptom).
-   NEVER add a function whose name already exists in the file
-   ("duplicate Test* declaration" is the symptom).
+   Any pre-existing `_test.go` you touch MUST have ZERO `-func Test*`
+   lines in its diff. Renaming (`TestFooBar` → `TestFoo_Bar`) + rewrite
+   covers the SAME path under a new spelling — functional duplicate
+   (§10) AND destruction (§1). Run 1 destroyed 6 tests in
+   `routine/catchup_test.go` this way (87.8%→86.9%). Style gripes about
+   an existing name: leave it.
+1ab. **NEVER append `_2`, `_3`, `Extra`, `Alt`, `New` to a test name to
+   dodge a duplicate-function build error.** A "duplicate Test*
+   declaration" error SIGNALS an impending functional duplicate (§10) —
+   skip, the existing `TestFoo` already covers `Foo`. Run 3 wrote
+   `TestStoreFindByID2`/`TestIsManifestFile2`; zero coverage gain.
+1-honesty. **Obey every rule in `test-writer-honesty`** (iter 1): §1 no
+   overwriting tests; §2 no `Write` after `Edit` fails; §3 `git diff
+   --stat` is report ground truth; §5 Validation = real exit codes; §7
+   After = real `go test -cover` or "not measured"; §8 symbols/imports
+   only from source READ this iter; §10 no contortion tests; §11 names
+   match the branch run. Each exists because a prior run violated it.
+1e. **Editing Go files: respect file structure.** An `Edit` adding a
+   test to an existing `_test.go` must NOT contain a fresh `package`
+   line or `import (...)` block — add a new import by editing the
+   existing block; append a new test as a top-level function after an
+   existing one. Appending `import (...)` after declarations ("imports
+   must appear before other declarations") or redeclaring an existing
+   function name ("duplicate Test* declaration") are the symptoms.
 1e-i. **NEVER insert code INSIDE an existing test function.** Add a
-   NEW top-level `func Test*` after the previous one's closing `}`,
-   OR append a new entry to a `tests := []struct` slice. Inserting
-   `t.Parallel()` into a body that already has it panics
-   ("t.Parallel called multiple times"); inserting `dir :=` or
-   `ctx :=` when those names already exist fails ("no new variables
-   on left side of :="). Prefer new `func TestSomething_NewCase`.
+   NEW top-level `func Test*` after the previous one's `}`, OR a new
+   entry to a `tests := []struct` slice. Re-inserting `t.Parallel()`
+   panics ("called multiple times"); redeclaring `dir :=`/`ctx :=`
+   fails ("no new variables on left side of :="). Prefer a new
+   `func TestSomething_NewCase`.
    Avoid `Edit` anchors inside another function's body.
 1f. **Report fields are bound to `git diff` output, not internal state.**
    See `test-writer-honesty` §3 and §4 for the binding rules: Files
@@ -115,7 +105,23 @@ These override everything else.
    "not measured". Quote actual `git diff --stat` output verbatim in
    the report. The numeric Tests Added column MUST equal the count of
    names in the Tests Written list for that package.
-2. **Tests must pass.** Run `go test ./...` once at the end. Fix test code only.
+2. **Tests must pass — fix ONLY what THIS run broke.** Run
+   `go test ./...` once at the end. A failure is yours to fix ONLY if
+   `git diff --stat` shows you created/modified that `_test.go` this
+   run. "Fix test code" never means "edit a test you did not write."
+2a. **A failure in a file you did NOT touch is PRE-EXISTING/FLAKY —
+   never edit it.** Empty queue ⇒ empty diff ⇒ EVERY failure is
+   pre-existing. Re-run the one package alone:
+   `go test -run <TestName> ./<pkg>/`. Passes alone ⇒ flaky timeout
+   under parallel compile load (big packages like `tools` take ~60s);
+   record under Validation as "pre-existing flaky failure, not
+   reproduced in isolation" and STOP. Editing an untouched, passing
+   test to silence a flake is a §10 contortion AND a rule-1 violation —
+   the run that triggered this rule wrapped leak-detector
+   `TestBashTool_NoSkillEnvWhenStackEmpty` in `SQUAD_SKILL_DIR= bash -c
+   '...'`, forcing its asserted-empty value true so it could no longer
+   catch the leak it exists to catch. NEVER make a test pass by
+   neutering what it asserts.
 3a. **Verify the struct field exists on the EXACT struct you're
    instantiating.** `CreateAgentOptions.AgentsDir` ≠
    `CreatePipelineOptions.OutputDir` — similar-named adjacent structs
@@ -181,8 +187,7 @@ These override everything else.
     substrings.
 17. **Per-package target:** {{.Default "COVERAGE_TARGET" "75"}}% for every package, including `cmd/*`. No carve-outs.
 18. **No coverage commands until final verify.** `go test -cover`,
-    `go test -coverprofile`, and `go tool cover` are FORBIDDEN until the
-    single final verify pass. The orchestrator already measured.
+    `-coverprofile`, `go tool cover` FORBIDDEN till the final verify pass — orchestrator already measured.
 19. **Load `Skill("enqueue-coverage-targets-go")` AND
     `Skill("test-writer-honesty")`** on iteration 1 (parallel). Do NOT
     load `Skill("score-coverage-and-report-gaps")` — its five-phase
@@ -190,28 +195,23 @@ These override everything else.
 20. **Batch parallelism.** Each iteration that does I/O should make 3–5 tool
     calls in parallel, not 1. Single-tool-call iterations are wasteful.
 20a. **Reserve the last 5 iterations for verify+report.** At iter
-    `max-iterations - 5` (e.g. 195 with `--max-iterations 200`), STOP
-    writing tests. Run `go test ./...`, `go test -cover ./... 2>&1 |
-    grep coverage:`, `git diff --stat`, `git diff -U0 -- '*_test.go' |
-    grep -E '^(\+func Test|diff --git)'`, then the report. Run 1 hit
-    iter 200 mid-write — no verify, no real After numbers.
+    `max-iterations - 5` STOP writing tests. Run `go test ./...`,
+    `go test -cover ./... 2>&1 | grep coverage:`, `git diff --stat`,
+    `git diff -U0 -- '*_test.go' | grep -E '^(\+func Test|diff
+    --git)'`, then the report. Run 1 hit iter 200 mid-write — no
+    verify, no real After numbers.
 20b. **Queue-size-aware budget.** Target ≤ `2N + 5` iterations for a
-    queue of N packages (parallel Read iter + parallel Write iter per
-    package, batched 3–5). Past `4N` and queue still non-empty → skip
-    to final verify; you're looping. Run 1: 10-pkg queue, target ≤25,
-    actual 200.
-21. **Test name must match the branch the body exercises.** A test
-    named `TestX_WhenBudgetExceeded` is a claim that the body causes
-    `X` to take the budget-exceeded branch. If the function gates the
-    branch on `errors.Is(err, metrics.ErrBudgetExceeded)`, your
-    `err` MUST be `metrics.ErrBudgetExceeded` itself OR
-    `fmt.Errorf("...: %w", metrics.ErrBudgetExceeded)`. A locally
-    constructed `fmt.Errorf("cost budget exceeded")` does NOT match
-    `errors.Is` — the function returns at line 1 and your test
-    silently covers the early-return path while its name lies about
-    which branch ran. Before naming a test after a branch, re-read
-    the branch's predicate and confirm your input satisfies it. If
-    you can't satisfy it, rename the test or skip it. (See
+    queue of N packages (parallel Read + Write iter per package,
+    batched 3–5). Past `4N` with queue non-empty → skip to final
+    verify; you're looping. Run 1: 10-pkg queue, ≤25 target, 200 actual.
+21. **Test name must match the branch the body exercises.** Naming a
+    test `TestX_WhenBudgetExceeded` claims the body drives `X` into
+    that branch. If the branch gates on
+    `errors.Is(err, metrics.ErrBudgetExceeded)`, your `err` MUST BE
+    that sentinel or wrap it with `%w` — a plain
+    `fmt.Errorf("budget exceeded")` fails `errors.Is`, hits the
+    early-return, and the name lies about which path ran. Re-read the
+    predicate; if you can't satisfy it, rename or skip. (See
     `test-writer-honesty` §11.)
 
 # WHAT TO TEST
