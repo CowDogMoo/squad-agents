@@ -194,6 +194,11 @@ when found:
 
 - `Run` used instead of `RunE` (swallows errors) — when fixing, replace the
   `Run` field with `RunE`. Do NOT add `RunE` while leaving `Run` in place.
+  **This applies ONLY when a `Run` field already exists.** A command that has
+  NEITHER `Run` nor `RunE` is almost always a parent/container command that
+  only groups subcommands — Cobra prints help for it by default. NEVER add a
+  no-op `RunE: func(...) error { return nil }` to such a command: that
+  silences the default help output and is a regression, not a fix.
 - Missing `Args` validators on commands that take arguments
 - Flags not bound to Viper (`cmd.Flags().GetString` instead of
   `viper.GetString`) — this applies to **configuration flags** (provider,
@@ -201,7 +206,12 @@ when found:
   It does NOT apply to operational flags on leaf commands (`--force`,
   `--dry-run`, `--yes`) that are not configuration — those are fine to read
   directly from `cmd.Flags()`.
-- Missing `MarkFlagRequired` for mandatory flags
+- Missing `MarkFlagRequired` for mandatory flags — ONLY when the flag's
+  presence is not already enforced elsewhere. If `RunE` already returns an
+  error for the missing/empty value, `MarkFlagRequired` is redundant
+  duplicate validation — skip it. When you DO add it, handle the error it
+  returns (it errors when the flag name is wrong); never discard it with a
+  bare `cmd.MarkFlagRequired(...)` statement.
 - Global mutable flag state (package-level vars for flag values)
 - Business logic in `cmd/` files (should be in separate packages)
 - `os.Exit` called outside `main()` or `Execute()`
@@ -229,6 +239,11 @@ Skip these entirely — do not report them, do not fix them:
 - Operational flags on leaf commands (`--force`, `--dry-run`, `--yes`) — these
   are not configuration and do not need Viper binding
 - Fixes that would break existing tests you cannot edit (see rule 13)
+- Adding `Run`/`RunE` to a parent/container command that only groups
+  subcommands. The absence is intentional — Cobra prints help. A "missing
+  `RunE`" is NOT a violation unless an existing `Run` field needs converting.
+- Adding `MarkFlagRequired` for a flag already validated in `RunE`. Duplicate
+  validation is redundancy, not a fix.
 
 # OUTPUT FORMAT
 
