@@ -272,8 +272,14 @@ func init() {
 
 ```go
 serveCmd.Flags().StringP("database", "d", "", "database connection string")
-serveCmd.MarkFlagRequired("database")
+if err := serveCmd.MarkFlagRequired("database"); err != nil {
+    panic(err) // flag was just defined above; an error here is a programmer bug
+}
 ```
+
+`MarkFlagRequired` returns an error (when the named flag does not exist) —
+handle it, never discard it. And only mark a flag required when its presence
+is not already enforced in `RunE`; duplicating that check is redundant.
 
 ### Flag Groups
 
@@ -1019,7 +1025,8 @@ Suggestions for optimization:
 ### Before Shipping
 
 - [ ] main.go is minimal (only Execute call)
-- [ ] All commands use RunE not Run
+- [ ] Action commands use RunE not Run (parent/container commands that only
+      group subcommands correctly have neither — Cobra prints help)
 - [ ] Flags bound to Viper
 - [ ] Commands read from Viper not flags
 - [ ] Configuration struct with validation
