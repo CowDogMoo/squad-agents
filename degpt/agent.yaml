@@ -14,7 +14,37 @@ wrapper: agent.md
 task: task.md
 disable_task: true
 edit_deadline: 0
+# Hard gate: reject any edit that introduces non-ASCII characters (smart quotes,
+# em/en dashes, ellipsis) the original didn't have — a model cannot sneak in the
+# typographic tells degpt exists to remove. Backs up the prompt's plain-ASCII rule.
+ascii_only: true
 budget:
   estimated_iterations: 20
   scale_factor: files
   files_per_iteration: 4
+# Sharded execution: squad globs the docs, splits them one-per-shard, and runs
+# this agent once per file with fresh context — so no single run accumulates the
+# whole repo (which made weak/local models loop, under-cover, or overflow).
+# A bare `squad run --agent degpt` shards transparently; no separate agent.
+execution:
+  shard_by: file
+  glob:
+    - "**/*.md"
+    - "**/*.txt"
+    - "**/*.rst"
+    - "**/*.adoc"
+  exclude:
+    - "**/CHANGELOG*"
+    - "**/CHANGES*"
+    - "**/HISTORY*"
+    - "**/LICENSE*"
+    - "**/NOTICE*"
+    - "**/COPYING*"
+    - "**/testdata/**"
+    - "**/.squad/**"
+  shard_batch: 1
+  merge: json
+  # 4 is the stable sweet spot for a single-GPU box: a single GPU batches
+  # ~2x before saturating, and 8-way concurrent load caused transient server
+  # blips for marginal gain. Raise on multi-GPU / cloud endpoints.
+  max_parallel: 4

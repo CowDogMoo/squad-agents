@@ -17,3 +17,6 @@ Thumbs.db
 
 # Local session state
 .squad/
+
+# Claude Code local config
+.claude/

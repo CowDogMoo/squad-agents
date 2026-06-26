@@ -22,8 +22,14 @@ Call `Skill("detect-llm-tells")` on the first iteration that needs to score a pa
 1c. **Phase boundary is a hard stop.** Once every globbed file has been Read once, Phase 2 is OVER — no further Read or Glob calls are permitted. Move directly to Phase 4 (report). Re-reads, "just one more file" reads, and exploratory Globs after Phase 2 are forbidden, even if you feel uncertain. Uncertainty resolves to LOW (do not flag), NOT "Read again." This rule prevents read-loop guards from firing.
 2. **Analyze prose only.** Skip code blocks, CLI examples, YAML/JSON/TOML frontmatter, config snippets.
 3. **Paragraph-level granularity.** Score each prose paragraph (2+ sentences, ~30 words min) independently. Flag only the bad paragraphs, not neighbors.
-4. **Require convergence: 3+ tell categories.** A paragraph must exhibit 3+ distinct categories to be flagged. Single "delve" or one "Moreover" is insufficient.
-5. **Score each flagged paragraph.** HIGH (4+ categories), MEDIUM (3 categories), LOW (1-2 categories -- do NOT flag).
+4. **Require convergence: 3+ tell categories, each independently real.** A paragraph must exhibit 3+ distinct categories to be flagged. Single "delve" or one "Moreover" is insufficient. Each category you count MUST be backed by a literal quoted trigger that meets that category's threshold in the DETECTION GUIDE below — you may not reach 3 by stretching weak signals. Specifically:
+   - **A single rule-of-three list does NOT satisfy Structure** — Structure needs 3+ triplets or >50% triplet bullets (a one-line tagline listing three things is normal human copy, not a tell).
+   - **Generic domain nouns are NOT Vocabulary tells** — "framework," "tool," "plain," "codebase," "library," "platform" are ordinary words. Only Tier 1/2 slop ("delve," "leverage," "seamless," "robust," "cutting-edge," "ecosystem," "tapestry") counts.
+   - **Coordinating conjunctions are NOT Transitions tells** — "and …," "but …," "so …" mid-sentence do not count. Transitions means sentence-initial connectors ("Moreover," "Furthermore," "Additionally," "Indeed," "Notably").
+   - **Rule-of-three and "not X but Y" are legitimate rhetorical devices, not tells by themselves** — humans use them deliberately and well. They count toward Structure ONLY when paired with vague/abstract/padded content. "mediocre at many things rather than excellent at one" (concrete, sharp) is good writing; "not just scalable but also robust and future-proof" (vague buzzwords) is a tell. Judge the content, not the shape.
+   - If removing any one stretched category drops you below 3, the paragraph is LOW — do NOT flag it.
+4a. **Good-prose gate — the dominant rule. Leave good writing alone.** Before flagging, ask: is this paragraph concrete (names specific things), varied in sentence rhythm, and natural to read aloud? If yes, it is human writing — SKIP it, even if it pattern-matches 3+ categories. Slop is vague, abstract, padded, and interchangeable; good prose is specific and earns its words. A false-positive rewrite that flattens sharp writing into bland mush is the WORST outcome this agent can produce — worse than missing a real tell. When borderline, resolve to LOW and skip.
+5. **Score each flagged paragraph.** HIGH (4+ categories AND vague/padded content), MEDIUM (3 categories), LOW (1-2 categories, or any paragraph that passes the good-prose gate -- do NOT flag). **In edit mode, rewrite ONLY HIGH-confidence paragraphs.** A MEDIUM (exactly 3) is reported in the Skipped table as "MEDIUM — borderline, not rewritten" and left untouched: 3 pattern-matches on otherwise-decent prose is exactly the false-positive zone. Never edit on a padded, borderline, or good-prose-gate-passing paragraph.
 6. **Exempt files.** Never touch: CHANGELOG/CHANGES/HISTORY.md, LICENSE/NOTICE/COPYING, `.github/`, code comments, vendored/generated files.
 7. **README headers are human convention.** "Installation," "Usage," "Contributing" are NOT tells. Only flag prose content under them.
 8. **Preserve technical accuracy.** Keep every command, path, URL, version, proper noun exactly as-is.
@@ -40,6 +46,8 @@ E1. **Rewrite, do not delete.** Every flagged paragraph must be rewritten. If pu
 E2. **Match project voice.** Read 2-3 surrounding files for tone first.
 E3. **Re-score after rewriting.** If rewrite still triggers 3+ categories, revise again.
 E4. **Verify edits WITHOUT re-reading.** Trust Edit tool output.
+E5. **Plain ASCII punctuation only — never introduce a tell while removing one.** Your rewrites MUST use plain ASCII: hyphen `-` (U+002D), straight quotes `'` `"`, three dots `...`. NEVER emit em dashes (`—`), en dashes (`–`), non-breaking hyphens (`‑` U+2011), smart/curly quotes (`’` `“` `”`), or the ellipsis character (`…`). Fancy typography is itself a Punctuation tell (category 3) — emitting it makes your output read MORE like LLM text, which is a regression. If the original used a fancy character, replace it with the ASCII equivalent.
+E6. **You MUST apply rewrites by calling the Edit tool — prose is not an edit.** Writing the rewritten paragraph in your report, or describing the change in words, does NOT count and is a FAILURE. Every flagged paragraph requires a real `Edit` (or `MultiEdit`) tool call against the file BEFORE you emit the report. The flow is: flag → call Edit to replace the text → THEN report. If you flagged paragraphs but made zero Edit tool calls, you have done nothing — go back and call Edit. The report's "Files touched" list must name files you actually edited via tool calls, and the working tree must reflect them.
 {{end}}
 {{if eq .Mode "readonly"}}
 
@@ -54,7 +62,9 @@ R1. **Report only.** Do NOT modify any files. List flagged paragraphs with file,
 
 ## Phase 1: Discover (EXACTLY 1 iteration)
 
-ALL FOUR Globs MUST go in iteration 1, in a single response, in parallel: `Glob **/*.md`, `Glob **/*.txt`, `Glob **/*.rst`, `Glob **/*.adoc`. Empty or small results are the correct answer — many repos have no `.txt` / `.rst` / `.adoc` files. Do NOT re-Glob in iter 2+ to "double-check." After this single iteration, the discovered file set is FROZEN.
+**SHARDED MODE — check first.** If your task input contains a "Partition Assignment" section (or an explicit list of files to analyze), you are running as one shard of a larger sharded run. SKIP all globbing — the file set is already chosen for you. Do NOT call Glob at all. Treat the listed files as your complete, FROZEN file set and go straight to Phase 2, reading only those files. Ignore the four-Glob instruction below; it applies only to unsharded runs.
+
+Otherwise (no file list provided), ALL FOUR Globs MUST go in iteration 1, in a single response, in parallel: `Glob **/*.md`, `Glob **/*.txt`, `Glob **/*.rst`, `Glob **/*.adoc`. Empty or small results are the correct answer — many repos have no `.txt` / `.rst` / `.adoc` files. Do NOT re-Glob in iter 2+ to "double-check." After this single iteration, the discovered file set is FROZEN.
 
 ## Phase 2: Analyze (varies by file count)
 
@@ -120,6 +130,8 @@ A paragraph needs 3+ categories to be flagged.
 
 **No-findings case.** If 0 paragraphs cross threshold, the report still emits every section below. Use empty tables (header row only) and explicit zero counts in Summary ("0 flagged" / "0 rewritten"). `Files Scanned` must list every globbed file. Do NOT emit prose-only "nothing to do" reports — the schema is required regardless of outcome.
 
+**Coverage honesty — report only what you actually did.** `Files Scanned` MUST list every file you actually Read, ONE explicit line per file (full path). It is FORBIDDEN to summarize with "remaining files," "all other .md files," "…", or any shortcut that stands in for files you did not enumerate. Any file count you state in the Summary MUST equal the number of files you actually Read this run — never round, inflate, or estimate (e.g. do not write "≈70 files" when you Read 32). If a globbed file was NOT Read, list it explicitly as `NOT READ` rather than claiming it is clean. A fabricated or padded coverage list is a failed run even if the analysis was otherwise correct.
+
 **Required literal markers (no-findings runs).** The validator requires the response to contain at least one of these exact substrings (case-insensitive). When 0 paragraphs are flagged you MUST include both lines, verbatim:
 
 ```
@@ -131,46 +143,33 @@ Put them at the top of the Summary section. Without these literal strings the ru
 
 {{if eq .Mode "edit"}}
 
+**BE TERSE — this is critical for cost.** Your rewrites are ALREADY applied to
+the files on disk. Do NOT paste the rewritten ("After") text back into the
+report — that duplicates the whole file and is the single biggest waste of
+output. No `Before:`/`After:` blocks. No multi-sentence prose. One compact line
+per rewrite. Aim for the entire report under ~120 words per file.
+
 ## Summary
 
-[2-3 sentences: files scanned, paragraphs rewritten, overall assessment]
+[ONE sentence: N paragraphs rewritten across M files, or "clean".]
 
 ## Sections Rewritten
 
-### [file:lines]
+One line each, NO quoted text:
 
-**File:** [path]
-**Lines:** [range]
-**Confidence:** HIGH/MEDIUM
-**Tell categories:** [3+ categories triggered]
-**Specific triggers:** [actual words/patterns per category]
-
-**Before:**
-> [original text]
-
-**After:**
-> [rewritten text]
-
-**Re-score:** [confirm <3 categories]
-
----
+- `file:lines` — HIGH/MEDIUM — categories: [list] — triggers: [the words]
 
 ## Sections Skipped
 
-| File | Lines | Categories (count) | Reason |
-|------|-------|--------------------|--------|
-| [path] | [range] | [list] (N) | Below threshold / Exempt / Accuracy risk |
+One line each (or "none"):
+
+- `file:lines` — [categories] (N) — below threshold / exempt / accuracy risk
 
 ## Files Scanned
 
-- `path/to/file.md` — clean / N paragraphs rewritten / skipped (exempt)
+- `path` — N rewritten / clean / skipped (exempt)
 
-## Validation
-
-- Meaning preserved: YES/NO
-- Structure preserved: YES/NO
-- Technical accuracy: unchanged
-- Re-score pass: YES/NO
+**Files touched:** [comma-separated edited paths, or `none`]
 {{end}}
 
 {{if eq .Mode "readonly"}}
