@@ -151,7 +151,11 @@ These are the anti-patterns you MUST fix when found:
 
 - Missing `version: "3"` field - Taskfile schema undefined
 - Missing `desc:` on tasks - breaks `task --list` usability
-- Hardcoded paths or values that should be variables
+- Hardcoded paths or values that should be variables. **Qualifier:** only when
+  the SAME literal appears 3+ times in tasks AND extracting it to a global
+  `vars:` entry removes real duplication. A single literal, a literal already in
+  correct concrete form, or any literal inside an `includes:` `vars:` block is
+  NOT a finding - leave it alone (see self-referential include below).
 - Hardcoded secrets or credentials - CRITICAL security issue
 - Missing preconditions for required inputs - confusing failures. ONLY add a
   precondition when the input is used unguarded AND there is no existing
@@ -175,12 +179,23 @@ These are the anti-patterns you MUST fix when found:
   validation - path traversal risk. **Only flag if the variable has no default
   or an unsafe default.** Variables with safe defaults like `/tmp` are LOW
   priority - skip unless the variable is explicitly documented as user input.
+- **Self-referential include variable** - in an `includes:` block, passing
+  `VAR: '{{"{{"}}.VAR}}'` (same name on both sides) into an external/remote
+  taskfile. The template resolves in the INCLUDED file's scope: if that file
+  defines its own default for `VAR`, the parent's value is silently discarded
+  and the include's default wins (e.g. `CMD_PATH: ./cmd` instead of the
+  parent's `./cmd/squad`). HIGH severity and **verification-invisible**:
+  `task --list` parses it cleanly, so your only gate will NOT catch it - you
+  must catch it by reading. Fix by passing the concrete literal (from the
+  parent's global `vars:`).
 
 # HOW TO FIX - CORRECT PATTERNS
 
 - **Missing version:** Add `version: "3"` at the top after the YAML header
 - **Missing desc:** Add `desc: "Brief description of task purpose"`
-- **Hardcoded values:** Extract to `vars:` section with meaningful name
+- **Hardcoded values:** Extract to the GLOBAL `vars:` section ONLY when the same
+  literal recurs 3+ times across tasks. Never extract a literal inside an
+  `includes:` `vars:` block - there `'{{"{{"}}.SAMENAME}}'` loses the passed-in value.
 - **Hardcoded secrets:** Replace with `'{{"{{"}}.SECRET_VAR | default ""}}'` and
   add precondition to validate it's set
 - **Missing preconditions:** Prefer Taskfile's native `requires:` block. Only
@@ -195,6 +210,10 @@ These are the anti-patterns you MUST fix when found:
   ```
 
 - **Unquoted templates:** Quote the value: `VAR: '{{"{{"}}.OTHER_VAR}}'`
+- **Self-referential include variable:** Replace `VAR: '{{"{{"}}.VAR}}'` in an
+  `includes:` block with the concrete literal from the parent's global `vars:` -
+  e.g. `CMD_PATH: ./cmd/squad`, not `CMD_PATH: '{{"{{"}}.CMD_PATH}}'`. Passing a var
+  under its own name loses the value when the included file defaults it.
 - **Missing silent:** Add `silent: true` ONLY to thin wrapper/runner tasks
   whose only output is Task's name-prefix duplicating the child program's
   banner. NEVER add it to tasks that emit progress, test output, or
@@ -232,6 +251,9 @@ Skip these entirely - do not report them, do not fix them:
   the threat model for local task runners doesn't justify the complexity
 - Changes requiring new external dependencies
 - Restructuring that would change task behavior without clear benefit
+- **Extracting/template-ifying a literal inside an `includes:` `vars:` block.**
+  A literal passed into an include (e.g. `CMD_PATH: ./cmd/squad`) is already
+  correct; `'{{"{{"}}.CMD_PATH}}'` silently breaks it (self-referential include var).
 
 # OUTPUT FORMAT
 

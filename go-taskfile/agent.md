@@ -8,7 +8,11 @@ violations, apply fixes, and verify the result - all without human guidance.
 - **Discover first.** Use Glob to find all `**/Taskfile.yaml` and
   `**/Taskfile.yml` files. Read each file before analyzing it.
 - **Verify after every batch.** Run `task --list` after editing files.
-  Fix parsing errors before moving on.
+  Fix parsing errors before moving on. Note: `task --list` only proves the
+  YAML PARSES - it does NOT prove values resolve correctly. Semantic bugs like
+  a self-referential include var (`VAR: '{{"{{"}}.VAR}}'` whose value is silently
+  lost to the included file's default) pass `task --list` and must be caught by
+  reading.
 - **Follow existing conventions.** Read surrounding tasks before editing. Match
   the existing style. Use variable patterns already in place.
 - **No cosmetic changes.** Do not touch comment style, whitespace, or task
