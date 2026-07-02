@@ -176,7 +176,7 @@ These are the anti-patterns you MUST fix when found:
   or an unsafe default.** Variables with safe defaults like `/tmp` are LOW
   priority - skip unless the variable is explicitly documented as user input.
 - **Self-referential include variable** - in an `includes:` block, passing
-  `VAR: '{{"{{"}}.VAR}}'` (same name on both sides) into an external/remote
+  `VAR: '{{.VAR}}'` (same name on both sides) into an external/remote
   taskfile. The template resolves in the INCLUDED file's scope: if that file
   defines its own default for `VAR`, the parent's value is silently discarded
   and the include's default wins (e.g. `CMD_PATH: ./cmd` instead of the
@@ -191,8 +191,8 @@ These are the anti-patterns you MUST fix when found:
 - **Missing desc:** Add `desc: "Brief description of task purpose"`
 - **Hardcoded values:** Extract to the GLOBAL `vars:` section ONLY when the same
   literal recurs 3+ times across tasks. Never extract a literal inside an
-  `includes:` `vars:` block - there `'{{"{{"}}.SAMENAME}}'` loses the passed-in value.
-- **Hardcoded secrets:** Replace with `'{{"{{"}}.SECRET_VAR | default ""}}'` and
+  `includes:` `vars:` block - there `'{{.SAMENAME}}'` loses the passed-in value.
+- **Hardcoded secrets:** Replace with `'{{.SECRET_VAR | default ""}}'` and
   add precondition to validate it's set
 - **Missing preconditions:** Prefer Taskfile's native `requires:` block. Only
   add a precondition when the input is used unguarded AND there is no existing
@@ -201,14 +201,14 @@ These are the anti-patterns you MUST fix when found:
 
   ```yaml
   preconditions:
-    - sh: test -n "{{"{{"}}.REQUIRED_VAR}}"
+    - sh: test -n "{{.REQUIRED_VAR}}"
       msg: "REQUIRED_VAR is required"
   ```
 
-- **Unquoted templates:** Quote the value: `VAR: '{{"{{"}}.OTHER_VAR}}'`
-- **Self-referential include variable:** Replace `VAR: '{{"{{"}}.VAR}}'` in an
+- **Unquoted templates:** Quote the value: `VAR: '{{.OTHER_VAR}}'`
+- **Self-referential include variable:** Replace `VAR: '{{.VAR}}'` in an
   `includes:` block with the concrete literal from the parent's global `vars:` -
-  e.g. `CMD_PATH: ./cmd/squad`, not `CMD_PATH: '{{"{{"}}.CMD_PATH}}'`. Passing a var
+  e.g. `CMD_PATH: ./cmd/squad`, not `CMD_PATH: '{{.CMD_PATH}}'`. Passing a var
   under its own name loses the value when the included file defaults it.
 - **Missing silent:** Add `silent: true` ONLY to thin wrapper/runner tasks
   whose only output is Task's name-prefix duplicating the child program's
@@ -222,7 +222,7 @@ These are the anti-patterns you MUST fix when found:
 
   ```yaml
   preconditions:
-    - sh: echo "{{"{{"}}.USER_PATH}}" | grep -qv '\.\.'
+    - sh: echo "{{.USER_PATH}}" | grep -qv '\.\.'
       msg: "USER_PATH cannot contain path traversal (..)"
   ```
 
@@ -245,7 +245,7 @@ Skip these entirely - do not report them, do not fix them:
 - Restructuring that would change task behavior without clear benefit
 - **Extracting/template-ifying a literal inside an `includes:` `vars:` block.**
   A literal passed into an include (e.g. `CMD_PATH: ./cmd/squad`) is already
-  correct; `'{{"{{"}}.CMD_PATH}}'` silently breaks it (self-referential include var).
+  correct; `'{{.CMD_PATH}}'` silently breaks it (self-referential include var).
 
 # OUTPUT FORMAT
 

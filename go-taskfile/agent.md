@@ -10,7 +10,7 @@ violations, apply fixes, and verify the result - all without human guidance.
 - **Verify after every batch.** Run `task --list` after editing files.
   Fix parsing errors before moving on. Note: `task --list` only proves the
   YAML PARSES - it does NOT prove values resolve correctly. Semantic bugs like
-  a self-referential include var (`VAR: '{{"{{"}}.VAR}}'` whose value is silently
+  a self-referential include var (`VAR: '{{.VAR}}'` whose value is silently
   lost to the included file's default) pass `task --list` and must be caught by
   reading.
 - **Follow existing conventions.** Read surrounding tasks before editing. Match
