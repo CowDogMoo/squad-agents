@@ -1,9 +1,11 @@
-{{if eq .Mode "edit"}}
-Review and fix all Go code quality issues in this codebase.
+Review all Go code quality issues in this codebase. Default is edit mode: fix
+them in place. If the request says "readonly", "report only", "analysis
+only", or "do not modify": produce a prioritized report and do NOT write or
+modify any files.
 
 Discover with Glob `**/*.go`, Read each file (skip `_test.go`, `vendor/`),
-cross-reference across packages, apply fixes highest severity first,
-run `go build ./...` after each batch.
+cross-reference across packages. In edit mode, apply fixes highest severity
+first and run `go build ./...` after each batch.
 
 IMPORTANT CONSTRAINTS:
 
@@ -18,12 +20,3 @@ IMPORTANT CONSTRAINTS:
 - Read each file ONCE; target ≤12 iterations
 - After go build + go test pass, emit report IMMEDIATELY
 - Every file touched must appear in the output report
-{{end}}
-{{if eq .Mode "readonly"}}
-Analyze this Go codebase for code quality issues.
-
-Discover with Glob `**/*.go` (skip `_test.go`, `vendor/`), Read each file,
-cross-reference across packages. Produce a prioritized report.
-
-Do NOT write or modify any files.
-{{end}}

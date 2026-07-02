@@ -1,4 +1,4 @@
-Bring each Go package below {{.Default "COVERAGE_TARGET" "75"}}% coverage up to that target by writing tests. Use the orchestrator-workers pattern: load `Skill("enqueue-coverage-targets-go")` on iter 1, run its discovery Bash on iter 2, then drain `/tmp/squad-targets.txt`.
+Bring each Go package below 75% coverage (or the caller's stated target) up to that target by writing tests. Use the orchestrator-workers pattern: load `Skill("enqueue-coverage-targets-go")` on iter 1, run its discovery Bash on iter 2, then drain `/tmp/squad-targets.txt`.
 
 # READ THIS FIRST — past failures (fixes are in anti-patterns 10–13)
 
@@ -26,4 +26,4 @@ Run `git diff --stat` and `git diff -U0 -- '*_test.go' | grep -E '^(\+func Test|
 
 # Constraints
 
-Target {{.Default "COVERAGE_TARGET" "75"}}% per package, including `cmd/*` (no carve-outs); only `_test.go`; black-box `package foo_test`; table-driven for 2+ cases; 1:1 naming (`foo.go` → `foo_test.go`); 3+ packages per Write/Edit batch. Iteration target ≤ `2 × queue_size + 5`; reserve the last 5 iters for verify+report.
+Target 75% per package unless the caller specifies otherwise, including `cmd/*` (no carve-outs); only `_test.go`; black-box `package foo_test`; table-driven for 2+ cases; 1:1 naming (`foo.go` → `foo_test.go`); 3+ packages per Write/Edit batch. Iteration target ≤ `2 × queue_size + 5`; reserve the last 5 iters for verify+report.
