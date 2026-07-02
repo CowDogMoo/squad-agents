@@ -254,17 +254,49 @@ for dir in "${AGENT_DIRS[@]}"; do
 			"${label} section: OUTPUT COMPLIANCE"
 	done
 
-	# ---- Severity include check (warn only) --------------------------------
+	# ---- Severity section check (warn only) --------------------------------
+	# Inline severity definitions are the intended Claude-native form; the
+	# legacy severity include is also accepted for un-migrated agents.
 	for f in "${system_files[@]}"; do
 		[ ! -f "$f" ] && continue
 		label="$(basename "$f")"
 		# Skip agents that don't use severity (e.g., scrub-comments)
 		if grep -qiE 'severity|CRITICAL.*HIGH.*MEDIUM' "$f"; then
-			if grep -q 'include "severity/standard.md"' "$f"; then
-				pass "${label}: uses severity include"
+			if grep -qiE '^#+ *SEVERITY' "$f" || grep -q 'include "severity/standard.md"' "$f"; then
+				pass "${label}: severity levels defined"
 			else
-				warn "${label}: defines severity inline — consider {{include \"severity/standard.md\"}}"
+				warn "${label}: mentions severity but has no SEVERITY LEVELS section"
 			fi
+		fi
+	done
+
+	# ---- Claude-native frontmatter checks -----------------------------------
+	# Every prompt entrypoint must open with YAML frontmatter (name,
+	# description, tools) so the same file loads as a Claude Code agent and
+	# squad skips template rendering. system.md frontmatter name must match
+	# the agent directory; stage files (*-system.md) carry their own names.
+	for f in "${system_files[@]}"; do
+		[ ! -f "$f" ] && continue
+		label="$(basename "$f")"
+		if [ "$(head -n 1 "$f")" != "---" ]; then
+			error "${label}: missing YAML frontmatter (Claude-native format required)"
+			continue
+		fi
+		fm=$(awk 'NR==1{next} /^---$/{exit} {print}' "$f")
+		missing=""
+		for key in name description tools; do
+			if ! printf '%s\n' "$fm" | grep -q "^${key}:"; then
+				missing="${missing} ${key}"
+			fi
+		done
+		if [ -n "$missing" ]; then
+			error "${label} frontmatter: missing key(s):${missing}"
+		else
+			pass "${label} frontmatter: name/description/tools present"
+		fi
+		fm_name=$(printf '%s\n' "$fm" | grep '^name:' | head -1 | sed 's/^name:[[:space:]]*//')
+		if [ "$label" = "system.md" ] && [ -n "$fm_name" ] && [ "$fm_name" != "$agent_name" ]; then
+			error "frontmatter name '${fm_name}' does not match directory '${agent_name}'"
 		fi
 	done
 

@@ -1,5 +1,5 @@
-Analyze this codebase's test coverage and bring each module to
-{{.Default "COVERAGE_TARGET" "75"}}% coverage.
+Analyze this codebase's test coverage and bring each module to 75%
+coverage (unless the caller specifies a different target).
 
 Discover all source files, measure baseline coverage with
 `npm test -- --coverage --passWithNoTests` or `npx jest --coverage --passWithNoTests`,
@@ -8,7 +8,7 @@ from Jest's text reporter.
 
 IMPORTANT CONSTRAINTS:
 
-- Target is {{.Default "COVERAGE_TARGET" "75"}}% PER MODULE, not just overall
+- Target is 75% PER MODULE, not just overall
 - Entry point files (index.ts, bin/cli.ts): aim for 50-60%,
   document untestable functions
 - Only create/modify `*.test.{js,ts}` or `*.spec.{js,ts}` files — never
