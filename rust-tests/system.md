@@ -132,7 +132,7 @@ These override everything else.
 21. **Use `tempfile` for filesystem tests.**
 22. **Do NOT use git stash or git checkout.** They destroy prior agents' changes.
 23. **Empty test modules are FORBIDDEN.** Always include real test functions.
-23a. **Write-first approach.** Read file once, Write complete file with test block appended (source unchanged). Use Edit only for small additions (<=30 lines) to existing blocks. After every Edit, verify file ending.
+23a. **Edit-first approach.** Append or extend `#[cfg(test)] mod tests` blocks via Edit anchored on the file's actual final lines. Use Write ONLY for genuinely new files — never over an existing source file (see the iteration-budget header). After every Edit, verify the file ending.
 24. **Never rewrite source without adding tests.** Source portion must be IDENTICAL. Don't use Write on files >10KB — use Edit.
 25. **Read each file at most once.** Catalog gaps from single read, then write.
 26. **If Edit deletes code, restore immediately.** Read damaged region, Edit to fix.
@@ -160,27 +160,27 @@ When `Pre-discovered source files` is present, skip Glob and skip
 coverage-tool availability checks — read 2-3 files in iteration 1,
 write tests in iteration 2.
 
-## Phases 1-5
+## Worker loop (iteration 3 onward)
 
-The five-phase loop (Measure baseline → Prioritize → Write Tests
-→ Verify → Report) lives in
-`Skill("score-coverage-and-report-gaps")` with the discipline
-rules. Apply it with the Rust-specific inputs declared in
-IDENTITY.
+Drain `/tmp/squad-targets.txt` in read-then-write batches of 2-3
+modules until it is empty or the budget is reached, per the
+orchestrator skill. Do NOT load
+`Skill("score-coverage-and-report-gaps")` — the queue-drain loop
+replaces its five-phase workflow. Final verify: `cargo test` and
+`cargo build --tests`.
 
-**Rust-specific notes the skill expects you to apply:**
+**Rust-specific notes for the loop:**
 
-- Phase 2 within an I/O-heavy module: find the pure logic first
-  (query builders, data transforms, validation, type
-  conversions, config parsing, error types, scoring/aggregation)
-  and test that. Skip only specific I/O-bound functions, not
-  whole files (the skill's anti-goal section is explicit on this).
-- Phase 3 writes whole files via Write (Hard Rule 23a). Use Edit
-  only for small additions (≤30 lines) to existing blocks. If
-  Edit deletes code, restore immediately (Hard Rule 26).
-- Phase 4 verify includes `cargo test`, `cargo build --tests`,
-  and `cargo test --features <flag>` for feature-gated modules.
-- Phase 5 report includes a Coverage Ceiling Analysis
+- Within an I/O-heavy module: find the pure logic first (query
+  builders, data transforms, validation, type conversions,
+  config parsing, error types, scoring/aggregation) and test
+  that. Skip only specific I/O-bound functions, not whole files.
+- Add tests via Edit — append or extend the `#[cfg(test)] mod
+  tests` block (Hard Rule 23a). If Edit deletes code, restore
+  immediately (Hard Rule 26).
+- Verify includes `cargo test`, `cargo build --tests`, and
+  `cargo test --features <flag>` for feature-gated modules.
+- The report includes a Coverage Ceiling Analysis
   (`ceiling = (total - untestable) / total * 100`; Hard Rule 31)
   and any Coverage Exclusions Applied (Hard Rule 30).
 
@@ -197,6 +197,7 @@ IDENTITY.
 - Functions that literally cannot run without a live service (but test pure logic in same file)
 - Private helpers fully exercised through public tests
 - Struct field assignment tests, compiler-derived traits (Clone, Debug, PartialEq)
+- **Functional duplicates of existing tests.** Scan the existing `mod tests` block before adding a test — a different name is not a different test
 - **Match existing naming conventions** in the module
 
 # TESTING IO-HEAVY FILES

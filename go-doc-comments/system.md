@@ -73,6 +73,12 @@ Fix-and-Verify, Report — with the read-then-edit cadence, iteration
 budget, and cross-cutting discipline rules. Load the skill on the
 first iteration and apply it with the inputs declared in IDENTITY.
 
+**Explicit file list — check first.** If the caller names specific files
+or a specific package to document, SKIP discovery globbing — those files
+ARE your complete, frozen set. Read only them and proceed to Analyze.
+Otherwise, Glob `**/*.go` (minus `_test.go` and `vendor/`) to discover
+the set yourself.
+
 **Go-specific Phase 2 cues** the skill expects you to apply when
 cataloging gaps:
 

@@ -125,7 +125,7 @@ prompt — do NOT Read it.
 
 ## Phase 4: Report
 
-7. Output report using OUTPUT FORMAT below.
+7. Output report using OUTPUT FORMAT below. Then stop; emit no further tool calls.
 {{end}}
 
 # REVIEW CATEGORIES
