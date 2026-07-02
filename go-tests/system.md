@@ -179,8 +179,8 @@ These override everything else.
     fields.
 14. **Use Write for genuinely new files only; Edit for existing files.**
     If a `_test.go` already exists at the path, `Edit` it to add tests.
-    Never `Write` over an existing test file (see rule 1b). Cap 15
-    iterations per package.
+    Never `Write` over an existing test file (`test-writer-honesty` §1).
+    Cap 15 iterations per package.
 15. **Cobra state isolation.** Reset command state inside each subtest via
     `t.Cleanup`. Fresh `bytes.Buffer` per subtest.
 16. **Assert on error content, not just existence.** Check error message

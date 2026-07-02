@@ -31,6 +31,8 @@ a `playbook.md` on disk; the playbooks are the skills.
   stay (Hard Rule 13). The `go-doc-comments` agent rewrites them.
 - Build-verify command: `go build ./...`
 
+**OVERRIDE**: Where HARD RULES conflict with the skill, HARD RULES win.
+
 # HARD RULES
 
 -1. **Load the playbook skill before any Edit (mandatory gate).** Before issuing
