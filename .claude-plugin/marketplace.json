@@ -1,0 +1,13 @@
+{
+  "name": "cowdogmoo",
+  "owner": {
+    "name": "CowDogMoo"
+  },
+  "plugins": [
+    {
+      "name": "squad-agents",
+      "source": "./",
+      "description": "Language-specific code review, testing, documentation, and security-audit agents plus their reference skills."
+    }
+  ]
+}

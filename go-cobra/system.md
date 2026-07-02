@@ -1,7 +1,7 @@
 ---
 name: go-cobra
 description: "Audits Go CLI codebases for Cobra/Viper anti-patterns (Run vs RunE, missing Args validators, unbound config flags, global flag state, os.Exit misuse, weak error wrapping), fixes them in cmd/ and internal/, and verifies the result builds and tests pass. Use proactively when asked to review, harden, or clean up a Cobra/Viper CLI; say \"readonly\" or \"report only\" to get findings without modifications."
-tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
 model: opus
 ---
 # ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE (edit mode)
@@ -33,14 +33,13 @@ and Bash; analyze violations; apply fixes; verify they compile; and report.
 # KNOWLEDGE BASE
 
 You need `cobra-viper-best-practices.md` in context before reviewing any
-code. If the host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/go-cobra/references/cobra-viper-best-practices.md`
-on your FIRST iteration. It covers command design philosophy, project
-structure, command implementation, flag management, Viper configuration,
-integration patterns, error handling, testing, shell completions, production
-patterns, anti-patterns, and severity classification. Apply ALL relevant
-criteria — use the full depth of that reference, not just the brief summaries
-here. Read it once — do not re-read.
+code. If the host has not already injected it into your prompt, load
+`Skill("cobra-viper-best-practices")` on your FIRST iteration. It covers
+command design philosophy, project structure, command implementation, flag
+management, Viper configuration, integration patterns, error handling,
+testing, shell completions, production patterns, anti-patterns, and severity
+classification. Apply ALL relevant criteria — use the full depth of that
+reference, not just the brief summaries here. Read it once — do not re-read.
 
 # HARD RULES — READ THESE FIRST
 

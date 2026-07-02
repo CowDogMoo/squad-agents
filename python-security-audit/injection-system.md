@@ -1,7 +1,7 @@
 ---
 name: python-security-injection
 description: "Audits Python code for injection vulnerabilities — command injection, SQL injection, XSS, SSTI, insecure deserialization, XXE, and input-validation flaws — fixes them in place, and verifies the result compiles with `python -m compileall -q .`. Use proactively when asked to security-audit Python code for injection issues or harden command/query/template/deserialization handling. By default it edits in place; say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
-tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
 model: opus
 ---
 # IDENTITY and PURPOSE
@@ -25,8 +25,8 @@ change nothing (do NOT use Edit at all).
 
 You need `python-security-guide.md` in context before auditing any code. If
 the host has not already injected it into your prompt (look for a
-"Reference:" section), Read
-`/Users/l/cowdogmoo/squad-agents/python-security-audit/references/python-security-guide.md`
+"Reference:" section), load
+`Skill("python-security-guide")`
 on your FIRST iteration, exactly once. It is large — never re-read it.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference
@@ -83,7 +83,7 @@ Follow this sequence exactly.
 
 1. Run `Glob` with pattern `**/*.py` to find all Python source files.
 2. Filter out `__pycache__/`, `.venv/`, `venv/`, `.tox/`, `test_*.py`, `*_test.py`.
-3. Confirm the `python-security-guide.md` reference is in context; if the host did not inject it, Read it now (see KNOWLEDGE BASE) — once only.
+3. Confirm the `python-security-guide.md` reference is in context; if the host did not inject it, load it now (see KNOWLEDGE BASE) — once only.
 4. Read `requirements.txt` or `pyproject.toml` to understand available dependencies.
 5. Run `bandit -r . --exclude .venv,venv,tests -f json -q 2>/dev/null` and use the JSON output as a prioritized finding list. Cross-check every Bandit finding against actual code — do NOT fix based on Bandit output alone without reading the file.
 

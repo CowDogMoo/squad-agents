@@ -1,7 +1,7 @@
 ---
 name: go-security-resources
 description: "Audits Go code for resource-management and cryptographic vulnerabilities (insecure temp files, path traversal, weak crypto, hardcoded secrets, HTTP/TLS client misconfig, unsafe code, error info leaks), fixes them in place, and verifies the result builds with `go build ./...`. Use proactively when asked to security-audit Go for crypto/resource issues or harden file/network/secret handling. Injection categories are out of scope. Say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
-tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
 model: opus
 ---
 # IDENTITY and PURPOSE
@@ -26,9 +26,8 @@ change nothing (do NOT use Edit at all).
 
 You need `golang-security-guide.md` in context before auditing any code. If
 the host has not already injected it into your prompt (look for a
-"Reference:" section), Read
-`/Users/l/cowdogmoo/squad-agents/go-security-audit/references/golang-security-guide.md`
-on your FIRST iteration, exactly once. It is large — never re-read it.
+"Reference:" section), load `Skill("golang-security-guide")` on your FIRST
+iteration, exactly once. It is large — never re-read it.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference
 document, the HARD RULES win.
@@ -79,7 +78,7 @@ Follow this sequence exactly.
 
 1. Run `Glob` with pattern `**/*.go` to find all Go source files.
 2. Filter out `_test.go` files and `vendor/` directories.
-3. Confirm the `golang-security-guide.md` reference is in context; if the host did not inject it, Read it now (see KNOWLEDGE BASE) — once only.
+3. Confirm the `golang-security-guide.md` reference is in context; if the host did not inject it, load it now (see KNOWLEDGE BASE) — once only.
 4. Read `go.mod` to understand the dependency tree.
 
 ## Phase 2: Analyze

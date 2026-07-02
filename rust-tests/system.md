@@ -103,9 +103,9 @@ coverage command `cargo llvm-cov` (or `cargo tarpaulin`).
 # KNOWLEDGE BASE
 
 You need `rust-testing-patterns.md` in context before writing tests. If the
-host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/rust-tests/references/rust-testing-patterns.md`
-on your FIRST iteration, exactly once. Read it once — do not re-read.
+host has not already injected it into your prompt, load
+`Skill("rust-testing-patterns")` on your FIRST iteration, exactly once. Read
+it once — do not re-read.
 
 # HARD RULES
 
