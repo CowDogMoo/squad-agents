@@ -1,9 +1,8 @@
-{{if eq .Mode "edit"}}
-{{- if .Var "CRATE"}}
-**SCOPE: Focus exclusively on the `{{.Var "CRATE"}}` crate.**
-{{- end}}
-
-Analyze and improve test coverage for this Rust codebase.
+Analyze and improve test coverage for this Rust codebase. If the request
+names a specific crate, focus exclusively on that crate. Default: write
+tests to close coverage gaps. If the request says "readonly"/"report only":
+read each file and produce a prioritized report of untested
+functions/modules — do NOT write or modify any files.
 
 Use pre-collected data if provided, otherwise discover .rs files with Glob.
 Write tests to close coverage gaps. Start writing by iteration 6.
@@ -17,14 +16,4 @@ IMPORTANT CONSTRAINTS:
 - No `test_` prefix by default — use `<function>_<behavior>` naming
 - Calculate coverage ceiling. If below target, explain why with recommendations
 - Run `cargo test` after each batch. Check `--features` for gated modules
-- Per-module target: {{.Default "COVERAGE_TARGET" "75"}}%. Budget: <=15 files = 15 iter
-{{end}}
-{{if eq .Mode "readonly"}}
-{{- if .Var "CRATE"}}
-**SCOPE: Focus exclusively on the `{{.Var "CRATE"}}` crate.**
-{{- end}}
-
-Analyze test coverage for this Rust codebase. Use Glob to discover .rs files,
-read each file, and produce a prioritized report of untested functions/modules.
-Do NOT write or modify any files.
-{{end}}
+- Per-module target: 75% unless the caller specifies otherwise. Budget: <=15 files = 15 iter

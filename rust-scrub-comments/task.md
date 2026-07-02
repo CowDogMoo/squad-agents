@@ -1,12 +1,11 @@
-Scan all Rust source files for useless, LLM-generated, and non-idiomatic comments and
-{{if eq .Mode "edit"}}**trim** mixed blocks to keep the useful "why" portion; **leave pure single-line narration alone** unless I have explicitly asked you to scrub or delete narration in this prompt (I have NOT){{end}}{{if eq .Mode "readonly"}}report them with confidence scores{{end}}.
+Scan all Rust source files for useless, LLM-generated, and non-idiomatic comments. Default (edit mode): **trim** mixed blocks to keep the useful "why" portion; **leave pure single-line narration alone** unless the request explicitly asks to scrub or delete narration (this prompt does NOT). If the request says "readonly"/"report only": report flagged comments with confidence scores and modify NOTHING.
 
 WORKFLOW (sequential, one file per iteration):
 
 - Iteration 1: `Glob **/*.rs`.
 - Iteration 2: Bash runs the `rg --type rust` discovery search — Search A (LLM-vocabulary regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`). Separate from Glob. Hits define PRIORITY ORDER; they do NOT define the corpus.
 - Iterations 3..N: ONE `Read` per iteration; emit Edits for that file in the SAME iteration; narrate `Progress: K/<total> done (last: <path>, edits: M)`; advance. NEVER parallel-read. NEVER re-Read a cache-hit file.
-- Iteration N+1: `cargo check 2>&1`, then emit the structured report.
+- Iteration N+1: `cargo check 2>&1` (edit mode), then emit the structured report.
 
 CONSTRAINTS:
 
@@ -20,10 +19,6 @@ CONSTRAINTS:
 - Comments only — never modify code, signatures, `use` statements, `mod` declarations, or string literals.
 - Cache-hit responses mean "already in context, move on."
 - Do NOT use additional `rg`/`Bash` searches as a substitute for Reading files. No Bash `find`/`grep` for discovery — `rg` only.
-{{if eq .Mode "edit"}}
-- Run `cargo check` after all edits. If zero edits, summary must say "No changes needed".
-{{end}}
-
-{{include "hard-rules/efficiency.md"}}
-
-COVERAGE IS MANDATORY — full coverage, no sampling. Read EVERY non-test, non-generated `.rs` file exactly once. The Large-tier "sample" guidance from efficiency.md does NOT apply to this agent.
+- In edit mode run `cargo check` after all edits. If zero edits, summary must say "No changes needed".
+- Efficiency digest: iteration budget 12/20/25 for small (<=20 files)/medium (21-50)/large (50+) codebases; batch a file's Edits with its Read; near the limit, verify and emit the report.
+- COVERAGE IS MANDATORY — full coverage, no sampling. Read EVERY non-test, non-generated `.rs` file exactly once; Large-tier "sample" guidance does NOT apply to this agent.

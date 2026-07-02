@@ -1,5 +1,7 @@
 Scan all documentation and text files for LLM-generated content and
-{{if eq .Mode "edit"}}rewrite flagged paragraphs to sound human-written{{end}}{{if eq .Mode "readonly"}}report flagged paragraphs with confidence scores{{end}}.
+rewrite flagged paragraphs to sound human-written (edit mode, the
+default) or report flagged paragraphs with confidence scores (readonly
+mode — caller said "readonly" / "report only").
 
 Start by using Glob with '**/*.md', '**/*.txt', '**/*.rst', '**/*.adoc'
 ALL FOUR in parallel in iteration 1. Empty results for `.txt`/`.rst`/`.adoc`
@@ -21,8 +23,8 @@ IMPORTANT CONSTRAINTS:
 - Skip code blocks, frontmatter, CLI examples, config snippets
 - Never touch CHANGELOG, LICENSE, NOTICE, .github/, .claude/ files
 - README headers ("Installation," "Usage") are NOT tells -- only flag prose under them
-{{if eq .Mode "edit"}}- Preserve all technical content (commands, paths, URLs, versions)
-- Re-score every rewrite -- revise if still 3+ categories
-- Every rewrite must say the same thing as the original{{end}}
+- Edit mode: preserve all technical content (commands, paths, URLs, versions)
+- Edit mode: re-score every rewrite -- revise if still 3+ categories
+- Edit mode: every rewrite must say the same thing as the original
 - Batch ALL edits per file, then emit report immediately
 - Every file scanned must appear in the output report

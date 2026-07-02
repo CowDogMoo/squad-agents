@@ -1,12 +1,12 @@
-Scan all non-test Go source files for useless, LLM-generated, and non-idiomatic comments and
-{{if eq .Mode "edit"}}**trim** mixed blocks to keep the useful "why" portion; **leave pure single-line narration alone** unless I have explicitly asked you to scrub or delete narration in this prompt (I have NOT){{end}}{{if eq .Mode "readonly"}}report them with confidence scores{{end}}.
+Scan all non-test Go source files for useless, LLM-generated, and non-idiomatic comments.
+Edit mode (the default): **trim** mixed blocks to keep the useful "why" portion; **leave pure single-line narration alone** unless I have explicitly asked you to scrub or delete narration in this prompt (I have NOT). Readonly mode ("readonly"/"report only"): report candidates with confidence scores instead of editing.
 
 WORKFLOW (sequential, one file per iteration):
 
 - Iteration 1: `Glob **/*.go`.
 - Iteration 2: Bash runs BOTH `rg --type go` discovery searches in a single call — Search A (LLM-vocabulary regex `(crucial|leverage|seamless|robust|Moreover|Furthermore|Additionally|streamlined|meticulous|intricate|comprehensive|pivotal|noteworthy|facilitate|underscore|Step \d|Phase \d)`) and Search B (PCRE2 structural-narration regex with method-receiver support, needs `--pcre2 -U`). Separate from Glob. Hits define PRIORITY ORDER (Search B first, then Search A, then remaining files); they do NOT define the corpus.
-- Iterations 3..N: ONE `Read` per iteration; emit Edits for that file in the SAME iteration; narrate `Progress: K/<total> done (last: <path>, edits: M)`; advance. NEVER parallel-read. NEVER re-Read a cache-hit file.
-- Iteration N+1: `go build ./... 2>&1`, then emit the structured report.
+- Iterations 3..N: ONE `Read` per iteration; emit Edits (edit mode) or flags (readonly) for that file in the SAME iteration; narrate `Progress: K/<total> done (last: <path>, edits: M)`; advance. NEVER parallel-read. NEVER re-Read a cache-hit file.
+- Iteration N+1: edit mode — `go build ./... 2>&1`, then emit the structured report; readonly — emit the report.
 
 CONSTRAINTS:
 
@@ -19,10 +19,8 @@ CONSTRAINTS:
 - Comments only — never modify code, signatures, imports, var/const, or string literals.
 - Cache-hit responses mean "already in context, move on."
 - Do NOT use additional `rg`/`Bash` searches as a substitute for Reading files. No Bash `find`/`grep` for discovery — `rg` only.
-{{if eq .Mode "edit"}}
-- Run `go build ./...` after all edits. If zero edits, summary must say "No changes needed".
-{{end}}
+- Edit mode: run `go build ./...` after all edits; if zero edits, the summary must say "No changes needed".
 
-{{include "hard-rules/efficiency.md"}}
+EFFICIENCY: batch all Edits for a file in its own iteration; emit the report the iteration AFTER the last file is Read; if the iteration cap forces an early stop, report anyway with a `## Coverage Shortfall` list.
 
-COVERAGE IS MANDATORY — full coverage, no sampling. Read EVERY non-test, non-vendor, non-generated `.go` file exactly once. The Large-tier "sample" guidance from efficiency.md does NOT apply to this agent.
+COVERAGE IS MANDATORY — full coverage, no sampling. Read EVERY non-test, non-vendor, non-generated `.go` file exactly once; large-codebase "sample remaining files" guidance does NOT apply to this agent.

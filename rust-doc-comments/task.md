@@ -1,8 +1,11 @@
-{{if eq .Mode "edit"}}
-Add and improve doc comments on all public declarations in this Rust codebase.
+Add and improve doc comments on all public declarations in this Rust
+codebase. Default: apply fixes in place. If the request says
+"readonly"/"report only": identify missing or deficient doc comments,
+produce a prioritized report, and do NOT write or modify any files.
 
 Start by using Glob with '**/*.rs' to discover all Rust source files.
-Read each file (skip target/). Apply fixes via Edit tool, highest priority first.
+Read each file (skip target/). In edit mode apply fixes via Edit tool,
+highest priority first.
 
 IMPORTANT CONSTRAINTS:
 
@@ -16,11 +19,3 @@ IMPORTANT CONSTRAINTS:
 - Public declarations only -- skip private items
 - Read each file ONCE, catalog findings, then fix
 - After `cargo build` passes, emit report IMMEDIATELY
-{{end}}
-{{if eq .Mode "readonly"}}
-Analyze doc comment quality in this Rust codebase.
-
-Use Glob with '**/*.rs' to discover all Rust source files.
-Read each file and identify missing or deficient doc comments.
-Produce a prioritized report. Do NOT write or modify any files.
-{{end}}
