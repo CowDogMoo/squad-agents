@@ -177,7 +177,7 @@ becomes the user message:
 
 ### Mode Support
 
-Agents use Go `text/template` conditionals to switch behavior:
+Every agent defaults to edit mode and switches to readonly when asked:
 
 ```bash
 # Edit mode (default) — agent fixes issues autonomously
@@ -187,14 +187,12 @@ squad run --agent go-review
 squad run --agent go-review --mode readonly
 ```
 
-```markdown
-{{if eq .Mode "edit"}}
-You are an autonomous agent. Fix issues and verify compilation.
-{{end}}
-{{if eq .Mode "readonly"}}
-You are an analysis agent. Report issues but do NOT modify files.
-{{end}}
-```
+Mode is dispatched at runtime, not render time. Each `system.md` describes
+both modes in prose (edit default; readonly opt-in on phrases like
+"readonly" or "report only"), squad injects a literal `Mode: readonly` line
+into the assembled prompt, and readonly runs additionally reject
+Write/Edit/MultiEdit at the tool layer. In Claude Code, put the keyword in
+the task prompt: `"readonly — review the crate at ..."`.
 
 ### Model Providers
 
@@ -228,6 +226,26 @@ Self-contained one-shot agents use an inline `prompt:` field in `agent.yaml`
 instead. Pipelines replace `entrypoint`/`wrapper` with a `stages:` block.
 The full shape reference is at
 [`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md).
+
+### Claude-Native Format (dual-host)
+
+Every `system.md` in this repo starts with a YAML frontmatter block
+(`name`, `description`, `tools`, `model`) and contains **no Go-template
+syntax**. The same file works in two hosts:
+
+- **squad** detects the frontmatter, strips it (its metadata comes from
+  `agent.yaml`), and delivers the body verbatim — no template rendering.
+- **Claude Code** loads the file directly as a custom agent. Register with
+  a symlink:
+
+  ```bash
+  ln -s "$(pwd)/go-review/system.md" ~/.claude/agents/go-review.md
+  ```
+
+There is no converted copy to drift: edit the file once, both hosts pick it
+up. Authoring rules for the format (mode prose, dual-host reference
+loading, no includes) are in
+[`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md#systemmd-main-prompt).
 
 ### agent.yaml Reference
 

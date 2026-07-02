@@ -10,7 +10,7 @@ so guidance doesn't drift.
 | Topic | Upstream doc |
 |---|---|
 | Four-concept model (Agent / Skill / Task tool / Pipeline) and decision flowcharts | [`squad/docs/agents-and-skills.md`](https://github.com/cowdogmoo/squad/blob/main/docs/agents-and-skills.md) |
-| Agent directory layout, template variables, mode conditionals | [`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md) |
+| Agent directory layout, Claude-native format, mode handling | [`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md) |
 | Composed pipeline manifest reference | [`squad/docs/pipelines.md`](https://github.com/cowdogmoo/squad/blob/main/docs/pipelines.md) |
 | Pipeline engineering depth, artifact handoff, anti-patterns | [`squad/docs/agents-engineering-pipeline-basics.md`](https://github.com/cowdogmoo/squad/blob/main/docs/agents-engineering-pipeline-basics.md) |
 | MCP server configuration and Skills-vs-MCP boundary | [`squad/docs/mcp-servers.md`](https://github.com/cowdogmoo/squad/blob/main/docs/mcp-servers.md) |
@@ -18,7 +18,11 @@ so guidance doesn't drift.
 ## Quick orientation for this repo
 
 - **Leaf agents** (e.g. [`go-review`](../go-review)) — `agent.yaml` +
-  `system.md` + `agent.md` + `task.md`. The standard shape.
+  `system.md` + `agent.md` + `task.md`. The standard shape. Every
+  `system.md` uses the **Claude-native format**: YAML frontmatter + plain
+  markdown, no template syntax. The same file is a valid Claude Code agent
+  (symlink it into `~/.claude/agents/`); squad strips the frontmatter and
+  skips template rendering when it sees the fence.
 - **Pipelines** (e.g. [`go-pipeline`](../go-pipeline),
   [`go-security-audit`](../go-security-audit)) — `agent.yaml` with a
   `stages:` block, `depends_on` ordering, and `gates:` for verification

@@ -88,12 +88,24 @@ gates:
 
 ### system.md
 
-The system prompt defines identity and capabilities:
+The system prompt defines identity and capabilities. It MUST start with a
+YAML frontmatter block and contain no Go-template syntax — this is the
+Claude-native format, which lets the same file drive both squad and Claude
+Code (see the
+[format reference](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md#systemmd-main-prompt)):
 
 ```markdown
+---
+name: my-agent
+description: "What it does. Use proactively when [trigger]. By default it edits in place; say \"readonly\" or \"report only\" for findings without modifications."
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
+model: opus
+---
 # IDENTITY
 
 You are a [role description]. Your mission is to [primary goal].
+By default you run in edit mode; if the caller asks for "readonly" or
+"report only", report findings and change nothing.
 
 # HARD RULES
 
@@ -169,16 +181,22 @@ Emit a markdown report with:
 
 ### Mode Support
 
-Use conditional blocks for mode-specific behavior:
+Describe both modes in prose — no `{{if .Mode}}` template blocks. Edit mode
+is the default; readonly is opt-in on caller phrases. Squad injects a
+`Mode: readonly` line into the prompt under `--mode readonly`, and Claude
+Code callers put the keyword in the task prompt:
 
 ```markdown
-{{if eq .Mode "edit"}}
-Fix issues directly using the Edit tool.
-{{end}}
-{{if eq .Mode "readonly"}}
-Report issues but do NOT modify any files.
-{{end}}
+By default you run in **edit mode**: fix issues directly using the Edit
+tool. If the caller's prompt asks for "readonly", "report only", or "do
+not modify", run in **readonly mode**: report issues and change nothing
+(do NOT use Edit at all).
 ```
+
+Mode-specific rules go in labeled subsections ("Edit-mode rules (the
+default)" / "Readonly-mode rules (opt-in)"); mode-specific report shapes go
+in labeled OUTPUT FORMAT subsections. See any agent in this repo for the
+pattern.
 
 ### Efficiency Rules
 
