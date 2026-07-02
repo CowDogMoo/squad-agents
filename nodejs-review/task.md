@@ -1,10 +1,12 @@
-{{if eq .Mode "edit"}}
-Review and fix all Node.js/TypeScript code quality issues in this codebase.
+Review all Node.js/TypeScript code quality issues in this codebase. Default
+is edit mode: fix them in place. If the request says "readonly", "report
+only", "analysis only", or "do not modify": produce a prioritized report and
+do NOT write or modify any files.
 
-Discover with Glob `**/*.{js,ts,mjs,cjs}`, Read each file (skip `node_modules/`,
-`dist/`, `build/`, `.next/`, test files), cross-reference across modules,
-apply fixes highest severity first, run `npx eslint --max-warnings=0 .` or
-`npx tsc --noEmit` after each batch.
+Discover with Glob `**/*.{js,ts,mjs,cjs}`, Read each file (skip
+`node_modules/`, `dist/`, `build/`, `.next/`, test files), cross-reference
+across modules. In edit mode, apply fixes highest severity first and run
+`npx eslint --max-warnings=0 .` or `npx tsc --noEmit` after each batch.
 
 IMPORTANT CONSTRAINTS:
 
@@ -17,13 +19,3 @@ IMPORTANT CONSTRAINTS:
 - Read each file ONCE; target ≤12 iterations
 - After lint + tests pass, emit report IMMEDIATELY
 - Every file touched must appear in the output report
-{{end}}
-{{if eq .Mode "readonly"}}
-Analyze this Node.js/TypeScript codebase for code quality issues.
-
-Discover with Glob `**/*.{js,ts,mjs,cjs}` (skip `node_modules/`, `dist/`,
-`build/`, test files), Read each file, cross-reference across modules.
-Produce a prioritized report.
-
-Do NOT write or modify any files.
-{{end}}

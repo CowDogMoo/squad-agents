@@ -16,8 +16,8 @@ guidance.
   `it.each` for grouping, not file infixes.
 - **Report coverage delta.** Record starting coverage BEFORE writing tests.
   Omitting delta = failure.
-- **Per-module target: {{.Default "COVERAGE_TARGET" "75"}}%.** Entry point files target 50%. A module
-  at 64% is NOT done.
+- **Per-module target: 75% (unless the caller specifies otherwise).** Entry
+  point files target 50%. A module at 64% is NOT done.
 - **Always analyze gaps.** Identify every file below target. Stopping at 64%
   without trying = failure.
 - **Mock at boundaries.** Use `jest.mock` / `vi.mock` for all external deps.
