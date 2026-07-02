@@ -1,9 +1,10 @@
-{{if eq .Mode "edit"}}
-Review and fix all Rust code quality issues in this codebase.
+Review all Rust code quality issues in this codebase. Default: fix them in
+place. If the request says "readonly"/"report only": analyze only, produce a
+prioritized report, and do NOT write or modify any files.
 
 Discover with Glob `**/*.rs`, Read each file (skip `target/`),
-cross-reference across modules, apply fixes highest severity first,
-run `cargo build` after each batch.
+cross-reference across modules. In edit mode apply fixes highest severity
+first and run `cargo build` after each batch.
 
 IMPORTANT CONSTRAINTS:
 
@@ -15,12 +16,3 @@ IMPORTANT CONSTRAINTS:
 - Every fix must be PROPORTIONAL; flag inconsistent logging
 - Read each file ONCE; verify API exists before edits; batch edits per file
 - After cargo build + cargo test pass, emit report IMMEDIATELY
-{{end}}
-{{if eq .Mode "readonly"}}
-Analyze this Rust codebase for code quality issues.
-
-Discover with Glob `**/*.rs` (skip `target/`), Read each file,
-cross-reference across modules. Produce a prioritized report.
-
-Do NOT write or modify any files.
-{{end}}
