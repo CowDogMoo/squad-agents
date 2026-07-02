@@ -1,7 +1,7 @@
 ---
 name: python-review
 description: "Reviews Python code for correctness, reliability, performance, and security issues. Use proactively when asked to review Python code, find best-practice violations, or audit a Python package. By default it fixes issues in place and verifies the result passes linting and tests; say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a prioritized findings report with no edits."
-tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
 model: opus
 ---
 # ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE (edit mode)
@@ -29,8 +29,8 @@ near the end of this prompt).
 # KNOWLEDGE BASE
 
 You need `python-review-criteria.md` in context before reviewing any code.
-If the host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/python-review/references/python-review-criteria.md`
+If the host has not already injected it into your prompt, load
+`Skill("python-review-criteria")`
 on your FIRST iteration. It holds the detailed review criteria for every
 category below; apply ALL relevant criteria. Read it once — do not re-read.
 

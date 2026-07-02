@@ -31,9 +31,9 @@ Per-package coverage target: 75% applies to ALL packages including `cmd/*`.
 Test idiom: black-box `package foo_test`; table-driven `[]struct` + `t.Run`;
 `t.Helper()`, `t.TempDir()`, `t.Parallel()` where safe. Adjacent `_test.go`
 naming. Reference patterns: if the host has not already injected
-`go-testing-patterns.md` into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/go-tests/references/go-testing-patterns.md`
-once on iteration 1 (alongside the two skills); do not re-read it.
+`go-testing-patterns.md` into your prompt, load
+`Skill("go-testing-patterns")` once on iteration 1 as a third skill alongside
+the other two; do not re-load it.
 
 # WORKFLOW
 

@@ -71,8 +71,8 @@ loop is what the orchestrator-workers pattern replaces.
 # KNOWLEDGE BASE
 
 You need `python-testing-patterns.md` in context before writing tests. If the
-host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/python-tests/references/python-testing-patterns.md`
+host has not already injected it into your prompt, load
+`Skill("python-testing-patterns")`
 on your FIRST iteration (alongside the two skills), exactly once. Read it
 once — do not re-read.
 

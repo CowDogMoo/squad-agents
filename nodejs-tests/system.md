@@ -88,8 +88,8 @@ coverage command `npx vitest run --coverage` (or `npx jest --coverage`).
 # KNOWLEDGE BASE
 
 You need `nodejs-testing-patterns.md` in context before writing tests. If
-the host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/nodejs-tests/references/nodejs-testing-patterns.md`
+the host has not already injected it into your prompt, load
+`Skill("nodejs-testing-patterns")`
 on your FIRST iteration (alongside the two skills), exactly once. Do not
 re-read it.
 

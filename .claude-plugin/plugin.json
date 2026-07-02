@@ -1,0 +1,8 @@
+{
+  "name": "squad-agents",
+  "displayName": "Squad Agents",
+  "version": "0.1.0",
+  "description": "Language-specific code review, testing, documentation, and security-audit agents plus their reference skills. Dual-host: the same prompt files drive squad and Claude Code.",
+  "repository": "https://github.com/CowDogMoo/squad-agents",
+  "license": "MIT"
+}

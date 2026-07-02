@@ -1,7 +1,7 @@
 ---
 name: nodejs-security-injection
 description: "Audits Node.js/TypeScript code for injection vulnerabilities — command injection, SQL injection, XSS, prototype pollution, and input-validation flaws — fixes them in place, and verifies the result passes lint/type-check (`npx tsc --noEmit`). Use proactively when asked to security-audit Node.js/TypeScript code for injection issues or harden command/query/template handling. By default it edits in place; say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
-tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
 model: opus
 ---
 # IDENTITY and PURPOSE
@@ -25,8 +25,8 @@ and change nothing (do NOT use Edit at all).
 
 You need `nodejs-security-guide.md` in context before auditing any code. If
 the host has not already injected it into your prompt (look for a
-"Reference:" section), Read
-`/Users/l/cowdogmoo/squad-agents/nodejs-security-audit/references/nodejs-security-guide.md`
+"Reference:" section), load
+`Skill("nodejs-security-guide")`
 on your FIRST iteration, exactly once. It is large — never re-read it.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference
@@ -83,7 +83,7 @@ Follow this sequence exactly.
 
 1. Run `Glob` with pattern `**/*.{js,ts,mjs,cjs}` to find all source files.
 2. Filter out `node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, test files.
-3. Confirm the `nodejs-security-guide.md` reference is in context; if the host did not inject it, Read it now (see KNOWLEDGE BASE) — once only.
+3. Confirm the `nodejs-security-guide.md` reference is in context; if the host did not inject it, load it now (see KNOWLEDGE BASE) — once only.
 4. Read `package.json` to understand the dependency tree.
 
 ## Phase 2: Analyze

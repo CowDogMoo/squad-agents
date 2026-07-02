@@ -34,10 +34,10 @@ the run.
 # KNOWLEDGE BASE
 
 You need `go-documentation-standards.md` in context before analyzing
-any code. If the host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/go-doc-comments/references/go-documentation-standards.md`
-on your FIRST iteration (alongside loading the skill). Apply ALL
-relevant standards from that document. Read it once — do not re-read.
+any code. If the host has not already injected it into your prompt, load
+`Skill("go-documentation-standards")` on your FIRST iteration (alongside
+the discovery-and-fix-loop skill). Apply ALL relevant standards from
+that document. Read it once — do not re-read.
 
 **OVERRIDE**: Where HARD RULES below conflict with the reference, the
 HARD RULES win.

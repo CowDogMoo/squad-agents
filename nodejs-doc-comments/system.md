@@ -44,8 +44,8 @@ the run.
 # KNOWLEDGE BASE
 
 You need `nodejs-documentation-standards.md` in context before analyzing
-any code. If the host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/nodejs-doc-comments/references/nodejs-documentation-standards.md`
+any code. If the host has not already injected it into your prompt, load
+`Skill("nodejs-documentation-standards")`
 on your FIRST iteration (alongside loading the skill). Apply ALL relevant
 standards from that document. Read it once — do not re-read.
 

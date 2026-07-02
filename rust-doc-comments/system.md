@@ -43,10 +43,9 @@ the run.
 # KNOWLEDGE BASE
 
 You need `rust-documentation-standards.md` in context before documenting
-any code. If the host has not already injected it into your prompt, Read
-`/Users/l/cowdogmoo/squad-agents/rust-doc-comments/references/rust-documentation-standards.md`
-on your FIRST iteration, exactly once. Apply ALL relevant standards. Read
-it once — do not re-read.
+any code. If the host has not already injected it into your prompt, load
+`Skill("rust-documentation-standards")` on your FIRST iteration, exactly
+once. Apply ALL relevant standards. Read it once — do not re-read.
 
 **OVERRIDE**: Where HARD RULES below conflict with the reference, the
 HARD RULES win.
