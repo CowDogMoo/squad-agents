@@ -282,19 +282,32 @@ for dir in "${AGENT_DIRS[@]}"; do
 			error "${label}: missing YAML frontmatter (Claude-native format required)"
 			continue
 		fi
+		# Pure-bash key checks: piping $fm into `grep -q` is unsafe under
+		# `set -o pipefail` — grep exits on the first match, printf can
+		# catch SIGPIPE (141), and the pipeline reports failure for a key
+		# that IS present. Timing-dependent, so it flaked only in CI.
 		fm=$(awk 'NR==1{next} /^---$/{exit} {print}' "$f")
+		fm_name=""
+		while IFS= read -r fm_line; do
+			case "$fm_line" in
+			name:*)
+				fm_name="${fm_line#name:}"
+				fm_name="${fm_name#"${fm_name%%[![:space:]]*}"}"
+				;;
+			esac
+		done <<<"$fm"
 		missing=""
 		for key in name description tools; do
-			if ! printf '%s\n' "$fm" | grep -q "^${key}:"; then
-				missing="${missing} ${key}"
-			fi
+			case $'\n'"${fm}"$'\n' in
+			*$'\n'"${key}:"*) ;;
+			*) missing="${missing} ${key}" ;;
+			esac
 		done
 		if [ -n "$missing" ]; then
 			error "${label} frontmatter: missing key(s):${missing}"
 		else
 			pass "${label} frontmatter: name/description/tools present"
 		fi
-		fm_name=$(printf '%s\n' "$fm" | grep '^name:' | head -1 | sed 's/^name:[[:space:]]*//')
 		if [ "$label" = "system.md" ] && [ -n "$fm_name" ] && [ "$fm_name" != "$agent_name" ]; then
 			error "frontmatter name '${fm_name}' does not match directory '${agent_name}'"
 		fi
