@@ -346,18 +346,52 @@ default task instructions.
 
 ## Skills
 
-Skills live in the sibling
-[squad-skills](https://github.com/cowdogmoo/squad-skills) repository — see
-that repo for the catalog, authoring guide, and the open
-[Agent Skills standard](https://agentskills.io). Agents load skills via
-`Skill("<name>")` calls in their `system.md`. Current wirings:
+Agents load skills via `Skill("<name>")` calls in their `system.md`,
+following the open [Agent Skills standard](https://agentskills.io).
+The skills come from two collections, split by coupling:
 
-- `degpt`, `go-scrub-comments`, `rust-scrub-comments` → `detect-llm-tells`
-- `go-scrub-comments`, `rust-scrub-comments` → `comment-scrub-playbook`
-- `go-doc-comments`, `python-doc-comments`, `rust-doc-comments`,
-  `nodejs-doc-comments` → `doc-comments-discovery-and-fix-loop`
-- `go-tests`, `python-tests`, `rust-tests`, `nodejs-tests` →
-  `score-coverage-and-report-gaps`
+- **[`skills/`](./skills) (this repo)** — reference knowledge bases
+  coupled to exactly one agent (`go-review-criteria`,
+  `ansible-standards`, `rust-testing-patterns`, …), plus the
+  orchestration skills that chain this repo's agents (`go-pipeline`,
+  `rust-pipeline`, `go-security-audit`). Each agent's `references/`
+  entries are symlinks into this directory, so an agent and its
+  reference docs always change in the same commit. Reference skills are
+  not meant for direct invocation; naming follows the agent
+  (`go-review` → `go-review-criteria`).
+- **[squad-skills](https://github.com/cowdogmoo/squad-skills) (sibling
+  repo)** — reusable, host-portable procedures shared across agents and
+  hosts. See that repo for the catalog and authoring guide.
+
+Rule of thumb: a skill that exists for one agent lives in `skills/`
+here; a skill reusable across agents or hosts lives in squad-skills.
+
+### Shared-skill wirings
+
+These agents load squad-skills skills at runtime, so squad-skills must
+be installed alongside this plugin — `squad-agents` declares it as a
+plugin dependency and will not enable without it:
+
+| squad-skills skill | Loaded by |
+|--------------------|-----------|
+| `detect-llm-tells` | degpt, go-scrub-comments, rust-scrub-comments |
+| `comment-scrub-playbook` | go-scrub-comments, rust-scrub-comments |
+| `doc-comments-discovery-and-fix-loop` | go-, python-, rust-, nodejs-doc-comments |
+| `score-coverage-and-report-gaps` | go-, python-, rust-, nodejs-tests |
+| `test-writer-honesty` | go-, python-, rust-, nodejs-tests |
+| `enqueue-coverage-targets-<lang>` | the matching `<lang>-tests` agent |
+
+### Installing in Claude Code
+
+Both collections ship as plugins from the `cowdogmoo` marketplace
+defined in this repo (`.claude-plugin/marketplace.json`). Dependencies
+are not auto-installed, so install both:
+
+```text
+/plugin marketplace add cowdogmoo/squad-agents
+/plugin install squad-skills@cowdogmoo
+/plugin install squad-agents@cowdogmoo
+```
 
 ## Contributing
 
