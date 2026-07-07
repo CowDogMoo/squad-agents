@@ -1,5 +1,6 @@
 {
   "name": "cowdogmoo",
+  "description": "CowDogMoo marketplace: squad agents for code review, testing, documentation, and security audits, plus the shared skills they depend on.",
   "owner": {
     "name": "CowDogMoo"
   },
@@ -8,6 +9,14 @@
       "name": "squad-agents",
       "source": "./",
       "description": "Language-specific code review, testing, documentation, and security-audit agents plus their reference skills."
+    },
+    {
+      "name": "squad-skills",
+      "source": {
+        "source": "github",
+        "repo": "CowDogMoo/squad-skills"
+      },
+      "description": "Model-agnostic, host-portable skills shared across squad agents: comment scrubbing, LLM-tell detection, coverage orchestration, doc-comment discovery loops, and test-writer discipline."
     }
   ]
 }
