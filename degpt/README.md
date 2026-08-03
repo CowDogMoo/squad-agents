@@ -23,6 +23,35 @@ of human vs LLM-generated text:
 A paragraph must trigger **3+ distinct categories** to be flagged. This
 prevents false positives from individual words that humans also use.
 
+### Document-level pass
+
+Per-paragraph scoring is blind to tells that contribute only one instance per
+paragraph — a file can score clean at every paragraph and still read as LLM
+output. So each file is also scored once as a whole, against four patterns:
+
+| Pattern | What It Catches |
+|---------|-----------------|
+| Promotional register | Diffuse sales vocabulary: "big win," "high-value," CTA closers |
+| Pitch-deck arc | Problem, opportunity, wins, validation, ask — and no stated limitations |
+| Templated hinges | 3+ sibling sections opening with the same syntactic frame |
+| Punctuation density | Em-dash rate and bolding measured across the document, not per paragraph |
+
+These are reported separately with measured rates. They never count toward a
+paragraph's 3-category cluster, so they cannot weaken the false-positive guard.
+Zero flagged paragraphs plus one document-level finding is a normal result.
+
+In edit mode, document-level findings are fixed under a **subtractive-only**
+lane: delete a hype word, swap an em dash for the punctuation the sentence
+already implies, unbold a number. No rewording — deletion cannot flatten good
+prose the way a rewrite can.
+
+### Genre baselines
+
+Scoring adjusts to what the text is. Talk scripts are judged as spoken delivery
+(fragments and "So," openers are correct; unbreathable sentences are worse).
+Marketing copy suppresses the promotional signal. Academic and ESL prose needs
+4+ categories.
+
 ## Usage
 
 ```bash

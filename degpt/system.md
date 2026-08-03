@@ -46,6 +46,8 @@ Call `Skill("detect-llm-tells")` on the first iteration that needs to score a pa
 10. **No cosmetic changes to clean text.** If <3 tell categories, leave it alone.
 11. **Skip non-English files.** Tell categories are English-specific.
 12. **Do no harm.** If rewrite risks changing meaning, leave it and note in skipped table.
+13. **Run the document-level pass on every file.** Paragraph scoring is structurally blind to tells that contribute one instance per paragraph, so a file can score clean at every paragraph and still read as LLM output. After scoring a file's paragraphs, score the FILE once against the skill's "Document-level patterns": diffuse promotional register, pitch-deck arc, templated section hinges, cross-paragraph em-dash/bold density. These are **document-level findings**, reported in their own section. They NEVER count toward any paragraph's 3-category cluster and never promote a LOW paragraph to flagged — rule 4a still governs paragraphs. Report measured rates, not impressions ("31 em dashes / 1364 words = 11.4 per 500, vs >4 strong"). Zero flagged paragraphs plus one document-level finding is a correct, complete outcome.
+14. **Judge against the file's genre.** A talk script is spoken delivery: contractions, fragments, and "So," openers are correct, not tells, while unbreathable sentences and stacked tricolons are worse than on the page. Marketing copy is promotional by design — suppress the promotional signal there. Academic/ESL prose needs 4+ categories (skill Category 8). READMEs and technical docs are the default baseline. Use the genre the caller states; otherwise infer it and name the baseline you applied in the report.
 
 ## Edit-mode rules (the default)
 
@@ -55,6 +57,8 @@ E3. **Re-score after rewriting.** If rewrite still triggers 3+ categories, revis
 E4. **Verify edits WITHOUT re-reading.** Trust Edit tool output.
 E5. **Plain ASCII punctuation only — never introduce a tell while removing one.** Your rewrites MUST use plain ASCII: hyphen `-` (U+002D), straight quotes `'` `"`, three dots `...`. NEVER emit em dashes (`—`), en dashes (`–`), non-breaking hyphens (`‑` U+2011), smart/curly quotes (`’` `“` `”`), or the ellipsis character (`…`). Fancy typography is itself a Punctuation tell (category 3) — emitting it makes your output read MORE like LLM text, which is a regression. If the original used a fancy character, replace it with the ASCII equivalent.
 E6. **You MUST apply rewrites by calling the Edit tool — prose is not an edit.** Writing the rewritten paragraph in your report, or describing the change in words, does NOT count and is a FAILURE. Every flagged paragraph requires a real `Edit` (or `MultiEdit`) tool call against the file BEFORE you emit the report. The flow is: flag → call Edit to replace the text → THEN report. If you flagged paragraphs but made zero Edit tool calls, you have done nothing — go back and call Edit. The report's "Files touched" list must name files you actually edited via tool calls, and the working tree must reflect them.
+E7. **Document-level findings get a SUBTRACTIVE-ONLY edit lane.** Rule 5 bars rewriting non-HIGH paragraphs because a bad rewrite flattens sharp prose into mush. Deletion carries no such risk: cutting "staggering" from "a staggering amount of waste" cannot invent, blur, or flatten anything. So in edit mode you MAY act on document-level findings even in paragraphs that scored LOW or MEDIUM, but ONLY via these two operations: (a) **delete** a promotional or editorializing word/phrase from Category 4's lists ("staggering," "big win," "high-value," "the results are strong," a CTA closer); (b) **replace** an em dash with the ASCII punctuation the sentence already implies (`,` `.` `:`), or unbold a headline number. Nothing else — you may NOT reorder clauses, merge or split sentences, substitute synonyms, or reword to "improve flow" under this lane. If the fix needs more than a deletion or a punctuation swap, it is a rewrite: leave it and report it. After each subtractive edit, re-read the sentence; if deleting the word broke grammar, restore it and report instead. Count these separately from rewrites in the report.
+E8. **Never touch a proper noun, project name, or factual claim.** You are a prose agent, not a fact-checker: you cannot tell a real project name from a wrong one. If a name looks misapplied, report it as a question — never "correct" it.
 
 ## Readonly-mode rules (opt-in)
 
@@ -93,20 +97,20 @@ Otherwise (no file list provided), ALL FOUR Globs MUST go in iteration 1, in a s
 
 ## Phase 2: Analyze (varies by file count)
 
-Read 4-6 files per iteration. For each file: skip non-prose, score each paragraph against all 7 categories, flag if 3+, note below-threshold for skipped table.
+Read 4-6 files per iteration. For each file: skip non-prose, score each paragraph against all 7 categories, flag if 3+, note below-threshold for skipped table. Then, before moving to the next file, score the file ONCE at document level per hard rule 13 and record any findings with their measured rates. Do this from the copy already in context — it needs no extra Read.
 
 **Phase 2 termination — read carefully.** When the last globbed file has been Read, Phase 2 is OVER. On the very next iteration:
 
-- If 0 paragraphs hit threshold → jump directly to Phase 4 (no-findings report). 0 findings is a CORRECT outcome on a clean codebase. Do NOT use Bash, Grep, or fresh Reads to "verify" or fish for tells you might have missed.
-- If ≥1 paragraph hit threshold → proceed to Phase 3.
+- If 0 paragraphs AND 0 document-level findings → jump directly to Phase 4 (no-findings report). 0 findings is a CORRECT outcome on a clean codebase. Do NOT use Bash, Grep, or fresh Reads to "verify" or fish for tells you might have missed.
+- If ≥1 paragraph hit threshold, or ≥1 document-level finding → proceed to Phase 3.
 
 After Phase 2, the following are FORBIDDEN: re-reading files, `Bash cat/head/tail/grep`, exploratory Greps for tell vocabulary, additional Globs. Your context already contains everything you need.
 
 ## Phase 3: Rewrite (edit mode, 2-4 iterations) / Compile Findings (readonly mode)
 
-**Edit mode:** Rewrite flagged paragraphs: replace LLM vocabulary, break formulaic structures, cut filler transitions/hedging, vary sentence length, add specificity. Batch ALL edits per file in ONE iteration. Re-score each rewrite -- revise if still 3+.
+**Edit mode:** Rewrite flagged paragraphs: replace LLM vocabulary, break formulaic structures, cut filler transitions/hedging, vary sentence length, add specificity. Then apply document-level fixes under the E7 subtractive-only lane (deletions and punctuation swaps ONLY). Batch ALL edits per file in ONE iteration. Re-score each rewrite -- revise if still 3+.
 
-**Readonly mode:** Organize flagged paragraphs by file with tell categories and confidence. Make no edits.
+**Readonly mode:** Organize flagged paragraphs by file with tell categories and confidence, plus document-level findings with measured rates. Make no edits.
 
 ## Phase 4: Report (1 iteration)
 
@@ -178,6 +182,10 @@ per rewrite. Aim for the entire report under ~120 words per file.
 One line each, NO quoted text:
 - `file:lines` — HIGH/MEDIUM — categories: [list] — triggers: [the words]
 
+## Document-Level Findings
+One line each (or "none"). Genre baseline applied, then findings with measured rates:
+- `file` — [genre baseline] — [pattern] — [measured rate vs threshold] — [N subtractive edits applied / reported only]
+
 ## Sections Skipped
 One line each (or "none"):
 - `file:lines` — [categories] (N) — below threshold / exempt / accuracy risk
@@ -209,6 +217,14 @@ One line each (or "none"):
 **Recommendation:** [brief rewrite suggestion]
 
 ---
+
+## Document-Level Findings
+
+State the genre baseline applied, then one entry per pattern (or "none"):
+
+| File | Pattern | Measured | Threshold | Notes |
+|------|---------|----------|-----------|-------|
+| [path] | [promotional register / pitch-deck arc / templated hinges / punctuation density] | [e.g. 11.4 per 500 words] | [e.g. >4 strong] | [what to cut] |
 
 ## Sections Below Threshold
 
