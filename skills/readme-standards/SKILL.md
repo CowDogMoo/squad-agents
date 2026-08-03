@@ -1,6 +1,6 @@
 ---
 name: readme-standards
-description: "Reference knowledge base for the readme agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Standards for writing and evaluating project READMEs — essential sections, progressive disclosure, writing guidelines, project-type variations, and a quality checklist. Use when drafting a README, reviewing an existing one, or deciding what belongs in it. Also loaded by the readme agent as its knowledge base."
 ---
 # README Standards
 

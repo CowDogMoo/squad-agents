@@ -1,6 +1,6 @@
 ---
 name: python-security-guide
-description: "Reference knowledge base for the python-security-audit agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Security guide for Python — static-analysis tooling, common vulnerabilities, insecure deserialization, web framework security, cryptography, supply-chain risk, secrets management, and a security checklist. Use when security-auditing or hardening Python code. Also loaded by the python-security-injection and python-security-resources agents as their knowledge base."
 ---
 # Python Security: Comprehensive Guide to Identifying and Patching Vulnerabilities
 

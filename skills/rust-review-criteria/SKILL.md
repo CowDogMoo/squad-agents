@@ -1,6 +1,6 @@
 ---
 name: rust-review-criteria
-description: "Reference knowledge base for the rust-review agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Review criteria for Rust — error handling, ownership and borrowing, concurrency, data management, trait design, code structure, API design, performance, module organization, security, and testing. Use when reviewing Rust code for correctness, safety, or best-practice violations. Also loaded by the rust-review agent as its knowledge base."
 ---
 # Rust Review Criteria
 

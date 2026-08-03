@@ -1,5 +1,5 @@
 ---
-name: go-taskfile
+name: taskfile-review
 version: 0.2.0
 description: Autonomous Taskfile review agent that discovers configuration issues, fixes best-practice violations, and verifies the result parses correctly.
 models:
@@ -13,7 +13,7 @@ entrypoint: system.md
 wrapper: agent.md
 references:
   - references/taskfile-best-practices.md
-  - references/go-taskfile-standards.md
+  - references/taskfile-standards.md
 task: task.md
 disable_task: true
 requires:

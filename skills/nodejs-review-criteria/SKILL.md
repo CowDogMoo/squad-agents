@@ -1,6 +1,6 @@
 ---
 name: nodejs-review-criteria
-description: "Reference knowledge base for the nodejs-review agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Review criteria for Node.js and TypeScript — error handling, async patterns, data management, type safety, code structure, API design, performance, and module organization. Use when reviewing JavaScript or TypeScript code for best-practice violations. Also loaded by the nodejs-review agent as its knowledge base."
 ---
 # Node.js / TypeScript Code Review Criteria
 

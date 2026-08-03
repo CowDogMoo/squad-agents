@@ -1,6 +1,6 @@
 ---
 name: go-review-criteria
-description: "Reference knowledge base for the go-review agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Review criteria for Go code — error handling, concurrency patterns, data management, interface and type design, code structure, API design, performance, and package organization. Use when reviewing Go code or auditing a Go package for best-practice violations. Also loaded by the go-review agent as its knowledge base."
 ---
 # Go Code Review Criteria
 

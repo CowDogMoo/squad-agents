@@ -77,7 +77,6 @@ squad run --agent go-pipeline
 | [go-security-audit](./go-security-audit) | Parallel injection + resource vulnerability detection with CWE IDs |
 | [go-cobra](./go-cobra) | Cobra/Viper CLI best practices |
 | [go-doc-comments](./go-doc-comments) | Go Doc Comments spec compliance |
-| [go-taskfile](./go-taskfile) | Taskfile.yaml best practices |
 | [go-tests](./go-tests) | Test coverage analysis and gap filling |
 
 ### Python Agents
@@ -135,6 +134,7 @@ See the [decision guide](https://github.com/cowdogmoo/squad/blob/main/docs/agent
 |-------|-------------|
 | [degpt](./degpt) | Detects and rewrites LLM-generated prose to sound human-written |
 | [readme](./readme) | Analyzes project structure and generates a comprehensive README.md following progressive disclosure best practices |
+| [taskfile-review](./taskfile-review) | go-task Taskfile best practices, security, and maintainability — language-agnostic |
 
 ### Agent Templates
 
@@ -144,7 +144,6 @@ they don't run as-is.
 | Template | Description |
 |----------|-------------|
 | [basic](./_includes/basic) | Minimal three-file agent (system.md + agent.md + task.md) for a review-style workflow |
-| [weekly-planner-template](./_includes/weekly-planner-template) | Google Doc planner → Google Calendar events; takes `PlannerDocId`, `CalendarId`, `AttendeeEmails`, `Timezone` as vars |
 
 ## Usage
 
@@ -356,15 +355,43 @@ The skills come from two collections, split by coupling:
   orchestration skills that chain this repo's agents (`go-pipeline`,
   `rust-pipeline`, `go-security-audit`). Each agent's `references/`
   entries are symlinks into this directory, so an agent and its
-  reference docs always change in the same commit. Reference skills are
-  not meant for direct invocation; naming follows the agent
-  (`go-review` → `go-review-criteria`).
+  reference docs always change in the same commit. Naming follows the
+  agent (`go-review` → `go-review-criteria`). Each one is also a
+  standalone knowledge base a human can call directly — see below.
 - **[squad-skills](https://github.com/cowdogmoo/squad-skills) (sibling
   repo)** — reusable, host-portable procedures shared across agents and
   hosts. See that repo for the catalog and authoring guide.
 
 Rule of thumb: a skill that exists for one agent lives in `skills/`
 here; a skill reusable across agents or hosts lives in squad-skills.
+The split is about **coupling**, not how broad the topic is — "how to
+review Go code" is a universal topic and still belongs here, because
+exactly one agent loads it.
+
+### Calling reference skills directly
+
+Whether a human can invoke a skill is a property of the skill, not of
+which repo holds it. Every skill in `skills/` states what it covers and
+when to reach for it, so any of them can be called on its own. Symlink
+the ones you want into your host's skills directory:
+
+```bash
+# One skill
+ln -s "$PWD/skills/readme-standards" ~/.claude/skills/readme-standards
+
+# Or all of them
+for d in "$PWD"/skills/*/; do
+    ln -sfn "$d" ~/.claude/skills/"$(basename "$d")"
+done
+```
+
+Then `Skill("readme-standards")` works in any project — useful for
+reviewing a README by hand without running the full `readme` agent.
+
+When writing a new reference skill, make the `description` say what the
+skill covers and when to use it. Do not write it as "internal to agent
+X" — that hides the skill from the host's routing, which is what decides
+whether it ever gets loaded at all.
 
 ### Shared-skill wirings
 

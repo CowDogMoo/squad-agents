@@ -1,12 +1,12 @@
 ---
 name: taskfile-best-practices
-description: "Reference knowledge base for the go-taskfile agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Review criteria and anti-patterns for go-task Taskfiles — structure, variable scoping, task design, command execution, dependency ordering, output, and security. Use when auditing or hardening a Taskfile.yaml in any language ecosystem. Also loaded by the taskfile-review agent as its knowledge base."
 ---
 # Taskfile Best Practices
 
 A comprehensive guide to writing effective Taskfile.yaml files following
 community best practices and the Taskfile philosophy. This document serves as
-the knowledge base for the go-taskfile agent.
+the knowledge base for the taskfile-review agent.
 
 ## Table of Contents
 

@@ -1,6 +1,6 @@
 ---
 name: python-documentation-standards
-description: "Reference knowledge base for the python-doc-comments agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Python documentation standards — PEP 257 docstrings, PEP 8 comments, type hints, codetags, linter directives, common mistakes, when to refactor instead of document, and a quality checklist. Use when writing or auditing docstrings on a Python package. Also loaded by the python-doc-comments agent as its knowledge base."
 ---
 # Python Documentation Standards
 

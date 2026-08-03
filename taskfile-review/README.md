@@ -1,7 +1,11 @@
-# Go Taskfile Agent
+# Taskfile Review Agent
 
 Autonomous Taskfile review agent that discovers configuration issues, fixes
 best-practice violations, and verifies the result parses correctly.
+
+Works on any [go-task](https://taskfile.dev) Taskfile regardless of what
+language the project is written in — `go-task` is the tool's name, not a
+constraint on the codebase.
 
 ## Usage
 
@@ -10,7 +14,7 @@ best-practice violations, and verifies the result parses correctly.
 Review and fix all Taskfile issues:
 
 ```bash
-task run:go-taskfile MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_API_KEY"
+task run:taskfile-review MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_API_KEY"
 ```
 
 ### Analyze Mode (readonly)
@@ -18,7 +22,7 @@ task run:go-taskfile MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_API_KEY"
 Analyze without applying fixes:
 
 ```bash
-task run:go-taskfile-analyze MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_API_KEY"
+task run:taskfile-review-analyze MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_API_KEY"
 ```
 
 ## What It Reviews
@@ -45,8 +49,8 @@ task run:go-taskfile-analyze MODEL=gpt-5.2-codex PROVIDER=openai API_KEY="$YOUR_
 
 ## Output
 
-- Fix mode: Applies fixes and produces a report to `/tmp/squad-go-taskfile.txt`
-- Analyze mode: Produces a report to `/tmp/squad-go-taskfile-analysis.txt`
+- Fix mode: Applies fixes and produces a report to `/tmp/squad-taskfile-review.txt`
+- Analyze mode: Produces a report to `/tmp/squad-taskfile-review-analysis.txt`
 
 ## Example
 
@@ -117,4 +121,4 @@ added a precondition to verify the variable is set.
 The agent uses these knowledge bases:
 
 - `references/taskfile-best-practices.md` - Review criteria and anti-patterns
-- `references/go-taskfile-standards.md` - Idiomatic Taskfile patterns
+- `references/taskfile-standards.md` - Idiomatic Taskfile patterns

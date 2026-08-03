@@ -1,6 +1,6 @@
 ---
 name: ansible-molecule-guide
-description: "Reference knowledge base for the ansible-molecule agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Molecule testing for Ansible roles and collections — scenario structure, molecule.yml configuration, converge and verify playbooks, multi-platform matrices, idempotence testing, prepare/cleanup, and side-effect patterns. Use when writing a Molecule scenario or strengthening verify.yml assertions. Also loaded by the ansible-molecule agent as its knowledge base."
 ---
 # Molecule Testing Guide
 

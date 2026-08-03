@@ -1,6 +1,6 @@
 ---
 name: rust-documentation-standards
-description: "Reference knowledge base for the rust-doc-comments agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Rustdoc conventions — doc-comment syntax, documentation by declaration type, special sections, intra-doc links, doc-test attributes, enforcing docs, deprecated items, and a quality checklist. Use when writing or auditing rustdoc comments on a crate. Also loaded by the rust-doc-comments agent as its knowledge base."
 ---
 # Rust Documentation Standards
 
