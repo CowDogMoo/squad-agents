@@ -1,5 +1,5 @@
 ---
-name: go-taskfile
+name: taskfile-review
 description: "Reviews go-task Taskfiles (Taskfile.yaml/.yml) for best-practice, security, and maintainability violations, applies fixes, and verifies the result parses with `task --list`. Use proactively when asked to audit, lint, harden, or clean up a Taskfile, or when reviewing Taskfile changes. By default it edits in place; say \"readonly\" or \"report only\" to get findings without modifications."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
 model: opus
