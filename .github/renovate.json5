@@ -7,7 +7,6 @@
     ':semanticCommits',
     ':enablePreCommit',
     ':automergeDigest',
-    ':automergeBranch',
     'helpers:pinGitHubActionDigests',
   ],
   dependencyDashboardLabels: [
@@ -31,9 +30,10 @@
   },
   packageRules: [
     {
-      description: 'Auto merge GitHub Actions updates',
+      description: 'Auto merge GitHub Actions and pre-commit hook updates',
       matchManagers: [
         'github-actions',
+        'pre-commit',
       ],
       matchDatasources: [
         'github-tags',
@@ -44,7 +44,10 @@
         'patch',
       ],
       automerge: true,
-      automergeType: 'branch',
+      // Branch automerge cannot work here: CI triggers on `pull_request`, so a
+      // bare branch never gets a green check and Renovate always falls back
+      // with "automerge aborted - PR exists".
+      automergeType: 'pr',
     },
   ],
 }
