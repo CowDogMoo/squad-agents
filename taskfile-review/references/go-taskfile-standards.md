@@ -1,1 +1,0 @@
-../../skills/go-taskfile-standards/SKILL.md

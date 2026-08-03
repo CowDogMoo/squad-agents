@@ -1,6 +1,6 @@
 ---
 name: go-testing-patterns
-description: "Reference knowledge base for the go-tests agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Idiomatic Go testing patterns — table-driven tests, subtests, test helpers, mocking strategies, benchmarks, coverage, Cobra CLI testing, and what not to test. Use when writing Go tests or raising coverage on a package. Also loaded by the go-tests agent as its knowledge base."
 ---
 # Go Testing Patterns
 

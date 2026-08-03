@@ -13,7 +13,7 @@ entrypoint: system.md
 wrapper: agent.md
 references:
   - references/taskfile-best-practices.md
-  - references/go-taskfile-standards.md
+  - references/taskfile-standards.md
 task: task.md
 disable_task: true
 requires:

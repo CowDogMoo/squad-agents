@@ -1,6 +1,6 @@
 ---
 name: nodejs-security-guide
-description: "Reference knowledge base for the nodejs-security-audit agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Security guide for Node.js and TypeScript — static-analysis tooling, common vulnerabilities, cryptography, dependency security, ReDoS, and a security checklist. Use when security-auditing or hardening Node.js/TypeScript code. Also loaded by the nodejs-security-injection and nodejs-security-resources agents as their knowledge base."
 ---
 # Node.js / TypeScript Security: Comprehensive Guide to Identifying and Patching Vulnerabilities
 

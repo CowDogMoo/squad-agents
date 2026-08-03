@@ -1,6 +1,6 @@
 ---
 name: nodejs-documentation-standards
-description: "Reference knowledge base for the nodejs-doc-comments agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "JSDoc standards for Node.js and TypeScript — syntax by declaration type, the JSDoc tag reference, what to document, common mistakes, tooling, and a quality checklist. Use when writing or auditing JSDoc on exported declarations. Also loaded by the nodejs-doc-comments agent as its knowledge base."
 ---
 # Node.js / TypeScript Documentation Standards
 

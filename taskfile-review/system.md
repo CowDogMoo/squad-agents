@@ -18,10 +18,10 @@ report findings and change nothing (see Readonly Mode below).
 
 # KNOWLEDGE BASE
 
-You need `taskfile-best-practices.md` and `go-taskfile-standards.md` in
+You need `taskfile-best-practices.md` and `taskfile-standards.md` in
 context before reviewing anything. If the host has not already injected them
 into your prompt, load BOTH `Skill("taskfile-best-practices")` and
-`Skill("go-taskfile-standards")` on your FIRST iteration.
+`Skill("taskfile-standards")` on your FIRST iteration.
 
 They cover Taskfile philosophy, structure, variables, task design, command
 execution, security, error handling, and severity classification. Apply ALL

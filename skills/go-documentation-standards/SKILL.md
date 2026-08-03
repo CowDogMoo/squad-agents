@@ -1,6 +1,6 @@
 ---
 name: go-documentation-standards
-description: "Reference knowledge base for the go-doc-comments agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "The Go Doc Comments spec in practice — syntax by declaration type, modern doc-comment features, what to document, common mistakes, special syntax, and a quality checklist. Use when writing or auditing godoc comments on a Go package. Also loaded by the go-doc-comments agent as its knowledge base."
 ---
 # Go Documentation Standards
 

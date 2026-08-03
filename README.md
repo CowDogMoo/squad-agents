@@ -356,10 +356,8 @@ The skills come from two collections, split by coupling:
   `rust-pipeline`, `go-security-audit`). Each agent's `references/`
   entries are symlinks into this directory, so an agent and its
   reference docs always change in the same commit. Naming follows the
-  agent (`go-review` → `go-review-criteria`). Most are written for their
-  agent and say so in their `description`; a few (`readme-standards`,
-  `taskfile-best-practices`, `go-taskfile-standards`) also stand alone
-  and are worth calling directly — see below.
+  agent (`go-review` → `go-review-criteria`). Each one is also a
+  standalone knowledge base a human can call directly — see below.
 - **[squad-skills](https://github.com/cowdogmoo/squad-skills) (sibling
   repo)** — reusable, host-portable procedures shared across agents and
   hosts. See that repo for the catalog and authoring guide.
@@ -373,16 +371,27 @@ exactly one agent loads it.
 ### Calling reference skills directly
 
 Whether a human can invoke a skill is a property of the skill, not of
-which repo holds it. A reference skill that also stands on its own says
-so in its `description`; symlink it into your host's skills directory to
-make it available outside this repo:
+which repo holds it. Every skill in `skills/` states what it covers and
+when to reach for it, so any of them can be called on its own. Symlink
+the ones you want into your host's skills directory:
 
 ```bash
+# One skill
 ln -s "$PWD/skills/readme-standards" ~/.claude/skills/readme-standards
+
+# Or all of them
+for d in "$PWD"/skills/*/; do
+    ln -sfn "$d" ~/.claude/skills/"$(basename "$d")"
+done
 ```
 
 Then `Skill("readme-standards")` works in any project — useful for
 reviewing a README by hand without running the full `readme` agent.
+
+When writing a new reference skill, make the `description` say what the
+skill covers and when to use it. Do not write it as "internal to agent
+X" — that hides the skill from the host's routing, which is what decides
+whether it ever gets loaded at all.
 
 ### Shared-skill wirings
 

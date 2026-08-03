@@ -1,5 +1,5 @@
 ---
-name: go-taskfile-standards
+name: taskfile-standards
 description: "Idiomatic go-task Taskfile patterns — file naming and structure, style, organization, variables and environment, dependencies, cross-platform compatibility, change detection, and CI/CD integration. Use when writing or restructuring a Taskfile.yaml in any language ecosystem. Also loaded by the taskfile-review agent as its knowledge base."
 ---
 # Idiomatic Go-Task Guide

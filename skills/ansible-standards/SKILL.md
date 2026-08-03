@@ -1,6 +1,6 @@
 ---
 name: ansible-standards
-description: "Reference knowledge base for the ansible-review agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Authoring standards for Ansible collections, roles, and playbooks — naming conventions, task quality, Molecule testing, linting, security best practices, anti-patterns, and a quality checklist. Use when writing new Ansible content or setting repo-wide conventions. Also loaded by the ansible-review agent as its knowledge base."
 ---
 # Ansible Standards
 

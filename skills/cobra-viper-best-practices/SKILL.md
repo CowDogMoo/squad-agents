@@ -1,6 +1,6 @@
 ---
 name: cobra-viper-best-practices
-description: "Reference knowledge base for the go-cobra agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Best practices for Go CLIs built on Cobra and Viper — command design, project structure, flag management, Viper configuration and binding, error handling, testing strategies, shell completions, and anti-patterns. Use when building or auditing a Cobra/Viper CLI. Also loaded by the go-cobra agent as its knowledge base."
 ---
 # Cobra & Viper Best Practices
 

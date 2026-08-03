@@ -1,6 +1,6 @@
 ---
 name: ansible-review-criteria
-description: "Reference knowledge base for the ansible-review agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Review criteria for Ansible playbooks and roles — the Zen of Ansible, YAML formatting, naming conventions, task structure, variables, conditionals, loops, handlers, error handling, idempotency, and role structure. Use when reviewing or refactoring Ansible code. Also loaded by the ansible-review agent as its knowledge base."
 ---
 # Idiomatic Ansible Review Criteria
 

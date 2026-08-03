@@ -121,4 +121,4 @@ added a precondition to verify the variable is set.
 The agent uses these knowledge bases:
 
 - `references/taskfile-best-practices.md` - Review criteria and anti-patterns
-- `references/go-taskfile-standards.md` - Idiomatic Taskfile patterns
+- `references/taskfile-standards.md` - Idiomatic Taskfile patterns

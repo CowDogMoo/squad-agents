@@ -1,6 +1,6 @@
 ---
 name: python-testing-patterns
-description: "Reference knowledge base for the python-tests agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "pytest patterns — parametrized tests, fixtures, exception testing, mocking, async tests, property-based testing with Hypothesis, snapshot testing, markers, and coverage. Use when writing Python tests or raising coverage on a module. Also loaded by the python-tests agent as its knowledge base."
 ---
 # Python Testing Patterns with pytest
 

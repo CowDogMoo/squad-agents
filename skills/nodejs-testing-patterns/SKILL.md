@@ -1,6 +1,6 @@
 ---
 name: nodejs-testing-patterns
-description: "Reference knowledge base for the nodejs-tests agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Jest and Vitest testing patterns — parameterized tests, describe/it organization, helpers and fixtures, mocking strategies, async testing, coverage, and what not to test. Use when writing Node.js or TypeScript tests or raising coverage on a module. Also loaded by the nodejs-tests agent as its knowledge base."
 ---
 # Node.js / TypeScript Testing Patterns
 

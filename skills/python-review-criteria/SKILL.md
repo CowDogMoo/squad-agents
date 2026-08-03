@@ -1,6 +1,6 @@
 ---
 name: python-review-criteria
-description: "Reference knowledge base for the python-review agent. Loaded by that agent on its first iteration when the host has not already injected it; not intended for direct invocation."
+description: "Review criteria for Python — 3.12/3.13 features, formatting, exception handling, type annotations, structural pattern matching, data structures, dataclasses/Pydantic/attrs, function and class design, and async patterns. Use when reviewing Python code for best-practice violations. Also loaded by the python-review agent as its knowledge base."
 ---
 # Python Code Review Criteria
 
