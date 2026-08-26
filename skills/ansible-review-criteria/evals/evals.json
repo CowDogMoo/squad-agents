@@ -1,0 +1,29 @@
+{
+  "skill_name": "ansible-review-criteria",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "review this Ansible task file for best-practice violations: evals/files/review/tasks.yml",
+      "expected_output": "All four planted violations are caught: the unnamed shell package-install task, the status command without changed_when, the templated when clause, and the non-idempotent echo-append.",
+      "files": ["evals/files/review/tasks.yml"],
+      "expectations": [
+        "The first task is flagged on multiple counts: it has no name, it uses shell for a package install where the apt/package module exists, and it does not use an FQCN",
+        "The systemctl is-active status check is corrected with changed_when: false (or explicitly reported as always reporting changed)",
+        "The when: \"{{ enable_tls }}\" clause is corrected to a bare expression without Jinja2 braces (such as enable_tls | bool)",
+        "The echo-append shell task is replaced with, or flagged for, ansible.builtin.lineinfile as the idempotent alternative",
+        "No correct constructs are reported as violations — the lineinfile TLS task's module usage itself is not flagged"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Every run of my Ansible playbook restarts the app service, because I have a restart task right after the template task that writes its config. How do I refactor this so it only restarts when the config actually changed?",
+      "expected_output": "The restart moves into a handler that the template task notifies, so the service restarts only on config change and repeat runs stay quiet.",
+      "files": [],
+      "expectations": [
+        "The solution moves the service restart into a handler and has the template task notify it",
+        "In the resulting design, the service restarts only when the template task reports changed, and a repeat run with an unchanged config triggers no restart",
+        "The handler and notification are shown with FQCN module usage (ansible.builtin.service or equivalent)"
+      ]
+    }
+  ]
+}

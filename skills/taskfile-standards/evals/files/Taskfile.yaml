@@ -1,0 +1,11 @@
+version: "3"
+
+tasks:
+  build:
+    cmds:
+      - go build -ldflags "-X main.version=1.4.2" -o dist/myapp ./cmd/myapp
+
+  release:
+    cmds:
+      - go build -ldflags "-X main.version=1.4.2" -o dist/myapp ./cmd/myapp
+      - tar -czf dist/myapp-1.4.2.tar.gz dist/myapp

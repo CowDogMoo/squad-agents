@@ -1,0 +1,11 @@
+vars:
+  API_KEY: sk-test-abc123secretkey
+
+tasks:
+  build:
+    cmds:
+      - go build -o myapp ./cmd/myapp
+
+  deploy:
+    cmds:
+      - deploy --api-key {{.API_KEY}} --env {{.ENV}}

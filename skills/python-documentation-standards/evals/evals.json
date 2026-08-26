@@ -1,0 +1,32 @@
+{
+  "skill_name": "python-documentation-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit the docstrings and comments in this Python module and fix everything that violates PEP 257 and PEP 8.",
+      "expected_output": "The module is rewritten so every docstring uses triple double quotes with imperative, complete-sentence summaries, the redundant inline comment and commented-out code are removed, and the undocumented public function gains a docstring.",
+      "files": ["evals/files/inventory.py"],
+      "expectations": [
+        "The single-quoted docstring on calc_total is replaced with triple double quotes",
+        "The calc_total summary line is rewritten in imperative mood (not 'Returns...') and ends with a period",
+        "The inline comment restating the tax multiplication is removed",
+        "The apply_discount docstring becomes a properly capitalized complete sentence ending with a period",
+        "The commented-out old_apply code block inside apply_discount is removed",
+        "validate_email has a docstring after the audit"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a Google-style docstring for this function: def fetch_rows(table, keys, timeout=None) -> dict. It fetches rows for the given keys from the table, returns a dict mapping each key to its row data, and raises IOError if the table is unreachable.",
+      "expected_output": "A Google-style docstring in triple double quotes with a one-line imperative summary, an Args section covering all three parameters, a Returns section describing the mapping, and a Raises section documenting IOError.",
+      "files": [],
+      "expectations": [
+        "The docstring is delimited by triple double quotes and begins with a one-line summary that ends with a period",
+        "All three parameters (table, keys, timeout) are documented in an Args section",
+        "The return value is described as a mapping of keys to row data in a Returns section",
+        "IOError is documented in a Raises section",
+        "The summary line uses imperative mood (e.g. 'Fetch...' rather than 'Fetches...')"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+---
+- shell: apt-get install -y nginx
+
+- name: Check nginx status
+  ansible.builtin.command: systemctl is-active nginx
+  register: nginx_status
+
+- name: Enable TLS redirect
+  ansible.builtin.lineinfile:
+    path: /etc/nginx/nginx.conf
+    line: "return 301 https://$host$request_uri;"
+  when: "{{ enable_tls }}"
+
+- name: Append log setting
+  ansible.builtin.shell: echo "log_level=debug" >> /etc/app.conf

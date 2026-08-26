@@ -1,0 +1,32 @@
+{
+  "skill_name": "go-security-audit",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Security-audit evals/files/vulnapp — report only, do not change anything.",
+      "expected_output": "A consolidated severity-grouped report covering both vulnerability classes — the command injection from the injection pass and the hardcoded credential plus MD5 password hashing from the resources pass — with no files modified and the build/test gates reported as skipped.",
+      "files": ["evals/files/vulnapp/go.mod", "evals/files/vulnapp/main.go"],
+      "expectations": [
+        "The command injection in the /trace handler (user-supplied host passed through `sh -c` string concatenation) is reported",
+        "The hardcoded dbPassword credential is reported",
+        "The MD5-based password hashing is reported with a stronger password-hashing algorithm recommended",
+        "No source files are modified",
+        "The build and test verification is reported as skipped because the audit was read-only",
+        "Findings are grouped by severity and reference the file and location of each issue"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Scan and harden evals/files/vulnapp for security vulnerabilities — fix what you find.",
+      "expected_output": "Both vulnerability classes are found and fixed in place — no more shell string concatenation with user input, no MD5 password hashing, no credential embedded in source — and the build and test gates are verified and reported alongside a severity-grouped findings list.",
+      "files": ["evals/files/vulnapp/go.mod", "evals/files/vulnapp/main.go"],
+      "expectations": [
+        "After the audit, the /trace handler no longer passes user input into a shell via `sh -c` string concatenation",
+        "Password hashing no longer uses MD5",
+        "The database password is no longer embedded as a source-code constant",
+        "Both `go build ./...` and `go test ./...` are run against the module after the fixes and their results reported, with the module still building",
+        "The consolidated report lists each finding with a severity and whether a fix was applied"
+      ]
+    }
+  ]
+}

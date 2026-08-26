@@ -1,0 +1,40 @@
+{
+  "skill_name": "nodejs-review-criteria",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review this TypeScript module for best-practice violations and give me a prioritized findings list: evals/files/review/orderService.ts",
+      "expected_output": "A prioritized findings report that catches the SQL injection, the un-awaited promise, the swallowed errors, the unchecked type assertion, and the synchronous I/O in the request path.",
+      "files": ["evals/files/review/orderService.ts"],
+      "expectations": [
+        "The string-interpolated SQL query in getOrder is identified as SQL injection and ranked at the highest severity",
+        "The un-awaited chargePayment call in processOrder is identified as a fire-and-forget promise whose rejection is unhandled",
+        "The empty catch block in processOrder is identified as swallowing errors",
+        "The unchecked 'as Order' assertion on the raw query result is flagged as an unsafe type assertion on external data",
+        "The readFileSync call in readTemplate is identified as blocking synchronous I/O in a request-handling path"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "In a PR I'm reviewing, a teammate calls sendWelcomeEmail(user) inside an async Express handler without await and says it's intentional fire-and-forget. Should I approve it as-is?",
+      "expected_output": "An answer that rejects the bare call, requires a non-empty rejection handler for intentional fire-and-forget, and does not present adding await as the only valid fix.",
+      "files": [],
+      "expectations": [
+        "The answer says the bare un-awaited call is not acceptable as-is because a rejection would be unhandled and can crash the process",
+        "The answer states the call becomes acceptable once it has a non-empty rejection handler (e.g. a .catch that logs the failure)",
+        "The answer acknowledges intentional fire-and-forget with error handling as a legitimate pattern rather than prescribing await as the only fix"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Rank these four review findings from most to least severe for a Node.js service: (a) console.log used where the codebase has a structured logger, (b) an empty catch {} block, (c) a SQL query built with template-string interpolation of user input, (d) a missing JSDoc comment on an exported function.",
+      "expected_output": "A ranking that places SQL interpolation first, the empty catch second, console.log third, and the missing JSDoc last.",
+      "files": [],
+      "expectations": [
+        "SQL string interpolation (c) is ranked the most severe of the four",
+        "The empty catch block (b) is ranked above both the console.log and missing-JSDoc findings",
+        "The missing JSDoc comment (d) is ranked the least severe"
+      ]
+    }
+  ]
+}

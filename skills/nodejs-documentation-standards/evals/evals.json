@@ -1,0 +1,39 @@
+{
+  "skill_name": "nodejs-documentation-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit the JSDoc in evals/files/audit/userService.ts — we're tightening our TypeScript doc standards and I want everything wrong with the existing comments called out.",
+      "expected_output": "A findings report identifying the detached JSDoc block, the redundant brace-wrapped types in a TypeScript file, the no-information summary, and the missing @throws on the JSON-parsing function.",
+      "files": ["evals/files/audit/userService.ts"],
+      "expectations": [
+        "The blank line between the getUserById JSDoc block and its declaration is reported as a defect that detaches the comment from the export",
+        "The {string} and {Promise<User | null>} annotations in @param/@returns are flagged as redundant because the file is TypeScript and the signature is the source of truth",
+        "The 'Gets the user.' summary is flagged as adding no information beyond the function name",
+        "parseUser is flagged for not documenting that it can throw on malformed JSON input (missing @throws)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write JSDoc for the exported declarations in evals/files/write/scheduler.ts.",
+      "expected_output": "JSDoc blocks attached directly to the exports, with the 100 ms minimum interval and retryAfter semantics documented and no brace-wrapped types.",
+      "files": ["evals/files/write/scheduler.ts"],
+      "expectations": [
+        "The documentation for schedule states the 100 ms minimum interval (values below 100 are raised to 100)",
+        "The documentation for RateLimitError explains what the retryAfter property means",
+        "No @param or @returns entry contains a brace-wrapped type annotation, since the file is TypeScript",
+        "Every added JSDoc block sits immediately above its declaration with no intervening blank line"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Quick question on our TypeScript JSDoc conventions: should @param lines include the type in braces like {string}? And do trivial getters and re-exports need JSDoc blocks?",
+      "expected_output": "An answer that says to omit brace types in .ts files and to leave trivial getters and re-exports undocumented.",
+      "files": [],
+      "expectations": [
+        "The answer says to omit type annotations from @param/@returns in .ts files because the TypeScript signature already carries the types",
+        "The answer says trivial getters/setters and re-exports should be left undocumented rather than given blocks that restate the name"
+      ]
+    }
+  ]
+}

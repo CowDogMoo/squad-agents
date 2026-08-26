@@ -1,0 +1,31 @@
+{
+  "skill_name": "golang-security-guide",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Security audit evals/files/audit/server.go and report what you find with severities — report only, don't modify anything.",
+      "expected_output": "A severity-ranked findings report identifying command injection, SQL injection, weak password hashing, a predictable session token, and a hardcoded secret, each with a concrete fix, and the file left untouched.",
+      "files": ["evals/files/audit/server.go"],
+      "expectations": [
+        "Command injection through `sh -c` with the user-supplied host parameter in the ping handler is identified at critical severity",
+        "The string-formatted SQL query in findUser is identified as SQL injection with a parameterized query given as the fix",
+        "MD5 password hashing is flagged with a dedicated password-hashing algorithm (bcrypt, scrypt, or argon2) recommended instead",
+        "The math/rand-based session token is flagged as predictable with crypto/rand given as the fix",
+        "The hardcoded apiKey constant is flagged as a secret embedded in source",
+        "server.go is not modified"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What security scanning should I wire into CI for my Go service, and what does each tool actually catch?",
+      "expected_output": "A CI recommendation covering govulncheck for known vulnerabilities, a static security analyzer such as gosec for insecure code patterns, and race-detector test runs, with the distinct coverage of each explained.",
+      "files": [],
+      "expectations": [
+        "govulncheck is recommended for scanning dependencies and code paths against known vulnerabilities",
+        "A code-level static security analyzer such as gosec is recommended for insecure code patterns",
+        "Running the test suite with the race detector enabled is included",
+        "The answer distinguishes what each recommended tool catches rather than presenting them as interchangeable"
+      ]
+    }
+  ]
+}

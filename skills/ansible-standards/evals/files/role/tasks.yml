@@ -1,0 +1,16 @@
+---
+- name: Install nginx
+  ansible.builtin.package:
+    name: nginx
+    state: latest
+
+- name: Create web user
+  ansible.builtin.user:
+    name: "{{ user }}"
+    password: "{{ admin_password | password_hash('sha512') }}"
+
+- name: Deploy config
+  ansible.builtin.template:
+    src: app.conf.j2
+    dest: /etc/app/app.conf
+    mode: 0644

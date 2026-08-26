@@ -1,0 +1,29 @@
+{
+  "skill_name": "python-testing-patterns",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write pytest tests for this module. Cover the edge cases.",
+      "expected_output": "A passing pytest test file that parametrizes the multi-case classify function, asserts the divide-by-zero ValueError, and documents each test with a one-line docstring.",
+      "files": ["evals/files/calculator.py"],
+      "expectations": [
+        "classify is tested across all three branches (negative, zero, positive) using parametrization rather than copy-pasted test functions",
+        "The divide-by-zero case is tested and asserts that ValueError is raised",
+        "Normal division is tested with at least one asserted result",
+        "Every test function has a one-line docstring stating the behavior it verifies",
+        "All produced tests pass when run with pytest against the fixture module"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My tests fail at collection with ModuleNotFoundError: No module named 'external_package'. I stub sys.modules['external_package'] inside a pytest fixture in conftest.py — why doesn't the stub take effect?",
+      "expected_output": "A diagnosis that fixtures run after test modules are imported at collection time, with the fix of moving the sys.modules stub to module level in conftest.py.",
+      "files": [],
+      "expectations": [
+        "The diagnosis states that pytest imports test files during collection, before any fixture runs, so a stub created inside a fixture is applied too late",
+        "The proposed fix places the sys.modules stub at module level in conftest.py so it executes before test files are imported",
+        "The answer does not suggest skipping the tests or removing the dependency as the primary solution"
+      ]
+    }
+  ]
+}

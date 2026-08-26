@@ -1,0 +1,30 @@
+{
+  "skill_name": "cobra-viper-best-practices",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit this Cobra CLI command file for anti-patterns: evals/files/cli/root.go. List what's wrong and how each should be fixed — don't edit the file.",
+      "expected_output": "A findings list covering the Run-instead-of-RunE error swallowing with os.Exit, the unvalidated args[0] access, the global viper singleton configured in init, and the discarded MarkFlagRequired error, each with its fix.",
+      "files": ["evals/files/cli/root.go"],
+      "expectations": [
+        "The deploy command's Run handler that prints the error and calls os.Exit is flagged, with RunE-style error propagation given as the fix",
+        "The unvalidated args[0] access is flagged as a panic when deploy is invoked with no argument, with a cobra Args validator given as the fix",
+        "Configuring the global viper singleton in init is flagged, with a dedicated viper instance recommended instead",
+        "The discarded MarkFlagRequired return value is flagged",
+        "root.go is not modified"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm starting a new Go CLI called depman built on cobra and viper. How should I lay out the project and wire config so flags, env vars, and a config file all work together sensibly?",
+      "expected_output": "A layout with a minimal main.go, commands under cmd/, business logic in internal/, a dedicated viper instance, RunE-based commands, and the correct precedence of flags over env vars over config file over defaults.",
+      "files": [],
+      "expectations": [
+        "The layout keeps main.go minimal (initialize and execute only), with commands in a cmd/ package and business logic in a separate package such as internal/",
+        "A dedicated viper instance is recommended instead of configuring the global singleton",
+        "The described configuration precedence has flags overriding environment variables, which override the config file, which overrides defaults",
+        "Commands are defined with RunE so errors propagate instead of being printed and exited inside command bodies"
+      ]
+    }
+  ]
+}

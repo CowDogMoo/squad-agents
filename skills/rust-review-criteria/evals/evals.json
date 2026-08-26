@@ -1,0 +1,30 @@
+{
+  "skill_name": "rust-review-criteria",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "review this Rust crate file for best-practice violations and tell me what you find, ordered by severity — report only, don't edit: evals/files/review/lib.rs",
+      "expected_output": "A severity-ordered findings report that catches the unwrap-on-I/O calls, the std::sync::Mutex guard held across an await, the silent as-cast truncation, and the unnecessary String clone, without modifying the file.",
+      "files": ["evals/files/review/lib.rs"],
+      "expectations": [
+        "The unwrap() calls in Config::load on the file read and first-line access are identified as error-handling violations, with fallible propagation (Result plus ? or context) as the fix",
+        "Holding the std::sync::Mutex guard across the .await in refresh is identified as a deadlock risk, with tokio::sync::Mutex or releasing the guard before the await as the fix",
+        "The raw as u16 cast in parse_port is flagged as a silent truncation of external input, with try_into() as the fix",
+        "The name() method returning a cloned String is flagged, with returning &str suggested",
+        "Findings are labeled or ordered by severity, and the unwrap-on-I/O and Mutex-across-await issues rank above the clone issue",
+        "The file itself is not modified"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Quick Rust review question: my crate's tests call .unwrap() all over the place, and in the shutdown path I do `let _ = tx.send(Shutdown)` on a channel. Should I fix those before review, and is unwrap ever OK outside tests?",
+      "expected_output": "Both patterns are correctly identified as acceptable — unwrap in tests and best-effort channel sends are not bugs — while unwrap on fallible operations in library code is identified as a real violation.",
+      "files": [],
+      "expectations": [
+        "The answer concludes that unwrap() in test code is acceptable and does not need fixing",
+        "The answer concludes that `let _ =` on a best-effort channel send is acceptable and not a bug",
+        "The answer distinguishes these from unwrap() on fallible operations in library/production code, which it identifies as a problem, while allowing statically guaranteed cases (such as a constant regex) or expect() with a justifying message"
+      ]
+    }
+  ]
+}
