@@ -1,0 +1,29 @@
+{
+  "skill_name": "rust-documentation-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit and fix the rustdoc comments in evals/files/docs/lib.rs — the crate needs to pass a docs review.",
+      "expected_output": "The file's public items end up with compliant rustdoc: full-sentence summaries, an # Errors section on the Result-returning function, a # Safety section on the unsafe function, and no name-restating comments.",
+      "files": ["evals/files/docs/lib.rs"],
+      "expectations": [
+        "The fragment comment \"the configuration\" on Config is replaced with a complete-sentence summary",
+        "load gains a doc comment with an # Errors section describing when it returns an error",
+        "read_raw gains a # Safety section listing the invariants the caller must uphold (valid, properly sized pointer/length)",
+        "The name-restating \"Creates a new Config.\" comment on new() is either removed or replaced with documentation that adds real information (such as the default timeout value)",
+        "A //! module- or crate-level doc comment is added at the top of the file"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a rustdoc comment for this public function: pub fn parse_config(input: &str) -> Result<Config, ConfigError> — it fails on invalid TOML syntax or when a required field is missing.",
+      "expected_output": "A /// doc comment whose first line is a complete-sentence summary and whose # Errors section documents both failure conditions.",
+      "files": [],
+      "expectations": [
+        "The comment's first line is a complete sentence summarizing what the function does",
+        "An # Errors section documents both failure conditions: invalid TOML syntax and a missing required field",
+        "The comment uses /// syntax placed directly above the declaration with no blank line between them"
+      ]
+    }
+  ]
+}

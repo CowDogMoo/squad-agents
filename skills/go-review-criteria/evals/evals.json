@@ -1,0 +1,30 @@
+{
+  "skill_name": "go-review-criteria",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review evals/files/review/report.go for best-practice violations. Report only with a severity for each finding — do not change the file.",
+      "expected_output": "A prioritized findings report that flags the concatenated SQL query, the unchecked type assertion, and the ignored write-path Close error, while leaving the acceptable deferred body-close alone and keeping the file unmodified.",
+      "files": ["evals/files/review/report.go"],
+      "expectations": [
+        "The string-concatenated SQL query in UserReport is flagged as a SQL injection risk at critical severity",
+        "The unchecked type assertion in Describe is flagged as a panic risk on non-string input",
+        "The ignored f.Close() error in SaveReport is flagged because a failed close after writing can silently lose data",
+        "The deferred `_ = resp.Body.Close()` in FetchStatus is not reported as an ignored-error violation",
+        "Every finding carries a severity level",
+        "report.go is left unmodified"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "A review bot flagged two things in my Go CLI and I'm not sure they're real issues. 1) In this loop:\n\nparts := \"\"\nfor _, s := range []string{cmd, env, region} {\n    parts += s + \" \"\n}\n\nit says to use strings.Builder. 2) It flags `_ = cmd.RegisterFlagCompletionFunc(\"env\", envComplete)` as an ignored error. Review both — are these genuine problems I need to fix?",
+      "expected_output": "Both flags are judged false positives: += is fine for a fixed 3-element loop and the discarded completion-registration error is an accepted pattern, with an explanation of when each would become a real problem.",
+      "files": [],
+      "expectations": [
+        "The += concatenation over the fixed 3-element loop is judged acceptable as-is, with strings.Builder rejected as unnecessary at this size",
+        "The discarded RegisterFlagCompletionFunc error is judged acceptable rather than a defect to fix",
+        "The answer identifies when each pattern would become a genuine problem (concatenation in large or hot loops; ignored errors that can cause data loss or incorrect behavior)"
+      ]
+    }
+  ]
+}

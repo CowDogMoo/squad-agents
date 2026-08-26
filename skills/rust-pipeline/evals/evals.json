@@ -1,0 +1,34 @@
+{
+  "skill_name": "rust-pipeline",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run the Rust quality pipeline on evals/files/demo_crate",
+      "expected_output": "The three subagent stages run sequentially with their gates enforced between them, ending in one consolidated report of per-stage changes and per-gate PASS/FAIL status.",
+      "files": [
+        "evals/files/demo_crate/Cargo.toml",
+        "evals/files/demo_crate/src/lib.rs"
+      ],
+      "expectations": [
+        "The stages run one at a time in the order review, then tests, then doc-comments, with each stage's summary collected before the next stage starts",
+        "The matching gate runs after each stage — clippy with warnings denied after review, the test suite after tests, a build after doc-comments — and no later stage starts after a failed gate",
+        "A single consolidated report ends the run, with one line per stage (what it changed, or skipped/clean) and a PASS/FAIL status for every gate that ran",
+        "Gates and stages that already passed are not re-run"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review, test, and document the Rust crate at evals/files/demo_crate end to end in one pass — heads up, I'm on the main branch and this repo has some unrelated uncommitted changes I haven't dealt with yet.",
+      "expected_output": "The pipeline does not start: the dirty working tree and main-branch state are surfaced and the user is asked how to proceed before any stage runs.",
+      "files": [
+        "evals/files/demo_crate/Cargo.toml",
+        "evals/files/demo_crate/src/lib.rs"
+      ],
+      "expectations": [
+        "No pipeline stage is launched and no files are edited before the user responds",
+        "The response surfaces the unrelated uncommitted changes and/or the main-branch state and asks the user to confirm or resolve it before proceeding",
+        "The working tree under evals/files/demo_crate is left unmodified"
+      ]
+    }
+  ]
+}

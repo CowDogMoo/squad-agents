@@ -1,0 +1,23 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Check nginx config exists
+      stat:
+        path: /etc/nginx/nginx.conf
+      register: nginx_conf
+
+    - name: Check nginx package
+      package:
+        name: nginx
+        state: present
+      check_mode: true
+      register: nginx_pkg
+
+    - name: Assert nginx service is running
+      assert:
+        that:
+          - ansible_facts.services['nginx.service'].state == 'running'

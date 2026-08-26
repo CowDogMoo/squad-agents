@@ -1,0 +1,38 @@
+{
+  "skill_name": "nodejs-testing-patterns",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write Jest tests for evals/files/src/displayName.ts — I want full branch coverage on getUserDisplayName.",
+      "expected_output": "A test file whose cases cover all three branches of getUserDisplayName using a mocked UserService.",
+      "files": ["evals/files/src/displayName.ts"],
+      "expectations": [
+        "A test verifies that a null lookup result produces 'Anonymous'",
+        "A test verifies that preferredName is returned when it is set",
+        "A test verifies the firstName + lastName fallback when preferredName is absent",
+        "The UserService dependency is supplied as a test double (mock/stub), not a real implementation"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have about eight input/expected-output pairs for a slugify() function, plus three inputs that should throw. What's the cleanest way to organize these tests in Vitest?",
+      "expected_output": "A recommendation to consolidate the cases into parameterized tables, with the throwing inputs asserted to throw separately from the success cases.",
+      "files": [],
+      "expectations": [
+        "The recommendation consolidates the repeated cases into a parameterized table (it.each/test.each or equivalent) instead of copy-pasted test blocks",
+        "The inputs that should throw are asserted to throw, organized separately from the success-case table"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm raising coverage on our TypeScript service — should I add tests for a controller method that purely delegates to a service, for our TypeScript interfaces, and for the app.listen() bootstrap in index.ts?",
+      "expected_output": "An answer that advises skipping all three and pointing test effort at code with real branching logic instead.",
+      "files": [],
+      "expectations": [
+        "The answer advises against testing the pure-delegation controller method, directing tests at the underlying service instead",
+        "The answer advises against testing TypeScript type definitions because the compiler already checks them",
+        "The answer advises against testing entry-point wiring such as app.listen()"
+      ]
+    }
+  ]
+}

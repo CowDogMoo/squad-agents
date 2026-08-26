@@ -1,0 +1,28 @@
+{
+  "skill_name": "taskfile-best-practices",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Harden this Taskfile — audit it and fix everything you find.",
+      "expected_output": "A fixed Taskfile with the version field added, the hardcoded secret replaced by an environment-sourced variable, descriptions on every task, preconditions validating required inputs, and hardcoded values moved to variables.",
+      "files": ["evals/files/Taskfile.yaml"],
+      "expectations": [
+        "The missing version field is identified and 'version: \"3\"' is present in the fixed file",
+        "The hardcoded API key is identified as a critical issue and no longer appears as a literal secret; it is sourced from the environment (empty default) or an external secret tool",
+        "Both the build and deploy tasks have a desc after the fix",
+        "The deploy task validates its required inputs (API_KEY and ENV) before running, failing with a clear message when they are missing",
+        "The hardcoded binary name and path in the build command are moved into variables"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My Taskfile has a clean task that runs rm -rf {{.TARGET_DIR}} where TARGET_DIR can be passed on the command line. Is that okay?",
+      "expected_output": "A warning that destructive commands on user-controlled paths are dangerous, with a fix that constrains the deletion target to a controlled variable or validates it first.",
+      "files": [],
+      "expectations": [
+        "The answer identifies user-controlled paths in a destructive rm -rf command as unsafe (e.g. TARGET_DIR could be '..' or '/')",
+        "The recommended fix constrains the deletion to a fixed or validated path (controlled variable, or a precondition that rejects unexpected values) rather than accepting arbitrary command-line input"
+      ]
+    }
+  ]
+}

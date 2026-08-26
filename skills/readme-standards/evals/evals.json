@@ -1,0 +1,41 @@
+{
+  "skill_name": "readme-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review my README at evals/files/review/README.md and tell me what's missing or broken before I publish the repo.",
+      "expected_output": "A critique that flags the placeholder text, the vague installation section, the buried project description, the missing runnable example, and the missing license section.",
+      "files": ["evals/files/review/README.md"],
+      "expectations": [
+        "The 'TODO: Add usage examples' placeholder is flagged as content that must not ship",
+        "The installation section is flagged for being vague ('the standard method') with no concrete commands or versioned prerequisites",
+        "The report notes that what the project does is not stated up front — the only description is buried in the Usage section",
+        "The absence of any runnable example or quick-start command is flagged",
+        "The missing license section is flagged"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Draft a README for my project: a CLI tool called logsift, installed with 'npm install -g logsift', run as 'logsift --field level=error app.log', which filters newline-delimited JSON logs by field values. MIT licensed, requires Node 20+.",
+      "expected_output": "A complete README that answers what/why/how up front, documents installation with prerequisites, shows the real filtering command as a runnable example, and includes an MIT license section.",
+      "files": [],
+      "expectations": [
+        "The opening states what logsift is and does before any installation detail",
+        "Installation includes the 'npm install -g logsift' command and the Node 20+ prerequisite",
+        "A quick-start or usage section demonstrates the provided '--field level=error' filtering command as a runnable example with no placeholder text",
+        "A license section identifying MIT is present"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My library's README is 450 lines — does it need a table of contents, and which sections are actually required vs nice-to-have?",
+      "expected_output": "A yes on the table of contents given the length, plus a required list covering installation, quick start/usage, and license, with the rest presented as conditional.",
+      "files": [],
+      "expectations": [
+        "A table of contents is recommended because the README exceeds the length threshold (~200 lines)",
+        "The required sections named include installation, a quick start or usage example, and license",
+        "Sections such as badges, contributing, and API reference are presented as conditional/recommended rather than required"
+      ]
+    }
+  ]
+}

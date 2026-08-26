@@ -1,0 +1,27 @@
+{
+  "skill_name": "rust-testing-patterns",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write Rust tests for the parse_duration function in evals/files/tests/duration.rs — cover the happy paths for seconds, minutes, and hours, plus the error cases.",
+      "expected_output": "An inline #[cfg(test)] module with independent parameterized cases for the valid inputs and explicit Err-variant assertions for the empty and invalid inputs.",
+      "files": ["evals/files/tests/duration.rs"],
+      "expectations": [
+        "Tests live in a #[cfg(test)] mod tests block that imports the parent module's items",
+        "Valid inputs (such as \"30s\", \"5m\", \"2h\") are covered as independent test cases — one runnable test per case via a parameterized macro or separate functions, not a loop over a Vec of cases inside a single test",
+        "Error cases assert the returned Result is the specific Err variant (ParseError::Empty for \"\" and ParseError::InvalidFormat for a bad unit or non-numeric value), not via #[should_panic] with unwrap",
+        "Test function names describe function and behavior without a test_ prefix"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Is it fine to test my Rust error paths with #[should_panic] plus unwrap()? And should my test functions be named test_parse_valid, test_parse_empty, etc.?",
+      "expected_output": "No on both counts: error paths should assert the Result is the expected Err variant, and the test_ prefix is redundant naming that the guidance replaces with <function>_<behavior>.",
+      "files": [],
+      "expectations": [
+        "The answer advises against #[should_panic] with unwrap() for error-path testing because an unrelated earlier panic makes the test falsely pass, and recommends asserting the Result is Err (matching the error variant) instead",
+        "The answer identifies the test_ prefix as redundant (the #[test] attribute already marks the function) and recommends <function>_<behavior> style names without it"
+      ]
+    }
+  ]
+}

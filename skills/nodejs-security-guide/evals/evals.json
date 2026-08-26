@@ -1,0 +1,38 @@
+{
+  "skill_name": "nodejs-security-guide",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Security-audit this Express route file and list every vulnerability with how to fix it: evals/files/audit/routes.ts",
+      "expected_output": "A findings report covering the command injection, the MD5 password hashing, the predictable Math.random token, and the prototype-pollution merge, each with a concrete remediation.",
+      "files": ["evals/files/audit/routes.ts"],
+      "expectations": [
+        "The exec call concatenating req.query.file is identified as command injection, with a fix that keeps user input out of a shell string (execFile/spawn with an argument array, or an allowlist)",
+        "MD5 hashing of passwords is flagged as broken for password storage, with a dedicated password-hashing algorithm (bcrypt, scrypt, or argon2) as the fix",
+        "The Math.random()-based token is flagged as predictable, with a cryptographically secure source (crypto.randomBytes or equivalent) as the fix",
+        "Object.assign of req.body onto an object is identified as a prototype-pollution risk, fixed by key allowlisting, schema validation that strips unknown keys, or a null-prototype object"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our API validates display names with the regex /^(\\w+\\s?)*$/ and a pentester hung the whole Node process with a single long input. What's happening and how do I harden this?",
+      "expected_output": "A diagnosis of catastrophic regex backtracking (ReDoS) blocking the event loop, with a fix that removes the overlapping quantifier and/or bounds input length.",
+      "files": [],
+      "expectations": [
+        "The hang is attributed to catastrophic backtracking (ReDoS) caused by the nested/overlapping quantifiers in the pattern",
+        "The remediation rewrites the pattern to eliminate the overlapping quantifier and/or validates input length before matching",
+        "The explanation notes that regex evaluation blocks the event loop, which is why one request stalled the entire process"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "What's the right way to generate password-reset tokens and session IDs in Node? We're currently using Math.random().toString(36).",
+      "expected_output": "An answer that rejects Math.random for security tokens and prescribes a CSPRNG such as crypto.randomBytes with adequate entropy.",
+      "files": [],
+      "expectations": [
+        "The answer rejects Math.random() for security-sensitive values because its output is predictable, not cryptographically secure",
+        "The recommended replacement draws from a cryptographically secure source (crypto.randomBytes, crypto.randomUUID, or equivalent) with adequate entropy"
+      ]
+    }
+  ]
+}

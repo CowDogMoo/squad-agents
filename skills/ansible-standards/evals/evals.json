@@ -1,0 +1,29 @@
+{
+  "skill_name": "ansible-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm writing a new Ansible role called webapp — check its defaults and tasks against our authoring standards: evals/files/role/defaults.yml and evals/files/role/tasks.yml",
+      "expected_output": "All five planted standards violations are caught: unprefixed variables, a plaintext secret default, state: latest, a password task without no_log, and an unquoted file mode.",
+      "files": ["evals/files/role/defaults.yml", "evals/files/role/tasks.yml"],
+      "expectations": [
+        "The unprefixed variables (port, user, admin_password) are flagged and role-prefixed names (webapp_port, webapp_user, webapp_admin_password) are applied or prescribed",
+        "The plaintext admin_password default is identified as a secret stored in plain text, with Ansible Vault (or equivalent secret management) as the fix",
+        "state: latest on the nginx package is changed to state: present or a pinned version, or explicitly flagged as non-deterministic",
+        "The user task that sets a password gains no_log: true, or its absence is flagged",
+        "The unquoted mode 0644 is quoted as \"0644\", or flagged for octal-interpretation risk"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Setting up a new Ansible collection acme.webstack for my org — what does galaxy.yml need at a minimum, and how should I handle collection versioning and the minimum Ansible version?",
+      "expected_output": "The required galaxy.yml fields, semantic versioning for the collection, and meta/runtime.yml with requires_ansible for the minimum Ansible version.",
+      "files": [],
+      "expectations": [
+        "The answer lists the required galaxy.yml fields: namespace, name, version, readme, and authors",
+        "Semantic versioning (X.Y.Z) is prescribed for the collection version",
+        "meta/runtime.yml with requires_ansible is given as the mechanism for declaring the minimum Ansible version"
+      ]
+    }
+  ]
+}

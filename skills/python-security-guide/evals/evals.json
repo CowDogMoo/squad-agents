@@ -1,0 +1,30 @@
+{
+  "skill_name": "python-security-guide",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Security-audit this Python module and fix the vulnerabilities you find.",
+      "expected_output": "All six planted vulnerabilities are found and remediated: pickle on untrusted data, unsafe yaml.load, shell command injection, MD5 password hashing, predictable random tokens, and the hardcoded API key.",
+      "files": ["evals/files/webapp.py"],
+      "expectations": [
+        "The session loader no longer deserializes untrusted input with pickle (replaced with a safe format such as JSON, or the risk is flagged as critical with a safe alternative)",
+        "yaml.load is replaced with yaml.safe_load or an explicit SafeLoader",
+        "The ping function no longer interpolates the host into a shell command string (list-argument subprocess and/or input validation is used)",
+        "Password hashing no longer uses MD5; a dedicated password hashing scheme such as bcrypt, argon2, or scrypt is used instead",
+        "The reset token is generated with the secrets module instead of the random module",
+        "The hardcoded API key is removed from source and loaded from the environment or a secrets manager"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Harden my Flask app for production. Right now I have app.secret_key = 'dev' and app.debug = True. What needs to change?",
+      "expected_output": "Guidance to load the secret key from the environment or a secrets manager, disable debug mode in production, and set secure session cookie flags.",
+      "files": [],
+      "expectations": [
+        "The secret key is sourced from an environment variable or secrets manager instead of being hardcoded",
+        "Debug mode is disabled for production",
+        "Session cookie hardening is recommended (Secure and HttpOnly flags, with SameSite as a plus)"
+      ]
+    }
+  ]
+}

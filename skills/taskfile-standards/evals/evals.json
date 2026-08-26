@@ -1,0 +1,30 @@
+{
+  "skill_name": "taskfile-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Restructure this Taskfile to follow idiomatic go-task conventions.",
+      "expected_output": "A restructured Taskfile where the duplicated build command and repeated version string are factored into variables and task reuse, every task has a description, and the file remains a valid version 3 Taskfile.",
+      "files": ["evals/files/Taskfile.yaml"],
+      "expectations": [
+        "The version string 1.4.2 appears only once, defined as a variable, instead of being repeated across commands",
+        "The duplicated go build command is eliminated — release reuses the build task (via deps or a task: call) rather than repeating its command",
+        "The app name and output path are defined as variables rather than hardcoded in each command",
+        "Every task has a desc so it appears in task --list",
+        "The result is valid YAML that keeps version: '3'"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a Taskfile.yaml for a Go project with build, test, and lint tasks. Build should skip when nothing has changed.",
+      "expected_output": "A valid version 3 Taskfile with described build, test, and lint tasks, a default task, and change detection on build via sources and generates.",
+      "files": [],
+      "expectations": [
+        "The file declares version: '3' and is valid YAML",
+        "build, test, and lint tasks all exist and each has a desc",
+        "The build task declares sources and generates (or an equivalent status check) so it is skipped when nothing changed",
+        "A default task is defined so running task with no arguments performs a sensible operation"
+      ]
+    }
+  ]
+}

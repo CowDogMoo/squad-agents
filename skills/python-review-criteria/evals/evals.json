@@ -1,0 +1,40 @@
+{
+  "skill_name": "python-review-criteria",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review this Python module for best-practice violations and tell me what needs fixing, ordered by severity.",
+      "expected_output": "A severity-ordered review that identifies the mutable default argument, the f-string SQL injection, the bare except that swallows errors, and the blocking HTTP call inside an async function, each with a concrete fix.",
+      "files": ["evals/files/user_service.py"],
+      "expectations": [
+        "The mutable default argument on add_item is identified as a defect with a None-default fix",
+        "The f-string SQL query in get_user is identified as a SQL injection risk with parameterized queries as the remediation",
+        "The bare except clause in get_user is identified as a problem (catches SystemExit/KeyboardInterrupt and silently swallows errors)",
+        "The synchronous requests.get call inside the async fetch_profile function is identified as blocking the event loop",
+        "The SQL injection and bare except are ranked at or near the highest severity, above style-level findings"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm reviewing a PR that replaces asyncio.gather(return_exceptions=True) with asyncio.TaskGroup because 'TaskGroup is the modern way'. Should I approve it?",
+      "expected_output": "A recommendation not to approve the swap as-is, explaining that TaskGroup cancels remaining tasks on the first failure while gather(return_exceptions=True) runs every task to completion and returns partial results.",
+      "files": [],
+      "expectations": [
+        "The answer concludes the replacement is a semantic change that should not be approved without further justification",
+        "The answer states that TaskGroup cancels remaining tasks when one fails, so partial results are lost",
+        "The answer states that gather(return_exceptions=True) runs all tasks to completion and returns both results and exceptions, making it the correct choice when partial results are needed"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We just bumped to Python 3.12. Review this signature for outdated typing: def fetch(ids: Optional[List[int]]) -> Union[Dict[str, User], None]",
+      "expected_output": "A modernized signature using built-in generics and union syntax, such as def fetch(ids: list[int] | None) -> dict[str, User] | None.",
+      "files": [],
+      "expectations": [
+        "The typing.List and typing.Dict aliases are replaced with built-in list and dict generics",
+        "Optional and Union are replaced with the | union syntax (e.g. list[int] | None)",
+        "The modernized signature preserves the original semantics (both the parameter and the return remain optional)"
+      ]
+    }
+  ]
+}

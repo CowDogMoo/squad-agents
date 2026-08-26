@@ -1,0 +1,29 @@
+{
+  "skill_name": "ansible-molecule-guide",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "strengthen this verify.yml for my nginx role — right now I don't trust it to actually catch a broken deploy: evals/files/molecule/verify.yml",
+      "expected_output": "A verify.yml where every registered check is followed by a real assertion, the package check fails when nginx is absent, service facts are gathered before the service assertion, and all modules use FQCN.",
+      "files": ["evals/files/molecule/verify.yml"],
+      "expectations": [
+        "The stat check on /etc/nginx/nginx.conf is followed by an assertion on the registered result, so a missing config file now fails verification instead of only being registered",
+        "The check_mode package task gains a failure condition (such as failed_when on its changed result), so an uninstalled nginx package fails verification",
+        "Service facts are gathered (service_facts task, with fact gathering enabled) before the ansible_facts.services assertion, so the service-state check can actually evaluate",
+        "All modules use fully qualified collection names (ansible.builtin.stat, ansible.builtin.package, ansible.builtin.assert)",
+        "Assertions carry meaningful failure messages identifying what broke"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Here's the molecule.yml for my role — it supports both Ubuntu and Rocky Linux. Writing a Molecule scenario for the first time, is anything missing? evals/files/molecule/molecule.yml",
+      "expected_output": "The missing idempotence step and the missing RedHat-family platform are both identified and added, without breaking the existing scenario sequence.",
+      "files": ["evals/files/molecule/molecule.yml"],
+      "expectations": [
+        "The absence of the idempotence step in test_sequence is identified, and it is added between converge and verify",
+        "The single-platform coverage is flagged and a RedHat-family platform (such as Rocky Linux) is added alongside Ubuntu, since the role supports both families",
+        "The existing working steps remain in the sequence with verify still running after converge and instances still destroyed at the end"
+      ]
+    }
+  ]
+}

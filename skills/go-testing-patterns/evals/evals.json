@@ -1,0 +1,33 @@
+{
+  "skill_name": "go-testing-patterns",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write Go tests for the pricing package in evals/files/testing — table-driven please, and make sure the error paths are covered.",
+      "expected_output": "A discount_test.go with a table-driven test run as named subtests covering the success case and both sentinel-error paths via errors.Is, skipping the trivial Name getter, and passing under go test.",
+      "files": [
+        "evals/files/testing/go.mod",
+        "evals/files/testing/discount.go"
+      ],
+      "expectations": [
+        "The produced tests use a table of cases executed as named subtests",
+        "Cases cover a successful discount, the negative-price error, and an out-of-range percent error",
+        "Error cases assert the specific sentinel errors (ErrNegativePrice / ErrBadPercent), not merely that an error is non-nil",
+        "The trivial Name getter gets no dedicated test",
+        "Tests are placed following the _test.go naming convention for the source file and `go test ./...` passes in the module"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "My Cobra CLI tests keep bleeding state between subtests — the second subtest sees output from the first, and args from earlier cases stick around. How should I structure tests for my package-level root command?",
+      "expected_output": "A per-subtest isolation pattern: fresh output buffer each subtest, output/args state restored after every subtest, no t.Parallel on the shared singleton, and assertions on error/output content.",
+      "files": [],
+      "expectations": [
+        "The recommended pattern restores the command's output writers and args after each subtest so the next one starts clean",
+        "Each subtest gets its own fresh output buffer rather than sharing one across cases",
+        "The advice does not add t.Parallel to subtests that share the package-level command",
+        "The shown assertions check expected content of the error or output, not merely that an error occurred"
+      ]
+    }
+  ]
+}

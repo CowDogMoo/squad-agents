@@ -1,0 +1,32 @@
+{
+  "skill_name": "go-documentation-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit the godoc comments in evals/files/docs/cache.go — don't edit anything, just report every doc-comment problem you find.",
+      "expected_output": "A findings report listing the missing package comment, the tautological Cache comment, the comment on Get not starting with the declared name, the blank line separating Set's comment from its declaration, and the undocumented exported Purge method.",
+      "files": ["evals/files/docs/cache.go"],
+      "expectations": [
+        "The missing doc comment on the exported Purge method (non-obvious behavior: removes expired entries and returns a count) is reported",
+        "The comment on Get is flagged because it does not begin with the declared name Get",
+        "The blank line between Set's comment and the Set declaration is flagged as detaching the comment",
+        "The 'Cache is a cache.' comment is flagged as adding no information beyond the identifier",
+        "The absence of a package comment for package cache is reported",
+        "cache.go is not modified"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add proper godoc comments to evals/files/docs/store.go — that file is the whole package.",
+      "expected_output": "store.go gains a package comment plus doc comments on the non-obvious exported declarations, each starting with its declared name and attached with no blank line, while the self-documenting String method is left uncommented and no executable code changes.",
+      "files": ["evals/files/docs/store.go"],
+      "expectations": [
+        "A package comment beginning with 'Package store' sits directly above the package clause",
+        "The exported Store type, Load method, TryLock method, and ErrLocked variable each have a doc comment that begins with its own name and sits immediately above the declaration with no intervening blank line",
+        "Load's doc comment covers its error behavior when the store is locked",
+        "The self-documenting String method is left without a doc comment",
+        "Only comments are added — no executable code lines are changed and the file remains valid, compilable Go"
+      ]
+    }
+  ]
+}
