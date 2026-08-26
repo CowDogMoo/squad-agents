@@ -1,0 +1,54 @@
+---
+name: Validate Skills
+on:
+  merge_group:
+  # No `paths` filter on pull_request: if the summary job is ever made a
+  # required status check on main, a filtered-out workflow never reports,
+  # which would leave non-skill PRs unmergeable. The jobs only scan
+  # skills/, so running on every PR is correct and costs ~30s.
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+    paths:
+      - 'skills/**'
+      - '.github/workflows/validate-skills.yaml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  # The validation logic lives in squad-skills so both repos run the same
+  # checks without a drifting copy. Skills here live under skills/.
+  skills:
+    name: Skills
+    uses: CowDogMoo/squad-skills/.github/workflows/reusable-validate-skills.yaml@main
+    with:
+      skills-dir: skills
+
+  # Named "Skill Validation Summary" (not "Validation Summary") because
+  # validate-agents.yaml already produces a check run with that name.
+  summary:
+    name: Skill Validation Summary
+    runs-on: ubuntu-latest
+    needs: [skills]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          if [ "${{ needs.skills.result }}" != "success" ]; then
+            echo "::error::Skill validation failed (result: ${{ needs.skills.result }})"
+            exit 1
+          fi
+          echo "✓ All skill validations passed"
