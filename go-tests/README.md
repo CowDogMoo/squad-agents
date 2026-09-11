@@ -1,6 +1,6 @@
 # Go Tests Pattern
 
-A comprehensive fabric pattern for generating Go tests following community best practices. This pattern analyzes Go code and creates table-driven tests with proper coverage of normal operation and edge cases.
+A squad agent for generating Go tests following community best practices. This agent analyzes Go code and creates table-driven tests with proper coverage of normal operation and edge cases.
 
 ## Pattern Structure
 
@@ -46,20 +46,19 @@ This pattern helps you:
 
 ## Installation
 
-This pattern is part of the fabric-patterns-hub. Ensure you have fabric installed:
+This agent ships with [squad-agents](https://github.com/cowdogmoo/squad-agents).
+Clone the repository somewhere squad looks for agents (`~/.config/squad/config.yaml`
+lists `agents.local_paths`), then run it by name:
 
 ```bash
-# Install fabric if you haven't already
-pip install fabric-ai
-
-# Add this patterns repository to fabric
-fabric --add-pattern-source /path/to/fabric-patterns-hub/patterns
+gh repo clone cowdogmoo/squad-agents ~/cowdogmoo/squad-agents
+squad run --agent go-tests
 ```
 
-Or use it directly:
+Or point squad at the directory directly:
 
 ```bash
-fabric --pattern /path/to/fabric-patterns-hub/patterns/go-tests
+squad run --agents-dir /path/to/squad-agents --agent go-tests
 ```
 
 ## Usage
@@ -67,13 +66,13 @@ fabric --pattern /path/to/fabric-patterns-hub/patterns/go-tests
 ### Generate Tests for a File
 
 ```bash
-cat myfile.go | fabric --pattern go-tests > myfile_test.go
+squad run --agent go-tests --working-dir .  # reviews myfile.go > myfile_test.go
 ```
 
 ### Generate Tests from Clipboard
 
 ```bash
-pbpaste | fabric --pattern go-tests | pbcopy
+squad run --agent go-tests
 ```
 
 ### Generate Tests for All Files
@@ -82,7 +81,7 @@ pbpaste | fabric --pattern go-tests | pbcopy
 for file in *.go; do
   if [[ "$file" != *_test.go ]]; then
     echo "Generating tests for $file..."
-    cat "$file" | fabric --pattern go-tests > "${file%.go}_test.go"
+    squad run --agent go-tests --working-dir "$(dirname "$file")" > "${file%.go}_test.go"
   fi
 done
 ```
@@ -97,7 +96,7 @@ for file in $(git diff --name-only HEAD~1 | grep '\.go$' | grep -v '_test\.go$')
   test_file="${file%.go}_test.go"
   if [ ! -f "$test_file" ]; then
     echo "Generating tests for $file..."
-    cat "$file" | fabric --pattern go-tests > "$test_file"
+    squad run --agent go-tests --working-dir "$(dirname "$file")" > "$test_file"
   fi
 done
 ```
@@ -289,10 +288,10 @@ Contributions welcome! Submit PRs for new testing patterns or improvements.
 
 ## License
 
-Part of fabric-patterns-hub, follows parent repository license.
+Part of squad-agents, follows parent repository license.
 
 ---
 
 **Version:** 1.0.0
 **Last Updated:** 2026-01-10
-**Maintainer:** fabric-patterns-hub contributors
+**Maintainer:** squad-agents contributors

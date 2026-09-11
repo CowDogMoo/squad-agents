@@ -1,0 +1,20 @@
+---
+name: changelog
+version: 0.1.0
+description: Generates and updates CHANGELOG entries from a repository's own git history, categorizing commits into Keep a Changelog sections and filtering out changes users never see. Emits antsibull-changelog YAML instead when the repo is an Ansible collection.
+models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+entrypoint: system.md
+wrapper: agent.md
+references:
+  - references/changelog-standards.md
+task: task.md
+budget:
+  estimated_iterations: 8
+  scale_factor: commits
+  files_per_iteration: 50
