@@ -353,6 +353,44 @@ def strip_trailing_whitespace(text: str) -> str:
     return "\n".join(line.rstrip() for line in text.split("\n"))
 
 
+CONVENTIONAL_COMMIT_RE = re.compile(
+    r"^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)"
+    r"(\([^)]*\))?!?: \S"
+)
+
+
+def unwrap_bold(line: str) -> str:
+    """Strip a **bold** wrapper that encloses the entire line."""
+    stripped = line.strip()
+    match = re.fullmatch(r"\*\*(.+)\*\*", stripped)
+    return match.group(1).strip() if match else stripped
+
+
+def select_title_index(lines: list[str], header_pattern: re.Pattern) -> int | None:
+    """Pick the index of the title line from the pre-section prefix.
+
+    Models occasionally false-start: emit a wrong title, a self-correction
+    line ("Wait — that's not right..."), then the real title. Both attempts
+    can be conventional-commit formatted, but the self-corrected one is
+    authoritative, so take the LAST conventional-commit line before any
+    section header and let everything above it be discarded. When no line
+    matches (a pattern whose titles aren't conventional commits), fall back
+    to the first non-empty line — the old behavior.
+    """
+    first_nonempty = None
+    last_conventional = None
+    for i, line in enumerate(lines):
+        if header_pattern.match(line):
+            break
+        if not line.strip():
+            continue
+        if first_nonempty is None:
+            first_nonempty = i
+        if CONVENTIONAL_COMMIT_RE.match(unwrap_bold(line)):
+            last_conventional = i
+    return last_conventional if last_conventional is not None else first_nonempty
+
+
 def merge_sections(text: str, section_names: list[str]) -> str:
     """Parse bold section headers, merge duplicates, drop empty sections.
 
@@ -372,16 +410,13 @@ def merge_sections(text: str, section_names: list[str]) -> str:
     sections: dict[str, list[str]] = {name: [] for name in section_names}
     other_lines: list[str] = []
     current_section: str | None = None
-    title_found = False
+
+    title_idx = select_title_index(lines, header_pattern)
+    if title_idx is not None:
+        title = unwrap_bold(lines[title_idx])
+        lines = lines[title_idx + 1 :]
 
     for line in lines:
-        # First non-empty line is the title
-        if not title_found:
-            if line.strip():
-                title = line
-                title_found = True
-            continue
-
         # Check for section header
         match = header_pattern.match(line)
         if match:
