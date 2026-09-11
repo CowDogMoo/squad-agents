@@ -136,6 +136,26 @@ See the [decision guide](https://github.com/cowdogmoo/squad/blob/main/docs/agent
 | [readme](./readme) | Analyzes project structure and generates a comprehensive README.md following progressive disclosure best practices |
 | [taskfile-review](./taskfile-review) | go-task Taskfile best practices, security, and maintainability — language-agnostic |
 
+### Git Text Agents
+
+Pure stdin-to-stdout transforms for the git workflow. Each directory also carries
+a `filter.sh` that post-processes the model output through the shared
+[`scripts/filter.py`](./scripts/filter.py) (fence stripping, section merging,
+required PR headings, attribution-trailer removal). The `squad_gen` helper in
+[dotfiles](https://github.com/l50/dotfiles) drives them; by hand:
+
+```bash
+git diff --staged \
+  | squad run --provider claude-code --system "$(awk 'NR==1&&/^---$/{s=1;next} s&&/^---$/{s=0;next} !s' commit/system.md)" \
+  | commit/filter.sh
+```
+
+| Agent | Description |
+|-------|-------------|
+| [commit](./commit) | Conventional Commits message from a staged diff |
+| [pr](./pr) | PR title and description from a branch diff, honoring required PR template headings |
+| [branch](./branch) | Idiomatic git branch name from a description, ticket, or diff |
+
 ### Agent Templates
 
 Starter templates under [`_includes/`](./_includes/) — copy and customize,
