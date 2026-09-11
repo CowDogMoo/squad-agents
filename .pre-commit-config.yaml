@@ -47,7 +47,7 @@ repos:
         args: ["--fix", "--config", ".hooks/linters/markdownlint.json"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.2
+    rev: v0.16.7
     hooks:
       - id: ruff
         args: [--fix]
