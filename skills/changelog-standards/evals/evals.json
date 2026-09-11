@@ -1,0 +1,41 @@
+{
+  "skill_name": "changelog-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Review the changelog at evals/files/review/CHANGELOG.md and tell me what to fix before I cut the release.",
+      "expected_output": "A critique that flags the vague entries, the non-standard category heading, the internal-only changes that should not ship, the unflagged breaking rename, and the missing Unreleased section and date format.",
+      "files": ["evals/files/review/CHANGELOG.md"],
+      "expectations": [
+        "The vague entries 'Fixed bug', 'Various improvements', and 'Updated code' are flagged as too unspecific to tell a user what changed",
+        "The non-standard 'Stuff' and 'Notes' headings are flagged in favor of the six standard categories (Added, Changed, Deprecated, Removed, Fixed, Security)",
+        "Internal-only changes — the parser refactor, the gofmt reformat, the CI runner move, and 'Bumped version' — are identified as changes users cannot observe and should be omitted",
+        "The rename of `Client.Send()` to `Client.Dispatch()` is identified as a breaking change that must be called out and warrants a MAJOR version bump under SemVer, not a 2.1 minor",
+        "The version heading is flagged for not following the `## [X.Y.Z] - YYYY-MM-DD` format"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm releasing a library that adds a --retry flag, fixes a crash on empty input (#412), and removes the deprecated Config.Legacy field. What version number, and how should the changelog entry read?",
+      "expected_output": "A MAJOR bump because a public field was removed, with entries grouped under Added, Fixed, and Removed in that order, each starting with a past-tense verb and citing the issue where known.",
+      "files": [],
+      "expectations": [
+        "A MAJOR version bump is recommended because removing the public `Config.Legacy` field is a backwards-incompatible change",
+        "Entries are grouped under the standard Added, Changed, Deprecated, Removed, Fixed, Security ordering, using only the categories that apply",
+        "Each entry begins with a past-tense verb such as 'Added', 'Fixed', or 'Removed'",
+        "The crash fix cites its issue reference (#412)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My repo is an Ansible collection with a galaxy.yml and a changelogs/ directory. Does that change how I write the release entry?",
+      "expected_output": "Yes — antsibull-changelog YAML rather than Keep a Changelog markdown, with release_summary as a single string, the other categories as lists, and entries prefixed by the role or module name.",
+      "files": [],
+      "expectations": [
+        "The antsibull-changelog YAML format is identified as the correct output for an Ansible collection, instead of Keep a Changelog markdown",
+        "`release_summary` is described as a single string rather than a list",
+        "The remaining categories are described as lists of strings, with entries prefixed by the role, module, or plugin name"
+      ]
+    }
+  ]
+}

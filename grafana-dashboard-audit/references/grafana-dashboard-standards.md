@@ -1,0 +1,1 @@
+../../skills/grafana-dashboard-standards/SKILL.md

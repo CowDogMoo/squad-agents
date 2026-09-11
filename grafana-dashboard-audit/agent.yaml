@@ -1,0 +1,33 @@
+---
+name: grafana-dashboard-audit
+version: 0.1.0
+description: Audits Grafana dashboard JSON against observability best practices - USE, RED and the Four Golden Signals, visual hierarchy and accessibility, panel selection, query performance, and sprawl control - and reports findings with a maturity rating per dashboard.
+models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+entrypoint: system.md
+wrapper: agent.md
+references:
+  - references/grafana-dashboard-standards.md
+task: task.md
+budget:
+  estimated_iterations: 16
+  scale_factor: files
+  files_per_iteration: 2
+execution:
+  shard_by: file
+  glob:
+    - "**/*dashboard*.json"
+    - "**/dashboards/**/*.json"
+    - "**/provisioning/dashboards/**/*.json"
+  exclude:
+    - "**/node_modules/**"
+    - "**/testdata/**"
+    - "**/.squad/**"
+  shard_batch: 1
+  merge: json
+  max_parallel: 4

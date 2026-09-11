@@ -58,9 +58,15 @@ jobs:
           sudo apt-get install -y libgpgme-dev libbtrfs-dev
 
       - name: Install shell formatting tools
+        env:
+          # Pinned, not @latest: shfmt v3.14.0 raised its minimum to Go 1.26,
+          # so `@latest` started failing against the pinned GO_VERSION with
+          # GOTOOLCHAIN=local. A floating version in CI breaks the build on
+          # someone else's release schedule; renovate can bump this line.
+          SHFMT_VERSION: v3.13.1
         run: |
           # Install shfmt for shell script formatting
-          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          go install "mvdan.cc/sh/v3/cmd/shfmt@${SHFMT_VERSION}"
 
           # Add Go bin directory to PATH
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
