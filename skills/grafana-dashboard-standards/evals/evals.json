@@ -1,0 +1,41 @@
+{
+  "skill_name": "grafana-dashboard-standards",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Audit the dashboard at evals/files/review/dashboard.json and tell me what to fix before I provision it.",
+      "expected_output": "An audit that flags the non-descriptive titles, the hardcoded datasource UID, the high-cardinality and unbounded queries, the wrong panel type for latency, the missing units, and the aggressive refresh against a 90-day window.",
+      "files": ["evals/files/review/dashboard.json"],
+      "expectations": [
+        "The dashboard title 'new dashboard copy 2' and the panel 1 title 'Panel Title' are flagged as non-descriptive, with 'copy 2' called out as a symptom of dashboard sprawl",
+        "The hardcoded datasource UID 'P1809F7CD0C75ACF3' is flagged in favor of a template variable, since no template variables are defined",
+        "Panel 1's query is flagged for high cardinality — grouping by `user_id` and `instance` — and panel 2's `histogram_quantile` is flagged for lacking a rate and an interval",
+        "The piechart in panel 2 is identified as the wrong visualization for latency over time, with a timeseries or heatmap recommended instead",
+        "Panels 1 and 2 are flagged for having no unit configured, and panel 3's 'short' unit is noted as wrong for an error rate",
+        "The 5s refresh against a 90-day time range is flagged as a query-cost problem"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm building a dashboard for a stateless HTTP API. Which observability methodology should drive the panel list, and what belongs on it?",
+      "expected_output": "RED for a request-driven service, giving Rate, Errors and Duration as the core signals, with USE identified as the method for resource-level dashboards instead.",
+      "files": [],
+      "expectations": [
+        "RED is recommended for a request-driven service, expanded as Rate, Errors, and Duration",
+        "USE (Utilization, Saturation, Errors) is distinguished as the methodology for resource-level dashboards rather than request-driven ones",
+        "The recommended panels cover request rate, error rate or ratio, and a latency distribution rather than a single average"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We have about 200 dashboards, most of them duplicated per environment, with no naming convention. Where does that put us on the maturity model and what is the next step?",
+      "expected_output": "Low maturity — dashboard sprawl — with the next step being template variables to collapse the per-environment duplicates plus a naming convention and methodology adoption.",
+      "files": [],
+      "expectations": [
+        "The situation is identified as Low maturity / dashboard sprawl, citing the uncontrolled creation, per-environment duplication, and absent naming conventions",
+        "Template variables are recommended to collapse the per-environment duplicates into a single dashboard",
+        "Moving toward Medium maturity is described as adopting a RED/USE/Golden Signals methodology, a naming convention, and regular cleanup"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "title": "new dashboard copy 2",
+  "uid": "abc123",
+  "refresh": "5s",
+  "time": { "from": "now-90d", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Panel Title",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "P1809F7CD0C75ACF3" },
+      "fieldConfig": { "defaults": {} },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total[5m])) by (pod, instance, path, user_id)" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "latency",
+      "type": "piechart",
+      "datasource": { "type": "prometheus", "uid": "P1809F7CD0C75ACF3" },
+      "targets": [
+        { "expr": "histogram_quantile(0.99, http_request_duration_seconds_bucket)" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "errors",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "P1809F7CD0C75ACF3" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "targets": [{ "expr": "sum(rate(http_requests_total{status=~\"5..\"}[$__rate_interval]))" }]
+    }
+  ]
+}
