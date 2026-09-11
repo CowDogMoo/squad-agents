@@ -33,7 +33,7 @@ jobs:
   # checks without a drifting copy. Skills here live under skills/.
   skills:
     name: Skills
-    uses: CowDogMoo/squad-skills/.github/workflows/reusable-validate-skills.yaml@fe4763ba1b289f8921841a045a19270b206c5830 # main
+    uses: CowDogMoo/squad-skills/.github/workflows/reusable-validate-skills.yaml@10bb754c311837ae074965e0164a793c58287675 # main
     with:
       skills-dir: skills
 
