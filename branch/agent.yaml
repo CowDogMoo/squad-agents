@@ -1,0 +1,22 @@
+---
+name: branch
+version: 0.1.0
+description: Idiomatic git branch name from a description or diff. A pure text transform; the input arrives on stdin (or in the User Message) and the whole response is the generated text, post-processed by filter.sh.
+models:
+  - model: claude-sonnet-4-6
+    provider: anthropic
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+entrypoint: system.md
+wrapper: agent.md
+task: task.md
+# Text transform, not a code-editing run. Shell helpers (squad_gen in dotfiles)
+# inject system.md through `squad run --system` and pipe the result through
+# filter.sh; an agentic `squad run --agent branch` needs --require-actionable=false
+# and --mode readonly because the output is a message, not a diff.
+budget:
+  estimated_iterations: 3
+  scale_factor: files
+  files_per_iteration: 50

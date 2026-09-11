@@ -46,6 +46,15 @@ repos:
       - id: markdownlint
         args: ["--fix", "--config", ".hooks/linters/markdownlint.json"]
 
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.2
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: '^(scripts|tests)/.*\.py$'
+      - id: ruff-format
+        files: '^(scripts|tests)/.*\.py$'
+
   - repo: local
     hooks:
       - id: prettier
@@ -60,3 +69,10 @@ repos:
         language: script
         files: '(^[^._][^/]*/)(agent\.yaml|system\.md|agent\.md|task\.md|.*-system\.md|.*-agent\.md|.*-task\.md)$'
         pass_filenames: true
+
+      - id: pytest
+        name: Run pytest (shared output filter)
+        entry: python3 -m pytest tests/ -x -q
+        language: system
+        files: '^(scripts|tests)/.*\.py$'
+        pass_filenames: false
