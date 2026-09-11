@@ -1,6 +1,6 @@
 # Go Review Pattern
 
-A comprehensive fabric pattern for reviewing Go code against industry best practices and idiomatic patterns. This pattern analyzes Go code and provides constructive, actionable feedback with severity-based findings.
+A squad agent for reviewing Go code against industry best practices and idiomatic patterns. This agent analyzes Go code and provides constructive, actionable feedback with severity-based findings.
 
 ## Pattern Structure
 
@@ -53,20 +53,19 @@ This pattern helps you:
 
 ## Installation
 
-This pattern is part of the fabric-patterns-hub. Ensure you have fabric installed:
+This agent ships with [squad-agents](https://github.com/cowdogmoo/squad-agents).
+Clone the repository somewhere squad looks for agents (`~/.config/squad/config.yaml`
+lists `agents.local_paths`), then run it by name:
 
 ```bash
-# Install fabric if you haven't already
-pip install fabric-ai
-
-# Add this patterns repository to fabric
-fabric --add-pattern-source /path/to/fabric-patterns-hub/patterns
+gh repo clone cowdogmoo/squad-agents ~/cowdogmoo/squad-agents
+squad run --agent go-review
 ```
 
-Or use it directly by pointing to the pattern directory:
+Or point squad at the directory directly:
 
 ```bash
-fabric --pattern /path/to/fabric-patterns-hub/patterns/go-review
+squad run --agents-dir /path/to/squad-agents --agent go-review
 ```
 
 ## Usage
@@ -76,7 +75,7 @@ fabric --pattern /path/to/fabric-patterns-hub/patterns/go-review
 Review a single Go file:
 
 ```bash
-cat myfile.go | fabric --pattern go-review > review.md
+squad run --agent go-review --working-dir .  # reviews myfile.go > review.md
 ```
 
 ### Review from Clipboard
@@ -84,7 +83,7 @@ cat myfile.go | fabric --pattern go-review > review.md
 Review code from clipboard (macOS):
 
 ```bash
-pbpaste | fabric --pattern go-review
+squad run --agent go-review
 ```
 
 ### Review Pull Request Changes
@@ -94,7 +93,7 @@ Review changed files in a PR:
 ```bash
 git diff main...HEAD --name-only | grep '\.go$' | while read file; do
   echo "## Review: $file"
-  cat "$file" | fabric --pattern go-review
+  squad run --agent go-review --working-dir "$(dirname "$file")"
   echo ""
 done > pr-review.md
 ```
@@ -110,7 +109,7 @@ Use as a pre-commit hook for code review:
 staged_files=$(git diff --cached --name-only | grep '\.go$')
 if [ -n "$staged_files" ]; then
   for file in $staged_files; do
-    review=$(cat "$file" | fabric --pattern go-review)
+    review=$(squad run --agent go-review --working-dir "$(dirname "$file")")
     if echo "$review" | grep -q "CRITICAL"; then
       echo "Critical issues found in $file:"
       echo "$review" | grep -A 10 "CRITICAL"
@@ -130,7 +129,7 @@ Use in your CI pipeline:
 
 for file in $(git diff --name-only HEAD~1 | grep '\.go$'); do
   echo "Reviewing $file..."
-  REVIEW=$(cat "$file" | fabric --pattern go-review)
+  REVIEW=$(squad run --agent go-review --working-dir "$(dirname "$file")")
 
   if echo "$REVIEW" | grep -q "## Critical Issues"; then
     echo "Critical issues found in $file!"
@@ -310,7 +309,7 @@ Edit the `# OUTPUT FORMAT` section in `system.md` to customize the report struct
 **Solution:** Focus on critical and high severity issues first:
 
 ```bash
-cat myfile.go | fabric --pattern go-review | grep -A 20 "## Critical Issues"
+squad run --agent go-review --working-dir .  # reviews myfile.go | grep -A 20 "## Critical Issues"
 ```
 
 ### Issue: Missing context in review
@@ -346,10 +345,10 @@ Contributions are welcome! If you have ideas for improving review criteria or ad
 
 ## License
 
-This pattern is part of the fabric-patterns-hub and follows the same license as the parent repository.
+This agent is part of squad-agents and follows the same license as the parent repository.
 
 ---
 
 **Version:** 1.0.0
 **Last Updated:** 2026-01-10
-**Maintainer:** fabric-patterns-hub contributors
+**Maintainer:** squad-agents contributors
