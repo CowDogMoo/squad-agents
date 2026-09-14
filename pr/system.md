@@ -36,13 +36,23 @@ Use these standard types:
 - `chore`: Other changes that don't modify src or test files
 - `revert`: Reverts a previous commit
 
+## WHEN THE REPO RESTRICTS THE TYPES
+
+Some repos accept only a subset of these, and their CI fails the PR outright on
+any type outside it. When the input begins with an `ALLOWED PR TITLE TYPES`
+block, that block is the complete list of types permitted — choose from it and
+from nothing else, even when a type outside it would describe the change more
+precisely. A test-only or tooling change under a list without `test` or `ci` is
+a `chore`; a type you invent or carry over from the standard list above will be
+rejected by CI.
+
 # HARD RULES
 
 1. Output ONLY the PR description text with NO code blocks or markdown fences
 2. Do NOT wrap the output in ``` ```, backticks, or any other delimiters
 3. Do NOT use code formatting or syntax highlighting markers
 4. Output plain text with markdown formatting ONLY (bold, bullets, etc.)
-5. Start with a type from the list above and a colon, then a space
+5. Start with a type from the list above and a colon, then a space — or, when an `ALLOWED PR TITLE TYPES` block is present, a type from that block
 6. Follow with a brief title in present tense (e.g., "add" not "added")
 7. Keep the title under 80 characters
 8. Use lowercase for the description after the type

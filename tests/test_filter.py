@@ -7,6 +7,7 @@ from typing import ClassVar
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from filter import (
+    coerce_title_type,
     collapse_blank_lines,
     drop_empty_bold_sections,
     drop_empty_heading_sections,
@@ -840,3 +841,60 @@ class TestRequiredHeadings:
         )
         # merge_sections would have relocated "Added" past the disclosure heading.
         assert result.index("- an addition") < result.index("## AI / LLM Assistance")
+
+
+class TestCoerceTitleType:
+    """A type outside the repo's allowed list fails its PR-title check outright."""
+
+    ALLOWED: ClassVar[list[str]] = ["feat", "fix", "docs", "chore", "dev"]
+
+    def test_allowed_type_is_left_alone(self):
+        text = "feat: add a cook time badge\n\n**Key Changes:**"
+        assert coerce_title_type(text, self.ALLOWED) == text
+
+    def test_test_type_becomes_chore(self):
+        text = "test: scope the fixture to the module"
+        assert coerce_title_type(text, self.ALLOWED) == "chore: scope the fixture to the module"
+
+    def test_refactor_and_ci_become_chore(self):
+        assert coerce_title_type("refactor: rename a helper", self.ALLOWED).startswith("chore:")
+        assert coerce_title_type("ci: bump the runner", self.ALLOWED).startswith("chore:")
+
+    def test_revert_becomes_fix(self):
+        assert coerce_title_type("revert: undo the badge", self.ALLOWED).startswith("fix:")
+
+    def test_scope_and_bang_survive(self):
+        out = coerce_title_type("test(api)!: drop a fixture", self.ALLOWED)
+        assert out == "chore(api)!: drop a fixture"
+
+    def test_body_is_untouched(self):
+        text = "test: scope the fixture\n\n**Key Changes:**\n\n- test: still a bullet"
+        out = coerce_title_type(text, self.ALLOWED)
+        assert out.split("\n")[0] == "chore: scope the fixture"
+        assert "- test: still a bullet" in out
+
+    def test_falls_back_to_first_allowed_when_chore_is_not_offered(self):
+        assert coerce_title_type("test: something", ["feat", "fix"]).startswith("feat:")
+
+    def test_no_allowed_list_is_a_no_op(self):
+        text = "test: scope the fixture"
+        assert coerce_title_type(text, []) == text
+
+    def test_untyped_title_is_left_alone(self):
+        text = "scope the fixture to the module"
+        assert coerce_title_type(text, self.ALLOWED) == text
+
+    def test_filter_text_applies_the_coercion(self):
+        out = filter_text(
+            "test: scope the fixture to the module\n\n**Key Changes:**\n\n- one thing\n",
+            blank_after_title=False,
+            allowed_types=self.ALLOWED,
+        )
+        assert out.split("\n")[0] == "chore: scope the fixture to the module"
+
+    def test_filter_text_without_allowed_types_keeps_the_type(self):
+        out = filter_text(
+            "test: scope the fixture to the module\n\n**Key Changes:**\n\n- one thing\n",
+            blank_after_title=False,
+        )
+        assert out.split("\n")[0] == "test: scope the fixture to the module"
