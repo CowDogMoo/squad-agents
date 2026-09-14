@@ -453,12 +453,60 @@ def merge_sections(text: str, section_names: list[str]) -> str:
     return "\n".join(parts)
 
 
+# A type outside the repo's list fails its PR-title check outright, so anything
+# not on the list is mapped to the nearest type that is. `chore` is the usual
+# home for the housekeeping types (test, ci, build, style, refactor, perf);
+# `revert` reads closest to `fix`.
+_TYPE_FALLBACKS = {
+    "test": ("chore", "dev"),
+    "ci": ("chore", "dev"),
+    "build": ("chore", "dev"),
+    "style": ("chore", "dev"),
+    "refactor": ("chore", "dev"),
+    "perf": ("chore", "fix"),
+    "revert": ("fix", "chore"),
+    "docs": ("docs", "chore"),
+}
+
+_TITLE_TYPE_RE = re.compile(r"^(?P<type>[a-z]+)(?P<scope>\([^)]*\))?(?P<bang>!?):\s*(?P<rest>.*)$")
+
+
+def coerce_title_type(text: str, allowed_types: list[str]) -> str:
+    """Rewrite the title's conventional-commit type to one the repo accepts.
+
+    The model is told which types are allowed, but a test-only diff pulls hard
+    toward `test:` whatever the prompt says. This is the deterministic backstop:
+    the generated title keeps its scope, its `!` and its wording, and only the
+    type word changes.
+    """
+    if not allowed_types or not text:
+        return text
+
+    lines = text.split("\n")
+    match = _TITLE_TYPE_RE.match(lines[0].strip())
+    if not match or match.group("type") in allowed_types:
+        return text
+
+    for candidate in _TYPE_FALLBACKS.get(match.group("type"), ()):
+        if candidate in allowed_types:
+            replacement = candidate
+            break
+    else:
+        replacement = "chore" if "chore" in allowed_types else allowed_types[0]
+
+    lines[0] = (
+        f"{replacement}{match.group('scope') or ''}{match.group('bang')}: {match.group('rest')}"
+    )
+    return "\n".join(lines)
+
+
 def filter_text(
     text: str,
     section_names: list[str] | None = None,
     max_blanks: int = 1,
     blank_after_title: bool = True,
     required_headings: list[str] | None = None,
+    allowed_types: list[str] | None = None,
 ) -> str:
     """Apply all filter steps to the input text."""
     text = strip_wrapping_fences(text)
@@ -485,6 +533,8 @@ def filter_text(
     text = collapse_blank_lines(text, max_blanks)
     text = strip_leading_trailing_blanks(text)
     text = strip_trailing_whitespace(text)
+    if allowed_types:
+        text = coerce_title_type(text, allowed_types)
     return text
 
 
@@ -510,6 +560,14 @@ def main():
         "under these headings.",
     )
     parser.add_argument(
+        "--allowed-type",
+        action="append",
+        dest="allowed_types",
+        metavar="TYPE",
+        help="Conventional-commit type the repo's PR title check accepts; repeatable. "
+        "A title whose type is not on the list is rewritten to the nearest one that is.",
+    )
+    parser.add_argument(
         "--no-blank-after-title",
         action="store_true",
         help="Do not insert a blank line between title and body (useful for PR descriptions)",
@@ -530,6 +588,7 @@ def main():
         max_blanks=args.max_blanks,
         blank_after_title=not args.no_blank_after_title,
         required_headings=args.required_headings,
+        allowed_types=args.allowed_types,
     )
     print(result)
 
