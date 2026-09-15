@@ -285,6 +285,31 @@ def normalize_heading(heading: str) -> str:
     return re.sub(r"\s+", " ", heading.strip().lstrip("#").strip()).casefold()
 
 
+def drop_preamble_before_required_heading(text: str, required_headings: Iterable[str]) -> str:
+    """Drop anything between the title and the first required heading.
+
+    The model is handed both the template's headings and the repo's allowed
+    title types, and it sometimes narrates reconciling the two — a line
+    observing that its type is not on the list, then a restated title — before
+    it starts the body. The headings own the body's structure, so whatever sits
+    between the title and the first one is commentary, not content.
+
+    Only applies where a template supplies the headings: a commit body is
+    prose with no heading to anchor on, and would be eaten whole.
+    """
+    wanted = {normalize_heading(h) for h in required_headings if h.strip()}
+    if not wanted:
+        return text
+
+    lines = text.split("\n")
+    for i, line in enumerate(lines[1:], start=1):
+        # Match the heading as a heading, so prose that merely repeats the
+        # words is not mistaken for the start of the body.
+        if line.lstrip().startswith("#") and normalize_heading(line) in wanted:
+            return "\n".join([lines[0], "", *lines[i:]])
+    return text
+
+
 def drop_empty_heading_sections(text: str, keep_headings: Iterable[str] = ()) -> str:
     """Remove markdown heading sections that have no content.
 
@@ -520,6 +545,7 @@ def filter_text(
         # Section merging reorders every named section to the end of the body, which
         # would pull bullets out from under the template headings they belong to, so
         # required headings and section merging are mutually exclusive.
+        text = drop_preamble_before_required_heading(text, required_headings)
         text = drop_empty_bold_sections(text)
         text = drop_empty_heading_sections(text, keep_headings=required_headings)
         text = normalize_section_spacing(text)

@@ -11,6 +11,7 @@ from filter import (
     collapse_blank_lines,
     drop_empty_bold_sections,
     drop_empty_heading_sections,
+    drop_preamble_before_required_heading,
     ensure_blank_after_title,
     filter_text,
     looks_like_api_error,
@@ -841,6 +842,86 @@ class TestRequiredHeadings:
         )
         # merge_sections would have relocated "Added" past the disclosure heading.
         assert result.index("- an addition") < result.index("## AI / LLM Assistance")
+
+
+class TestDropPreambleBeforeRequiredHeading:
+    """Telling the model the allowed types makes it narrate applying them."""
+
+    HEADINGS: ClassVar[list[str]] = [
+        "## What this PR does / why we need it:",
+        "## Which issue(s) this PR fixes:",
+        "## AI / LLM Assistance",
+    ]
+
+    def test_drops_self_correction_and_restated_title(self):
+        # Observed on CowDogMoo/mealie#21: the model opened with an off-list
+        # type, talked itself into an allowed one, and restated the title.
+        text = (
+            "ci: gate the release pipeline\n\n"
+            "Wait - `ci` is not in the allowed list. Correcting to `chore`.\n\n"
+            "chore: gate the release pipeline\n\n"
+            "## What this PR does / why we need it:\n\nIt gates the pipeline.\n"
+        )
+        result = drop_preamble_before_required_heading(text, self.HEADINGS)
+
+        assert result.splitlines()[0] == "ci: gate the release pipeline"
+        assert "allowed list" not in result
+        assert result.count("gate the release pipeline") == 1
+        assert "It gates the pipeline." in result
+
+    def test_leaves_a_body_that_already_starts_at_its_heading(self):
+        text = "feat: add a thing\n\n## What this PR does / why we need it:\n\nBody.\n"
+        assert drop_preamble_before_required_heading(text, self.HEADINGS) == text
+
+    def test_no_required_headings_is_a_no_op(self):
+        # The commit agent passes none: its body is prose with nothing to
+        # anchor on, and would otherwise be eaten whole.
+        text = "fix: stop the parser choking\n\nThe unit name is interpolated.\n"
+        assert drop_preamble_before_required_heading(text, []) == text
+
+    def test_prose_repeating_a_heading_is_not_the_body_start(self):
+        text = (
+            "feat: add a thing\n\n"
+            "What this PR does / why we need it: is answered below.\n\n"
+            "## What this PR does / why we need it:\n\nBody.\n"
+        )
+        result = drop_preamble_before_required_heading(text, self.HEADINGS)
+        assert "is answered below" not in result
+        assert "## What this PR does / why we need it:" in result
+
+    def test_missing_heading_leaves_the_text_alone(self):
+        # Nothing to anchor on means nothing is safe to drop.
+        text = "feat: add a thing\n\nSome preamble.\n\n## Unexpected heading\n\nBody.\n"
+        assert drop_preamble_before_required_heading(text, self.HEADINGS) == text
+
+    def test_filter_text_strips_the_preamble_end_to_end(self):
+        text = (
+            "ci: gate the release pipeline\n\n"
+            "Wait - `ci` is not in the allowed list. Correcting to `chore`.\n\n"
+            "chore: gate the release pipeline\n\n"
+            "## What this PR does / why we need it:\n\nIt gates the pipeline.\n\n"
+            "## AI / LLM Assistance\n\nWritten by an LLM from the diff.\n"
+        )
+        result = filter_text(
+            text, required_headings=self.HEADINGS, allowed_types=["chore", "feat", "fix"]
+        )
+
+        lines = result.splitlines()
+        assert lines[0] == "chore: gate the release pipeline"
+        assert "allowed list" not in result
+        # The body opens on the template, not on a restatement of the title.
+        assert lines[1].strip() == ""
+        assert lines[2] == "## What this PR does / why we need it:"
+
+    def test_commit_prose_body_survives_filter_text(self):
+        text = (
+            "fix: stop the parser choking on a unit named cup ** 2\n\n"
+            "The unit name is interpolated into a format string.\n\n"
+            "**Changed:**\n\n- Escaped the unit name\n"
+        )
+        result = filter_text(text, section_names=["Added", "Changed", "Removed"])
+        assert "The unit name is interpolated into a format string." in result
+        assert "- Escaped the unit name" in result
 
 
 class TestCoerceTitleType:
