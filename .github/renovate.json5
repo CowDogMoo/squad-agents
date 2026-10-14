@@ -1,53 +1,6 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    'config:recommended',
-    ':disableRateLimiting',
-    ':dependencyDashboard',
-    ':semanticCommits',
-    ':enablePreCommit',
-    ':automergeDigest',
-    'helpers:pinGitHubActionDigests',
-  ],
-  dependencyDashboardLabels: [
-    'renovate-dashboard',
-  ],
-  dependencyDashboardTitle: 'Renovate Dashboard',
-  suppressNotifications: [
-    'prIgnoreNotification',
-  ],
-  rebaseWhen: 'conflicted',
-  commitBodyTable: true,
-  labels: [
-    'renovate',
-  ],
-  platformAutomerge: true,
-  'pre-commit': {
-    enabled: true,
-  },
-  'github-actions': {
-    enabled: true,
-  },
-  packageRules: [
-    {
-      description: 'Auto merge GitHub Actions and pre-commit hook updates',
-      matchManagers: [
-        'github-actions',
-        'pre-commit',
-      ],
-      matchDatasources: [
-        'github-tags',
-      ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-        'patch',
-      ],
-      automerge: true,
-      // Branch automerge cannot work here: CI triggers on `pull_request`, so a
-      // bare branch never gets a green check and Renovate always falls back
-      // with "automerge aborted - PR exists".
-      automergeType: 'pr',
-    },
+    'github>CowDogMoo/renovate-config',
   ],
 }
