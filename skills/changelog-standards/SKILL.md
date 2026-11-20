@@ -1,6 +1,6 @@
 ---
 name: changelog-standards
-description: "Standards for writing and evaluating changelogs — Keep a Changelog structure, the six change categories, entry style, semantic versioning and breaking changes, release patterns, and the antsibull-changelog YAML format for Ansible collections. Use when writing a release entry, reviewing a CHANGELOG, or deciding which commits are user-facing. Also loaded by the changelog agent as its knowledge base."
+description: "Changelog standards: Keep a Changelog sections, entry style, semantic versioning and breaking changes, and antsibull-changelog fragments for Ansible collections. Use when writing a release entry, reviewing a CHANGELOG, or deciding which commits are user-facing."
 ---
 # Changelog Standards
 

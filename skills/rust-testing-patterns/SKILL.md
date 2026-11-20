@@ -1,6 +1,6 @@
 ---
 name: rust-testing-patterns
-description: "Rust testing patterns — unit and integration tests, parameterized tests with rstest and test-case, error testing, async tests, mocking, test helpers, filesystem tests, property-based testing, and doc tests. Use when writing Rust tests or raising coverage on a module. Also loaded by the rust-tests agent as its knowledge base."
+description: "Rust testing patterns: unit and integration tests, rstest and test-case, error and async tests, mocking, property tests, and doc tests. Use when writing Rust tests or raising coverage."
 ---
 # Rust Testing Patterns
 

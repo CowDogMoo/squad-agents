@@ -22,7 +22,7 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
   format violations to fix
 - Proportional: simple getter = one line, trivial = NO comment
 - Exported declarations only — skip unexported names
-- Read each file ONCE, catalog all findings, then fix — target ≤15 iterations
+- Read each file ONCE, catalog all findings, then fix
 - Use ONE Grep/Glob on repo root, not per-directory — minimize tool calls
 - After tsc --noEmit passes, emit report IMMEDIATELY — no post-fix exploration
 - Every file touched must appear in the output report

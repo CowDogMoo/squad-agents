@@ -1,6 +1,6 @@
 ---
 name: readme-standards
-description: "Standards for writing and evaluating project READMEs — essential sections, progressive disclosure, writing guidelines, project-type variations, and a quality checklist. Use when drafting a README, reviewing an existing one, or deciding what belongs in it. Also loaded by the readme agent as its knowledge base."
+description: "README standards: essential sections, progressive disclosure, writing style, project-type variations, and a checklist. Use when drafting or reviewing a README or deciding what belongs in it."
 ---
 # README Standards
 

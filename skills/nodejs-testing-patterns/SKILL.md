@@ -1,6 +1,6 @@
 ---
 name: nodejs-testing-patterns
-description: "Jest and Vitest testing patterns — parameterized tests, describe/it organization, helpers and fixtures, mocking strategies, async testing, coverage, and what not to test. Use when writing Node.js or TypeScript tests or raising coverage on a module. Also loaded by the nodejs-tests agent as its knowledge base."
+description: "Jest and Vitest patterns: parameterized tests, describe/it layout, fixtures, mocking, async tests, coverage, and what not to test. Use when writing Node.js or TypeScript tests or raising coverage."
 ---
 # Node.js / TypeScript Testing Patterns
 

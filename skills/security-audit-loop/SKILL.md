@@ -142,10 +142,11 @@ skipped table from Phase 2 notes; do not re-explore.
 
 ## Budget and wind-down
 
-- Batch Read calls and track your iteration count.
-- Read each file once: analyze everything first, then fix.
-- Target 12 iterations or fewer for 20 or fewer files. Finish Phases 1
-  and 2 within 4 iterations.
+- The iteration cap lives in the agent's manifest (`max_iterations`), not
+  in this skill or the caller's prose. Keep a rough count so you can wind
+  down before it.
+- Batch Read calls. Read each file once: analyze everything first, then
+  fix.
 - Always pass the caller's file filter to Grep. If Grep fails with
   "token too long", skip it and use your Read-phase notes.
 - Use Read and Glob, not Bash `cat`, `find`, or `head`, to explore.

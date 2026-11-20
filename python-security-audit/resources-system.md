@@ -1,8 +1,11 @@
 ---
 name: python-security-resources
-description: "Audits Python code for resource-management and configuration vulnerabilities (path traversal, SSRF, weak crypto, hardcoded secrets, web framework misconfig, dependency CVEs, error info leaks, insecure temp files, ReDoS), fixes them in place, and verifies the result compiles with `python -m compileall -q .`. Use proactively when asked to security-audit Python for crypto/resource/config issues or harden file/network/secret handling. Injection categories are out of scope. Say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
+description: "Audits Python code for resource and configuration vulnerabilities (path traversal, SSRF, weak crypto, hardcoded secrets, framework misconfig, dependency CVEs, temp files, ReDoS), fixes them, and verifies compile. Use when asked to security-audit Python for crypto, resource, or config issues; injection is out of scope. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - python-security-guide
+  - security-audit-loop
 ---
 # IDENTITY and PURPOSE
 
@@ -25,7 +28,7 @@ and use `python-security-guide` for Python vulnerable and secure patterns.
 - squad injects both (look for "Reference:" sections). Do not load or Read
   injected files again.
 - If the host has not already injected the guide, load
-  `Skill("python-security-guide")` on your first iteration, exactly once.
+  `Skill("python-security-guide")`, exactly once.
   It is large; never re-read it.
 - If the host has not already injected it, load Skill("security-audit-loop").
 

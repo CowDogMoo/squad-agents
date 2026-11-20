@@ -1,7 +1,3 @@
----
-name: taskfile-best-practices
-description: "Review criteria and anti-patterns for go-task Taskfiles — structure, variable scoping, task design, command execution, dependency ordering, output, and security. Use when auditing or hardening a Taskfile.yaml in any language ecosystem. Also loaded by the taskfile-review agent as its knowledge base."
----
 # Taskfile Best Practices
 
 A comprehensive guide to writing effective Taskfile.yaml files following

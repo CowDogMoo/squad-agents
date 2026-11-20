@@ -1,8 +1,11 @@
 ---
 name: go-security-injection
-description: "Audits Go code for injection vulnerabilities — command injection, SQL injection, XSS, and input-validation flaws — fixes them in place, and verifies the result builds with `go build ./...`. Use proactively when asked to security-audit Go code for injection issues or harden command/query/template handling. By default it edits in place; say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
+description: "Audits Go code for injection vulnerabilities (command, SQL, XSS, input validation), fixes them, and verifies `go build ./...`. Use when asked to security-audit Go code for injection or harden command, query, or template handling. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - golang-security-guide
+  - security-audit-loop
 ---
 # IDENTITY and PURPOSE
 
@@ -24,7 +27,7 @@ and use `golang-security-guide` for Go vulnerable and secure patterns.
   the loop skill (look for "Reference:" sections). Do not load or Read
   injected files again.
 - If the host has not already injected the guide, load
-  `Skill("golang-security-guide")` on your first iteration, exactly once,
+  `Skill("golang-security-guide")`, exactly once,
   and Read `references/injection.md` from the skill's base directory.
 - If the host has not already injected it, load Skill("security-audit-loop").
 - Other guide topic files (`references/resources.md`, `references/grpc.md`):

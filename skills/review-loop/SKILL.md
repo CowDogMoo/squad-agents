@@ -33,9 +33,8 @@ the caller wins.
   modify" select readonly mode; otherwise edit mode applies.
 
 Optional overrides a caller may declare (defaults in parentheses):
-read batch size (3-5 files), first-Edit deadline (iteration 4),
-read-back after Edit (read the edited lines), allowed new dependencies
-(none), and readonly report shape (the readonly-mode format below).
+read batch size (3-5 files), allowed new dependencies (none), and
+readonly report shape (the readonly-mode format below).
 
 ## Modes
 
@@ -47,33 +46,23 @@ modifies a file is invalid.
 Both modes look for the same issues. Edit mode fixes them; readonly mode
 reports them with a suggested fix.
 
-## Iteration budget
+## Scope and budget
 
-Scale with codebase size:
+The iteration cap and the edit deadline are not set here or in the
+caller's prose: they live in the agent's `agent.yaml` (`max_iterations`,
+`edit_deadline`). Keep a rough count of iterations so you can wind down
+before the cap.
 
-| Codebase | Files | Iteration cap |
-|---|---|---|
-| Small | 20 or fewer | 12 |
-| Medium | 21-50 | 20 |
-| Large | more than 50 | 25 |
-
-For large codebases, prioritize entry points, core logic, and the public
-API, and list what you did not read.
-
-Rough allocation: Phase 1 one iteration; Phase 2 and 3 interleaved; the
-final verify and the report in the same response.
+Review every file in scope before you conclude nothing is actionable. A
+clean lint run or passing tests does not shrink the scope. Zero edits is
+a valid outcome for clean code; never make a change just to show
+progress. If the cap will not cover every file, start with entry points,
+core logic and the public API, and list what you did not read.
 
 **Read-then-edit cadence (edit mode).** Read a batch of files in
 parallel, fix what you found in them, then read the next batch. Never
-hold more than one unprocessed batch. Make the first Edit by the
-caller's deadline. If you reach the deadline having read the
-highest-impact files and found nothing worth fixing, produce the report
-instead of manufacturing a fix. A short "no issues found" report is a
-valid outcome.
-
-If lint is clean and tests pass, read at most 5 of the most complex
-files, check for the highest-impact issues, and report if nothing is
-actionable.
+hold more than one unprocessed batch. Make the final verify and the
+report in the same response.
 
 ## Phase 1: Discover
 
@@ -112,9 +101,9 @@ actionable.
   `old_string` so the match is unique.
 - **Verify the API first.** Grep for a type, variant, or function before
   using it in an Edit, and match existing patterns.
-- **Read-back.** After a batch, Read only the edited lines to confirm the
-  replacement. Callers that declare "trust Edit output" re-read only when
-  Edit reports an error.
+- **Verify with the build, not a re-read.** The Edit result confirms the
+  change; the caller's build, lint and test commands confirm it works.
+  Re-read a file only when an Edit or a verify error points into it.
 - **Verify after every batch** with the caller's build or lint command,
   and fix errors before continuing. After all fixes, run build and tests
   once. Prefer one Bash call that prints each exit code.
@@ -215,8 +204,9 @@ Callers add language-specific items to this list.
 ## Report formats
 
 Sorting: findings by severity (CRITICAL first), then by category.
-Category names come from the caller's review categories. Section
-headings below are required, in order, at heading level 2.
+Category names come from the caller's review categories. The section
+headings below are required, in order, at the heading level the caller's
+OUTPUT COMPLIANCE list shows (level 2 when it shows none).
 
 ### Edit-mode report
 

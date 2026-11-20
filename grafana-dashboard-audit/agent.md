@@ -17,8 +17,7 @@ version: 0.1.0
 - **Every finding carries its fix.** The actual query, unit, threshold, or
   panel type - not "consider improving this".
 - **Stop when done.** After the report, stop.
-- **Efficient.** Target <=16 iterations. One dashboard per shard; read each
-  file once.
+- **Efficient.** One dashboard per shard; read each file once.
 
 # OUTPUT COMPLIANCE
 

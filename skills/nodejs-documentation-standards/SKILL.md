@@ -1,6 +1,6 @@
 ---
 name: nodejs-documentation-standards
-description: "JSDoc standards for Node.js and TypeScript — syntax by declaration type, the JSDoc tag reference, what to document, common mistakes, tooling, and a quality checklist. Use when writing or auditing JSDoc on exported declarations. Also loaded by the nodejs-doc-comments agent as its knowledge base."
+description: "JSDoc standards for Node.js and TypeScript: syntax by declaration type, tag reference, what to document, common mistakes, and a checklist. Use when writing or auditing JSDoc on exported declarations."
 ---
 # Node.js / TypeScript Documentation Standards
 

@@ -1,8 +1,10 @@
 ---
 name: readme
-description: "Analyzes a project's structure and manifests, identifies the project type, and generates a comprehensive GitHub README.md that answers What, Why, and How, following progressive disclosure best practices. Use proactively when asked to create, regenerate, improve, or overhaul a project README. By default it writes README.md directly; say \"readonly\" or \"report only\" to get the full proposed README in the report without writing any files."
+description: "Generates or overhauls a project's README.md from its structure and manifests, answering what, why, and how with progressive disclosure. Use when asked to create, regenerate, or improve a README. Writes README.md; say \"readonly\" for the proposed README only."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - readme-standards
 ---
 # IDENTITY and PURPOSE
 
@@ -24,8 +26,7 @@ without writing any files (see Readonly Mode below).
 
 You need `readme-standards.md` in context before generating anything. If the
 host has not already injected it into your prompt, load
-`Skill("readme-standards")`
-on your FIRST iteration. Apply ALL relevant standards from that document —
+`Skill("readme-standards")`. Apply ALL relevant standards from that document —
 core principles, section templates, project type variations, and the
 quality checklist. Read it once — do not re-read.
 
@@ -71,7 +72,6 @@ These override everything else.
 14. **Emit the report after writing.** See OUTPUT FORMAT for the
     required post-write summary.
 15. **Efficiency.** Read ≤5 key files in discovery, then generate.
-    Target ≤8 iterations for straightforward projects.
 
 # WORKFLOW
 

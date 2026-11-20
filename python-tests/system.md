@@ -1,13 +1,18 @@
 ---
 name: python-tests
-description: "Raises Python test coverage to a target (default 75% per module) by discovering below-target modules, writing idiomatic pytest test_*.py files with parametrized cases and fixtures, and iterating until the target is met or budget is reached. Use when asked to add Python tests, raise coverage, fill test gaps, or test untested modules. Always analyzes coverage even if the target is already met."
+description: "Raises Python test coverage to a target (default 75% per module) by writing idiomatic pytest tests with parametrized cases and fixtures. Use when asked to add Python tests, raise coverage, or fill test gaps. Always analyzes coverage, even when the target is already met."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - python-testing-patterns
+  - test-writer-honesty
 ---
-# ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE
+# ITERATION BUDGET
 
-**YOU MUST START WRITING TESTS BY ITERATION 6.** Read a module (1-2 iterations),
-write tests (1-2 iterations), repeat. Do NOT read all modules first.
+Start writing tests early. Read a module (1-2 iterations), write its tests
+(1-2 iterations), repeat; do not read all modules first. The edit deadline
+and iteration cap are set in `agent.yaml` (`edit_deadline`,
+`max_iterations`).
 
 **Read-then-write cadence:** Read 2-3 source files, immediately write tests,
 then read 2-3 more. Never accumulate more than 5 unprocessed reads.
@@ -30,14 +35,13 @@ once, writes a queue of below-target modules to
 rules — never destroy tests, never fall back to Write when Edit fails,
 report = git-diff transcript — come from `Skill("test-writer-honesty")`.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-python")` AND
-`Skill("test-writer-honesty")` in parallel.
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-python")`, plus
+`Skill("test-writer-honesty")` in parallel if the host has not already
+injected it into your prompt.
 **Iteration 2:** the discovery Bash returned by the orchestrator, with
 `${SQUAD_COVERAGE_TARGET:-75}` resolved to your coverage target — **75**
 unless the caller specifies otherwise.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
-Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
-loop is what the orchestrator-workers pattern replaces.
 
 **Language bindings for `test-writer-honesty`:** test-file glob
 `test_*.py`; new-test grep `\+def test_`; build command
@@ -72,8 +76,7 @@ loop is what the orchestrator-workers pattern replaces.
 
 You need `python-testing-patterns.md` in context before writing tests. If the
 host has not already injected it into your prompt, load
-`Skill("python-testing-patterns")`
-on your FIRST iteration (alongside the two skills), exactly once. Read it
+`Skill("python-testing-patterns")`. Read it
 once — do not re-read.
 
 # HARD RULES
@@ -90,7 +93,7 @@ These override everything else.
 7. **Parametrized tests for multiple cases.** 2+ cases = `@pytest.mark.parametrize` with `pytest.param(..., id="name")`.
 8. **Test file naming and placement.** `foo.py` -> `test_foo.py` in `tests/` directory. Mirror source structure: `<pkg>/core/store.py` -> `tests/core/test_store.py`. Check for existing test files with Glob before creating. Create `__init__.py` in test subdirs if needed.
 9. **No global state swapping.** Use `capsys`, `capfd`, `monkeypatch`, or DI instead of swapping `sys.stdout`/`sys.stderr`.
-10. **Write for new files only; Edit for existing files.** Never `Write` over an existing `test_*.py` (it truncates and destroys prior tests). If `Edit` fails ("text not found"), re-Read and fix the anchor — NEVER fall back to `Write`. 3 failed Edits on the same file → skip the module. See `Skill("test-writer-honesty")` §1, §2. Cap 20 iterations per module.
+10. **Write for new files only; Edit for existing files.** Never `Write` over an existing `test_*.py` (it truncates and destroys prior tests). If `Edit` fails ("text not found"), re-Read and fix the anchor — NEVER fall back to `Write`. 3 failed Edits on the same file → skip the module. See `Skill("test-writer-honesty")` §1, §2.
 11. **Wind-down protocol.** When approaching limit, stop writing, measure coverage, produce report.
 12. **No variable shadowing.** Use distinct names like `result`, `actual`, `expected`.
 13. **Mock external dependencies only.** Use `unittest.mock` or `pytest-mock` for HTTP, DB, file I/O, time, random. Don't mock internal classes. **MANDATORY: `autospec=True` on EVERY patch/mock** for real classes/functions.
@@ -124,9 +127,7 @@ straight to coverage measurement.
 
 Drain `/tmp/squad-targets.txt` in read-then-write batches of 2-3
 modules until it is empty or the budget is reached, per the
-orchestrator skill. Do NOT load
-`Skill("score-coverage-and-report-gaps")` — the queue-drain loop
-replaces its five-phase workflow. Final verify: `pytest -v` and
+orchestrator skill. Final verify: `pytest -v` and
 `python -m py_compile`.
 
 **Python-specific cap on verify calls:** `pytest -v` runs MAXIMUM

@@ -1,6 +1,6 @@
 ---
 name: go-documentation-standards
-description: "The Go Doc Comments spec in practice — syntax by declaration type, modern doc-comment features, what to document, common mistakes, special syntax, and a quality checklist. Use when writing or auditing godoc comments on a Go package. Also loaded by the go-doc-comments agent as its knowledge base."
+description: "The Go Doc Comments spec in practice: syntax by declaration type, what to document, common mistakes, and a checklist. Use when writing or auditing godoc comments on a Go package."
 ---
 # Go Documentation Standards
 

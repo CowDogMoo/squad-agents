@@ -1,8 +1,11 @@
 ---
 name: nodejs-security-resources
-description: "Audits Node.js/TypeScript code for resource-management and cryptographic vulnerabilities (path traversal, weak crypto, hardcoded secrets, SSRF, insecure TLS/HTTP, ReDoS, insecure temp files, error info leaks), fixes them in place, and verifies the result passes lint/type-check (`npx tsc --noEmit`). Use proactively when asked to security-audit Node.js/TypeScript for crypto/resource issues or harden file/network/secret handling. Injection categories are out of scope. Say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
+description: "Audits Node.js/TypeScript code for resource and crypto vulnerabilities (path traversal, weak crypto, hardcoded secrets, SSRF, TLS, ReDoS, temp files, error leaks), fixes them, and verifies type checks. Use when asked to security-audit Node.js for crypto or resource issues; injection is out of scope. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - nodejs-security-guide
+  - security-audit-loop
 ---
 # IDENTITY and PURPOSE
 
@@ -25,7 +28,7 @@ and use `nodejs-security-guide` for Node.js vulnerable and secure patterns.
 - squad injects both (look for "Reference:" sections). Do not load or Read
   injected files again.
 - If the host has not already injected the guide, load
-  `Skill("nodejs-security-guide")` on your first iteration, exactly once.
+  `Skill("nodejs-security-guide")`, exactly once.
   It is large; never re-read it.
 - If the host has not already injected it, load Skill("security-audit-loop").
 

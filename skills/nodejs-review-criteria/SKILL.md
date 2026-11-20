@@ -1,6 +1,6 @@
 ---
 name: nodejs-review-criteria
-description: "Review criteria for Node.js and TypeScript — error handling, async patterns, data management, type safety, code structure, API design, performance, and module organization. Use when reviewing JavaScript or TypeScript code for best-practice violations. Also loaded by the nodejs-review agent as its knowledge base."
+description: "Review criteria for Node.js and TypeScript: error handling, async patterns, type safety, code structure, API design, performance, and modules. Use when reviewing JavaScript or TypeScript code for best-practice violations."
 ---
 # Node.js / TypeScript Code Review Criteria
 

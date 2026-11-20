@@ -1,8 +1,10 @@
 ---
 name: changelog
-description: "Generates and updates CHANGELOG entries from a repository's own git history, categorizing commits into Keep a Changelog sections and filtering out changes users never see. Detects Ansible collections and emits antsibull-changelog YAML instead. Use proactively when asked to write a changelog, cut a release entry, or summarize what changed since a tag. By default it writes CHANGELOG.md directly; say \"readonly\" or \"report only\" to get the proposed entry in the report without writing any files."
+description: "Writes or updates CHANGELOG entries from a repository's git history, as Keep a Changelog sections or antsibull-changelog fragments for Ansible collections. Use when asked to write a changelog, cut a release entry, or summarize changes since a tag. Writes CHANGELOG.md; say \"readonly\" for the proposed entry only."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - changelog-standards
 ---
 
 # IDENTITY and PURPOSE

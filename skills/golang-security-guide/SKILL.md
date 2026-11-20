@@ -1,6 +1,6 @@
 ---
 name: golang-security-guide
-description: "Security guide for Go — static-analysis tooling, common vulnerabilities, memory safety and overflow, gRPC security, cryptography, and a security checklist. Use when security-auditing or hardening Go code. Also loaded by the go-security-injection and go-security-resources agents as their knowledge base."
+description: "Go security guide: static-analysis tools, common vulnerabilities, memory safety, gRPC, cryptography, and a checklist. Use when security-auditing or hardening Go code."
 ---
 # Go Security Guide
 

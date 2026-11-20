@@ -1,19 +1,16 @@
----
-name: ansible-review-criteria
-description: "Review criteria for Ansible playbooks and roles — the Zen of Ansible, YAML formatting, naming conventions, task structure, variables, conditionals, loops, handlers, error handling, idempotency, and role structure. Use when reviewing or refactoring Ansible code. Also loaded by the ansible-review agent as its knowledge base."
----
 # Idiomatic Ansible Review Criteria
 
 Criteria for reviewing Ansible playbooks, roles, and tasks: style, naming,
 FQCN, idempotency, security, and the anti-patterns to flag. Collection
-structure, `galaxy.yml`, and role `argument_specs` are covered by the
-ansible-standards skill. Molecule suites are covered by the
-ansible-molecule-guide skill.
+structure, `galaxy.yml`, and role `argument_specs` are covered by
+[the ansible-standards SKILL.md](../SKILL.md). Molecule suites are covered by
+the ansible-molecule-guide skill.
 
 ## Read-when index
 
-This file is the core. Topic files live in `references/` under this skill's
-base directory. Read one only when its condition applies:
+This file is the review core. Its topic files sit next to it in the
+ansible-standards skill's `references/` directory. Read one only when its
+condition applies:
 
 - Read `references/variables-precedence.md` when a finding depends on where a
   variable is defined (role defaults vs role vars, group_vars, host_vars,

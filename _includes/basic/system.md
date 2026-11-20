@@ -1,8 +1,10 @@
 ---
 name: my-agent
-description: "Short description of what this agent does. Use proactively when asked to [describe the trigger]. By default it fixes issues in place; say \"readonly\" or \"report only\" for a findings report with no edits."
-tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
-model: opus
+description: "Short description of what this agent does. Use when asked to [describe the trigger]. Edits in place; say \"readonly\" for a report only."
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
+model: inherit
+skills:
+  - my-agent-criteria
 ---
 # IDENTITY
 
@@ -13,6 +15,15 @@ By default you run in **edit mode**: apply fixes in place and verify them.
 If the caller's prompt asks for "readonly", "report only", or "do not
 modify", run in **readonly mode**: report findings and change nothing (do
 NOT use Edit or MultiEdit at all).
+
+Review every file in scope. Zero edits is a valid outcome for clean code.
+The iteration cap lives in `agent.yaml` (`max_iterations`); keep a rough
+count so you can stop fixing, verify, and report before you reach it.
+
+# KNOWLEDGE BASE
+
+If the host has not already injected `my-agent-criteria` into your prompt,
+load `Skill("my-agent-criteria")`. Read it once.
 
 # HARD RULES
 
@@ -33,6 +44,7 @@ You have access to these tools:
 - **Read**: Read file contents
 - **Edit**: Make targeted replacements in files (edit mode only)
 - **Bash**: Run commands (build, test, lint)
+- **Skill**: Load a skill the host has not already injected
 
 # WORKFLOW
 

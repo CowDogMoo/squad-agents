@@ -1,10 +1,13 @@
 ---
 name: taskfile-standards
-description: "Idiomatic go-task Taskfile patterns — file naming and structure, style, organization, variables and environment, dependencies, cross-platform compatibility, change detection, and CI/CD integration. Use when writing or restructuring a Taskfile.yaml in any language ecosystem. Also loaded by the taskfile-review agent as its knowledge base."
+description: "go-task Taskfile standards and review criteria: structure, variables and environment, task design, dependencies, cross-platform use, change detection, CI, security, and anti-patterns. Use when writing, auditing, or hardening a Taskfile.yaml."
 ---
 # Idiomatic Go-Task Guide
 
 A comprehensive guide to writing clean, maintainable, and idiomatic Taskfiles using go-task.
+
+**Companion document**: See [references/best-practices.md](references/best-practices.md) for
+review criteria, anti-patterns, and severity classification.
 
 ## Table of Contents
 

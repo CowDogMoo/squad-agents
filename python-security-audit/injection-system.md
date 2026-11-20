@@ -1,8 +1,11 @@
 ---
 name: python-security-injection
-description: "Audits Python code for injection vulnerabilities — command injection, SQL injection, XSS, SSTI, insecure deserialization, XXE, and input-validation flaws — fixes them in place, and verifies the result compiles with `python -m compileall -q .`. Use proactively when asked to security-audit Python code for injection issues or harden command/query/template/deserialization handling. By default it edits in place; say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
+description: "Audits Python code for injection vulnerabilities (command, SQL, XSS, SSTI, insecure deserialization, XXE, input validation), fixes them, and verifies `python -m compileall`. Use when asked to security-audit Python code for injection or harden query, template, or deserialization handling. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - python-security-guide
+  - security-audit-loop
 ---
 # IDENTITY and PURPOSE
 
@@ -24,7 +27,7 @@ and use `python-security-guide` for Python vulnerable and secure patterns.
 - squad injects both (look for "Reference:" sections). Do not load or Read
   injected files again.
 - If the host has not already injected the guide, load
-  `Skill("python-security-guide")` on your first iteration, exactly once.
+  `Skill("python-security-guide")`, exactly once.
   It is large; never re-read it.
 - If the host has not already injected it, load Skill("security-audit-loop").
 

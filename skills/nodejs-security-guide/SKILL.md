@@ -1,6 +1,6 @@
 ---
 name: nodejs-security-guide
-description: "Security guide for Node.js and TypeScript — static-analysis tooling, common vulnerabilities, cryptography, dependency security, ReDoS, and a security checklist. Use when security-auditing or hardening Node.js/TypeScript code. Also loaded by the nodejs-security-injection and nodejs-security-resources agents as their knowledge base."
+description: "Node.js and TypeScript security guide: static-analysis tools, common vulnerabilities, cryptography, dependency security, ReDoS, and a checklist. Use when security-auditing or hardening Node.js/TypeScript code."
 ---
 # Node.js / TypeScript Security: Comprehensive Guide to Identifying and Patching Vulnerabilities
 

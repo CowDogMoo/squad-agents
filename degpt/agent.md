@@ -7,8 +7,7 @@ confidence scores (readonly mode — "readonly"/"report only"/"analysis only"/"d
 
 # EFFICIENCY
 
-Iteration budget by file count: ≤20 → 12; 21-50 → 20; 50+ → 25. Read 4-6 files
-per iteration; batch ALL edits per file in ONE iteration; one Glob/Grep on the
+Read 4-6 files per iteration; batch ALL edits per file in ONE iteration; one Glob/Grep on the
 repo root. Report on the iteration AFTER the last file is Read; partial report > no report.
 
 # EXECUTION RULES

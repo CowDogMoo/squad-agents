@@ -381,10 +381,12 @@ jobs:
         with:
           persist-credentials: false
 
+      # Soft limits: an oversized prompt file gets a warning annotation but
+      # does not fail the job, so authors are not pushed to compress prose
+      # into terse rule lists just to fit a cap.
       - name: Check prompt file line counts
         run: |
           shopt -s nullglob
-          failed=0
           SYSTEM_MAX=300
           AGENT_MAX=50
           TASK_MAX=30
@@ -394,10 +396,8 @@ jobs:
             if [ ! -f "$file" ]; then return; fi
             count=$(wc -l < "$file" | tr -d ' ')
             if [ "$count" -gt "$max" ]; then
-              echo "::error file=${file}::${kind} has ${count} lines (limit ${max})"
-              return 1
+              echo "::warning file=${file}::${kind} has ${count} lines (soft limit ${max})"
             fi
-            return 0
           }
 
           while IFS= read -r agent_yaml; do
@@ -406,23 +406,23 @@ jobs:
             if grep -q '^stages:' "$agent_yaml"; then
               # Composed agent: check stage files
               for f in "$dir"/*-system.md; do
-                [ -f "$f" ] && check_limit "$f" $SYSTEM_MAX "system prompt" || failed=1
+                [ -f "$f" ] && check_limit "$f" $SYSTEM_MAX "system prompt"
               done
               for f in "$dir"/*-agent.md; do
-                [ -f "$f" ] && check_limit "$f" $AGENT_MAX "agent wrapper" || failed=1
+                [ -f "$f" ] && check_limit "$f" $AGENT_MAX "agent wrapper"
               done
               for f in "$dir"/*-task.md; do
-                [ -f "$f" ] && check_limit "$f" $TASK_MAX "task file" || failed=1
+                [ -f "$f" ] && check_limit "$f" $TASK_MAX "task file"
               done
               # Also check stages/ subdirectory layout
               for f in "$dir"/stages/*/system.md; do
-                [ -f "$f" ] && check_limit "$f" $SYSTEM_MAX "system prompt" || failed=1
+                [ -f "$f" ] && check_limit "$f" $SYSTEM_MAX "system prompt"
               done
               for f in "$dir"/stages/*/agent.md; do
-                [ -f "$f" ] && check_limit "$f" $AGENT_MAX "agent wrapper" || failed=1
+                [ -f "$f" ] && check_limit "$f" $AGENT_MAX "agent wrapper"
               done
               for f in "$dir"/stages/*/task.md; do
-                [ -f "$f" ] && check_limit "$f" $TASK_MAX "task file" || failed=1
+                [ -f "$f" ] && check_limit "$f" $TASK_MAX "task file"
               done
 
               # Pipeline agents (stages referencing external agents) have no prompt files
@@ -431,17 +431,13 @@ jobs:
               fi
             else
               # Leaf agent
-              check_limit "$dir/system.md" $SYSTEM_MAX "system prompt" || failed=1
-              check_limit "$dir/agent.md" $AGENT_MAX "agent wrapper" || failed=1
-              check_limit "$dir/task.md" $TASK_MAX "task file" || failed=1
+              check_limit "$dir/system.md" $SYSTEM_MAX "system prompt"
+              check_limit "$dir/agent.md" $AGENT_MAX "agent wrapper"
+              check_limit "$dir/task.md" $TASK_MAX "task file"
             fi
           done < <(find . -name 'agent.yaml' -not -path './_includes/*' -type f)
 
-          if [ $failed -eq 1 ]; then
-            echo "::error::One or more prompt files exceed line count limits"
-            exit 1
-          fi
-          echo "✓ All prompt files within line count limits"
+          echo "✓ Prompt file line counts checked (soft limits)"
 
       - name: Check required sections
         run: |

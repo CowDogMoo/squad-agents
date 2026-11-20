@@ -1,6 +1,6 @@
 ---
 name: python-review-criteria
-description: "Review criteria for Python — 3.12/3.13 features, exception handling, type annotations, structural pattern matching, data structures, dataclasses/Pydantic/attrs, function and class design, and async patterns. Use when reviewing Python code for best-practice violations. Also loaded by the python-review agent as its knowledge base."
+description: "Review criteria for Python: exception handling, type annotations, pattern matching, data models, function and class design, and async patterns. Use when reviewing Python code for best-practice violations."
 ---
 # Python Code Review Criteria
 
