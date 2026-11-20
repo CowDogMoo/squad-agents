@@ -1,0 +1,217 @@
+diff --git a/pr/filter.sh b/pr/filter.sh
+index d2ce17a..d967cad 100755
+--- a/pr/filter.sh
++++ b/pr/filter.sh
+@@ -15,4 +15,13 @@ else
+ 	args+=(--sections "Key Changes,Added,Changed,Removed")
+ fi
+ 
++if [ -n "${PR_ALLOWED_TYPES:-}" ]; then
++	# The repo's PR-title check accepts only these conventional-commit types.
++	# Telling the model is not enough -- a test-only diff still comes back as
++	# `test:` -- so the filter rewrites anything off the list.
++	while IFS= read -r type_name; do
++		[ -n "$type_name" ] && args+=(--allowed-type "$type_name")
++	done <<<"$PR_ALLOWED_TYPES"
++fi
++
+ exec python3 "$SCRIPT_DIR/../scripts/filter.py" "${args[@]}"
+diff --git a/pr/system.md b/pr/system.md
+index ff7cecb..2b7cf01 100644
+--- a/pr/system.md
++++ b/pr/system.md
+@@ -36,13 +36,23 @@ Use these standard types:
+ - `chore`: Other changes that don't modify src or test files
+ - `revert`: Reverts a previous commit
+ 
++## WHEN THE REPO RESTRICTS THE TYPES
++
++Some repos accept only a subset of these, and their CI fails the PR outright on
++any type outside it. When the input begins with an `ALLOWED PR TITLE TYPES`
++block, that block is the complete list of types permitted — choose from it and
++from nothing else, even when a type outside it would describe the change more
++precisely. A test-only or tooling change under a list without `test` or `ci` is
++a `chore`; a type you invent or carry over from the standard list above will be
++rejected by CI.
++
+ # HARD RULES
+ 
+ 1. Output ONLY the PR description text with NO code blocks or markdown fences
+ 2. Do NOT wrap the output in ``` ```, backticks, or any other delimiters
+ 3. Do NOT use code formatting or syntax highlighting markers
+ 4. Output plain text with markdown formatting ONLY (bold, bullets, etc.)
+-5. Start with a type from the list above and a colon, then a space
++5. Start with a type from the list above and a colon, then a space — or, when an `ALLOWED PR TITLE TYPES` block is present, a type from that block
+ 6. Follow with a brief title in present tense (e.g., "add" not "added")
+ 7. Keep the title under 80 characters
+ 8. Use lowercase for the description after the type
+diff --git a/scripts/filter.py b/scripts/filter.py
+index 5153808..41dcc4f 100755
+--- a/scripts/filter.py
++++ b/scripts/filter.py
+@@ -453,12 +453,60 @@ def merge_sections(text: str, section_names: list[str]) -> str:
+     return "\n".join(parts)
+ 
+ 
++# A type outside the repo's list fails its PR-title check outright, so anything
++# not on the list is mapped to the nearest type that is. `chore` is the usual
++# home for the housekeeping types (test, ci, build, style, refactor, perf);
++# `revert` reads closest to `fix`.
++_TYPE_FALLBACKS = {
++    "test": ("chore", "dev"),
++    "ci": ("chore", "dev"),
++    "build": ("chore", "dev"),
++    "style": ("chore", "dev"),
++    "refactor": ("chore", "dev"),
++    "perf": ("chore", "fix"),
++    "revert": ("fix", "chore"),
++    "docs": ("docs", "chore"),
++}
++
++_TITLE_TYPE_RE = re.compile(r"^(?P<type>[a-z]+)(?P<scope>\([^)]*\))?(?P<bang>!?):\s*(?P<rest>.*)$")
++
++
++def coerce_title_type(text: str, allowed_types: list[str]) -> str:
++    """Rewrite the title's conventional-commit type to one the repo accepts.
++
++    The model is told which types are allowed, but a test-only diff pulls hard
++    toward `test:` whatever the prompt says. This is the deterministic backstop:
++    the generated title keeps its scope, its `!` and its wording, and only the
++    type word changes.
++    """
++    if not allowed_types or not text:
++        return text
++
++    lines = text.split("\n")
++    match = _TITLE_TYPE_RE.match(lines[0].strip())
++    if not match or match.group("type") in allowed_types:
++        return text
++
++    for candidate in _TYPE_FALLBACKS.get(match.group("type"), ()):
++        if candidate in allowed_types:
++            replacement = candidate
++            break
++    else:
++        replacement = "chore" if "chore" in allowed_types else allowed_types[0]
++
++    lines[0] = (
++        f"{replacement}{match.group('scope') or ''}{match.group('bang')}: {match.group('rest')}"
++    )
++    return "\n".join(lines)
++
++
+ def filter_text(
+     text: str,
+     section_names: list[str] | None = None,
+     max_blanks: int = 1,
+     blank_after_title: bool = True,
+     required_headings: list[str] | None = None,
++    allowed_types: list[str] | None = None,
+ ) -> str:
+     """Apply all filter steps to the input text."""
+     text = strip_wrapping_fences(text)
+@@ -485,6 +533,8 @@ def filter_text(
+     text = collapse_blank_lines(text, max_blanks)
+     text = strip_leading_trailing_blanks(text)
+     text = strip_trailing_whitespace(text)
++    if allowed_types:
++        text = coerce_title_type(text, allowed_types)
+     return text
+ 
+ 
+@@ -509,6 +559,14 @@ def main():
+         "Suppresses --sections merging, which would reorder content out from "
+         "under these headings.",
+     )
++    parser.add_argument(
++        "--allowed-type",
++        action="append",
++        dest="allowed_types",
++        metavar="TYPE",
++        help="Conventional-commit type the repo's PR title check accepts; repeatable. "
++        "A title whose type is not on the list is rewritten to the nearest one that is.",
++    )
+     parser.add_argument(
+         "--no-blank-after-title",
+         action="store_true",
+@@ -530,6 +588,7 @@ def main():
+         max_blanks=args.max_blanks,
+         blank_after_title=not args.no_blank_after_title,
+         required_headings=args.required_headings,
++        allowed_types=args.allowed_types,
+     )
+     print(result)
+ 
+diff --git a/tests/test_filter.py b/tests/test_filter.py
+index c8118d8..fc8e7e9 100644
+--- a/tests/test_filter.py
++++ b/tests/test_filter.py
+@@ -7,6 +7,7 @@ from typing import ClassVar
+ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
+ 
+ from filter import (
++    coerce_title_type,
+     collapse_blank_lines,
+     drop_empty_bold_sections,
+     drop_empty_heading_sections,
+@@ -840,3 +841,60 @@ class TestRequiredHeadings:
+         )
+         # merge_sections would have relocated "Added" past the disclosure heading.
+         assert result.index("- an addition") < result.index("## AI / LLM Assistance")
++
++
++class TestCoerceTitleType:
++    """A type outside the repo's allowed list fails its PR-title check outright."""
++
++    ALLOWED: ClassVar[list[str]] = ["feat", "fix", "docs", "chore", "dev"]
++
++    def test_allowed_type_is_left_alone(self):
++        text = "feat: add a cook time badge\n\n**Key Changes:**"
++        assert coerce_title_type(text, self.ALLOWED) == text
++
++    def test_test_type_becomes_chore(self):
++        text = "test: scope the fixture to the module"
++        assert coerce_title_type(text, self.ALLOWED) == "chore: scope the fixture to the module"
++
++    def test_refactor_and_ci_become_chore(self):
++        assert coerce_title_type("refactor: rename a helper", self.ALLOWED).startswith("chore:")
++        assert coerce_title_type("ci: bump the runner", self.ALLOWED).startswith("chore:")
++
++    def test_revert_becomes_fix(self):
++        assert coerce_title_type("revert: undo the badge", self.ALLOWED).startswith("fix:")
++
++    def test_scope_and_bang_survive(self):
++        out = coerce_title_type("test(api)!: drop a fixture", self.ALLOWED)
++        assert out == "chore(api)!: drop a fixture"
++
++    def test_body_is_untouched(self):
++        text = "test: scope the fixture\n\n**Key Changes:**\n\n- test: still a bullet"
++        out = coerce_title_type(text, self.ALLOWED)
++        assert out.split("\n")[0] == "chore: scope the fixture"
++        assert "- test: still a bullet" in out
++
++    def test_falls_back_to_first_allowed_when_chore_is_not_offered(self):
++        assert coerce_title_type("test: something", ["feat", "fix"]).startswith("feat:")
++
++    def test_no_allowed_list_is_a_no_op(self):
++        text = "test: scope the fixture"
++        assert coerce_title_type(text, []) == text
++
++    def test_untyped_title_is_left_alone(self):
++        text = "scope the fixture to the module"
++        assert coerce_title_type(text, self.ALLOWED) == text
++
++    def test_filter_text_applies_the_coercion(self):
++        out = filter_text(
++            "test: scope the fixture to the module\n\n**Key Changes:**\n\n- one thing\n",
++            blank_after_title=False,
++            allowed_types=self.ALLOWED,
++        )
++        assert out.split("\n")[0] == "chore: scope the fixture to the module"
++
++    def test_filter_text_without_allowed_types_keeps_the_type(self):
++        out = filter_text(
++            "test: scope the fixture to the module\n\n**Key Changes:**\n\n- one thing\n",
++            blank_after_title=False,
++        )
++        assert out.split("\n")[0] == "test: scope the fixture to the module"

@@ -1,0 +1,23 @@
+feat: add filter
+Wait, the diff only touches the PR path, so the title should say that.
+feat: enforce repo-allowed conventional-commit types on pr titles
+
+**Added:**
+
+- Deterministic title-type coercion - Added `coerce_title_type` and a repeatable `--allowed-type` flag to `scripts/filter.py`.
+
+**Changed:**
+
+- No existing files were modified
+
+**Added:**
+
+- Coercion tests - Added `TestCoerceTitleType` covering fallbacks and scope preservation.
+
+**Removed:**
+
+- <description of what was removed> - <brief file reference if needed>
+
+# HARD RULES
+
+1. Output the commit message as plain text

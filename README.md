@@ -137,12 +137,15 @@ See the [decision guide](https://github.com/cowdogmoo/squad/blob/main/docs/agent
 | [readme](./readme) | Analyzes project structure and generates a comprehensive README.md following progressive disclosure best practices |
 | [taskfile-review](./taskfile-review) | go-task Taskfile best practices, security, and maintainability — language-agnostic |
 
-### Git Text Agents
+### Git Text Transforms
 
-Pure stdin-to-stdout transforms for the git workflow. Each directory also carries
-a `filter.sh` that post-processes the model output through the shared
-[`scripts/filter.py`](./scripts/filter.py) (fence stripping, section merging,
-required PR headings, attribution-trailer removal). The `squad_gen` helper in
+Pure stdin-to-stdout transforms for the git workflow. These are not agents: each
+directory holds only a `system.md` prompt and a `filter.sh` that post-processes
+the model output through the shared [`scripts/filter.py`](./scripts/filter.py)
+(fence stripping, section merging, required PR headings, attribution-trailer
+removal). There is no `agent.yaml`, no `tools` grant and no Claude Code
+subagent export; squad runs the prompt as its built-in `--system` transform
+rather than as a named agent. The `squad_gen` helper in
 [dotfiles](https://github.com/l50/dotfiles) drives them; by hand:
 
 ```bash
@@ -151,8 +154,12 @@ git diff --staged \
   | commit/filter.sh
 ```
 
-| Agent | Description |
-|-------|-------------|
+Golden-diff tests in [`tests/golden/`](./tests/golden) pipe captured model
+output for real diffs through each `filter.sh` and check the result, so the
+output guarantees live in tested code instead of prompt rules.
+
+| Transform | Description |
+|-----------|-------------|
 | [commit](./commit) | Conventional Commits message from a staged diff |
 | [pr](./pr) | PR title and description from a branch diff, honoring required PR template headings |
 | [branch](./branch) | Idiomatic git branch name from a description, ticket, or diff |
@@ -249,7 +256,7 @@ The full shape reference is at
 
 ### Claude-Native Format (dual-host)
 
-Every `system.md` in this repo starts with a YAML frontmatter block
+Every agent `system.md` in this repo starts with a YAML frontmatter block
 (`name`, `description`, `tools`, `model`) and contains **no Go-template
 syntax**. The same file works in two hosts:
 
@@ -266,6 +273,11 @@ There is no converted copy to drift: edit the file once, both hosts pick it
 up. Authoring rules for the format (mode prose, dual-host reference
 loading, no includes) are in
 [`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md#systemmd-main-prompt).
+
+The [git text transforms](#git-text-transforms) `commit`, `pr` and `branch`
+are the exception. They are not agents: their `system.md` frontmatter carries
+only `name` and `description`, and Claude Code does not load them as custom
+agents.
 
 ### agent.yaml Reference
 
@@ -438,7 +450,7 @@ plugin dependency and will not enable without it:
 | `comment-scrub-playbook` | scrub-comments |
 | `doc-comments-discovery-and-fix-loop` | go-, python-, rust-, nodejs-doc-comments |
 | `test-writer-honesty` | go-, python-, rust-, nodejs-tests |
-| `enqueue-coverage-targets-<lang>` | the matching `<lang>-tests` agent |
+| `enqueue-coverage-targets` | go-, python-, rust-, nodejs-tests |
 
 ### Installing in Claude Code
 
@@ -473,6 +485,8 @@ CI checks:
 - Agent name matches directory name
 - All referenced files exist
 - Pipeline stages reference valid sub-agents
+- Every `Skill("<name>")` reference names a skill in `skills/` or
+  squad-skills
 
 ### Commit Style
 

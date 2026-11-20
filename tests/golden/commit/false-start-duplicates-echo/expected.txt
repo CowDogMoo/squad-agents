@@ -1,0 +1,8 @@
+feat: enforce repo-allowed conventional-commit types on pr titles
+
+**Added:**
+
+- Deterministic title-type coercion - Added `coerce_title_type` and a repeatable `--allowed-type` flag to `scripts/filter.py`.
+
+
+- Coercion tests - Added `TestCoerceTitleType` covering fallbacks and scope preservation.
