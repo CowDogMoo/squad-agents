@@ -10,24 +10,24 @@ on:
       - synchronize
       - reopened
     paths:
-      - '**/agent.yaml'
-      - '**/system.md'
-      - '**/agent.md'
-      - '**/task.md'
-      - '**/references/**'
-      - '_includes/**'
-      - '.github/workflows/validate-agents.yaml'
+      - "**/agent.yaml"
+      - "**/system.md"
+      - "**/agent.md"
+      - "**/task.md"
+      - "**/references/**"
+      - "_includes/**"
+      - ".github/workflows/validate-agents.yaml"
   push:
     branches:
       - main
     paths:
-      - '**/agent.yaml'
-      - '**/system.md'
-      - '**/agent.md'
-      - '**/task.md'
-      - '**/references/**'
-      - '_includes/**'
-      - '.github/workflows/validate-agents.yaml'
+      - "**/agent.yaml"
+      - "**/system.md"
+      - "**/agent.md"
+      - "**/task.md"
+      - "**/references/**"
+      - "_includes/**"
+      - ".github/workflows/validate-agents.yaml"
   workflow_dispatch:
 
 permissions:

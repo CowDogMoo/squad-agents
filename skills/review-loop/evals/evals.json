@@ -18,7 +18,10 @@
       "id": 2,
       "prompt": "Review this Go code, report only, do not modify anything.\n\nPre-discovered source files\nevals/files/readonly/store.go",
       "expected_output": "A readonly-mode report covering only store.go: the string-concatenated SQL query in FindUser at CRITICAL and the ignored f.Close() error after a write in Save, each with file, line, and a suggested fix. notes.go is not read or reported because the pre-discovered list is authoritative, and no file is modified.",
-      "files": ["evals/files/readonly/store.go", "evals/files/readonly/notes.go"],
+      "files": [
+        "evals/files/readonly/store.go",
+        "evals/files/readonly/notes.go"
+      ],
       "expectations": [
         "No Edit, MultiEdit, or Write call is made and both store.go and notes.go are byte-for-byte unchanged",
         "The concatenated SQL query in FindUser is reported as a SQL injection risk at CRITICAL severity",
