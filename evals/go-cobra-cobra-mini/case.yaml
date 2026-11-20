@@ -20,26 +20,26 @@ runs: 3
 graders:
   - name: version-uses-runE
     type: regex
-    target: {source: file, path: cmd/version.go}
+    target: { source: file, path: cmd/version.go }
     pattern: 'RunE:\s*\S'
   - name: version-drops-run
     type: regex
-    target: {source: file, path: cmd/version.go}
+    target: { source: file, path: cmd/version.go }
     pattern: '\bRun:\s*\S'
     match: not_contains
   - name: init-parent-keeps-no-runE
     type: regex
-    target: {source: file, path: cmd/init.go}
+    target: { source: file, path: cmd/init.go }
     # The file's only RunE belongs to the `agent` subcommand.
-    pattern: 'RunE:'
+    pattern: "RunE:"
     match: count:1
   - name: grade-adds-no-markflagrequired
     type: regex
-    target: {source: file, path: cmd/grade.go}
-    pattern: 'MarkFlagRequired'
+    target: { source: file, path: cmd/grade.go }
+    pattern: "MarkFlagRequired"
     match: not_contains
   - name: delegated-to-go-cobra
     type: tool_used
     tool: Agent
-    input_match: 'go-cobra'
+    input_match: "go-cobra"
     arm: with-only

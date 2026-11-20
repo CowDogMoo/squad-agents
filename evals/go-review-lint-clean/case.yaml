@@ -31,5 +31,5 @@ graders:
   - name: delegated-to-go-review
     type: tool_used
     tool: Agent
-    input_match: 'go-review'
+    input_match: "go-review"
     arm: with-only
