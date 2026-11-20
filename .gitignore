@@ -24,3 +24,6 @@ Thumbs.db
 # Python bytecode from the shared filter tests
 __pycache__/
 *.pyc
+
+# agent_evals.py run output
+agent-evals-results/

@@ -164,6 +164,15 @@ output guarantees live in tested code instead of prompt rules.
 | [pr](./pr) | PR title and description from a branch diff, honoring required PR template headings |
 | [branch](./branch) | Idiomatic git branch name from a description, ticket, or diff |
 
+### Regression Evals
+
+[`evals/`](./evals) holds `claude plugin eval` cases seeded from the agents'
+own failures: the go-cobra false positives, the go-tests incidents, and a
+lint-clean module where go-review should make zero edits.
+`scripts/agent_evals.py run` stages the agents with the squad-skills skills
+they load and runs the cases, optionally against a no-plugin baseline or on
+another model; see [`evals/README.md`](./evals/README.md).
+
 ### Agent Templates
 
 Starter templates under [`_includes/`](./_includes/) — copy and customize,

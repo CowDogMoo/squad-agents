@@ -16,7 +16,15 @@ already validated in `RunE`) while confirming it still applies a genuine fix.
 
 ## Running the regression check
 
-Point the go-cobra agent at this directory and inspect the resulting diff:
+The `go-cobra-cobra-mini` case in [`evals/`](../../../evals/README.md) runs
+this check with `claude plugin eval` and grades it automatically:
+
+```bash
+python3 scripts/agent_evals.py run --skills-dir ../squad-skills --case go-cobra-cobra-mini
+```
+
+To run it by hand instead, point the go-cobra agent at this directory and
+inspect the resulting diff:
 
 ```bash
 squad run --agent go-cobra --working-dir go-cobra/testdata/cobra-mini \
