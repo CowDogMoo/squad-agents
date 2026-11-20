@@ -423,20 +423,22 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
     """Reduce the output to the message inside the code fence that wraps it.
 
     A commit message or PR description opens with its title: a line with a
-    conventional-commit type, or one of the repo's allowed types. A fence that
-    is open at the first title and closes below every title wraps the message
-    itself, and whatever sits outside it is narration ("I will analyze the
-    diff...", "Let me know if you want changes."). Left in place, the narration
-    becomes the title and the closing fence ends up in the last section.
+    conventional-commit type, or one of the repo's allowed types. When an odd
+    number of fence lines sits above the title, the last of them opens a fence
+    that wraps the message, and whatever sits outside it is narration ("I will
+    analyze the diff...", "Let me know if you want changes."). Left in place,
+    the narration becomes the title and the closing fence ends up in the last
+    section.
 
-    Fences are paired as they nest: a fence with an info string always opens
-    one, and a bare fence closes the innermost open one. When the fence holds
-    only the title, the body follows it outside the fence and is kept.
+    When a bare fence follows the title with only blank lines between, the
+    model fenced just its title: both fence lines go and the body after them
+    stays. Otherwise the closer is the last bare fence below the title with an
+    even number of fence lines between them, so code blocks inside the message
+    stay balanced, and only the lines between opener and closer are kept.
 
-    A fence that opens below the title is body content and is left alone, as
-    is a fenced snippet that closes before the title or holds a title that
-    another one follows. Text with no title has nothing to anchor on and is
-    returned unchanged.
+    A title outside every fence means the message is not wrapped, so a fenced
+    snippet above it or a code block in its body is left alone. Text with no
+    title, or an unclosed wrapper, is returned unchanged.
     """
     lines = text.split("\n")
 
@@ -447,34 +449,23 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
             CONVENTIONAL_COMMIT_RE.match(line) or (match and match.group("type") in allowed_types)
         )
 
+    fences = [i for i, ln in enumerate(lines) if ln.strip().startswith("```")]
     titles = [i for i, ln in enumerate(lines) if is_title(ln)]
-    if not titles:
+    if not titles or any(sum(f < i for f in fences) % 2 == 0 for i in titles):
         return text
 
-    open_fences: list[int] = []
-    opener = closer = None
-    for i, line in enumerate(lines):
-        if i == titles[0]:
-            if not open_fences:
-                return text
-            opener = open_fences[0]
-        stripped = line.strip()
-        if not FENCE_OPEN_RE.match(stripped):
-            continue
-        if stripped == "```" and open_fences:
-            open_fences.pop()
-        else:
-            open_fences.append(i)
-        if opener is not None and not open_fences:
-            closer = i
-            break
-
-    if opener is None or closer is None or titles[-1] > closer:
+    title = titles[0]
+    opener = max(f for f in fences if f < title)
+    below = [f for f in fences if f > title]
+    if not below:
         return text
-    inside = lines[opener + 1 : closer]
-    if [ln.strip() for ln in inside if ln.strip()] == [lines[titles[0]].strip()]:
-        return "\n".join([*inside, *lines[closer + 1 :]])
-    return "\n".join(inside)
+    first = below[0]
+    if lines[first].strip() == "```" and not any(ln.strip() for ln in lines[title + 1 : first]):
+        return "\n".join([*lines[opener + 1 : first], *lines[first + 1 :]])
+    closers = [f for f in below[::2] if lines[f].strip() == "```"]
+    if not closers:
+        return text
+    return "\n".join(lines[opener + 1 : closers[-1]])
 
 
 def merge_sections(text: str, section_names: list[str]) -> str:

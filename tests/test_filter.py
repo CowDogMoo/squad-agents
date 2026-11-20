@@ -477,6 +477,29 @@ class TestUnwrapFencedMessage:
         )
         assert unwrap_fenced_message(text) == text
 
+    def test_bare_inner_code_block_keeps_the_sections_after_it(self):
+        body = (
+            "feat: add run script\n**Key Changes:**\n- Adds a runner, invoked as:\n"
+            "```\n./run.sh --all\n```\n**Added:**\n- run.sh"
+        )
+        text = f"Here is the PR description:\n```markdown\n{body}\n```"
+        assert unwrap_fenced_message(text) == body
+
+    def test_bare_wrapper_with_bare_inner_code_block_keeps_the_block(self):
+        body = "feat: add runner\n\n**Added:**\n\n- runner:\n```\n./run.sh\n```"
+        text = f"I will write the commit message.\n```\n{body}\n```"
+        assert unwrap_fenced_message(text) == body
+
+    def test_fenced_title_keeps_an_example_title_in_the_body_code_block(self):
+        text = (
+            "**Title:**\n```\ndocs: explain commit format\n```\n**Added:**\n"
+            "- Example message:\n```\nfeat: add a thing\n```"
+        )
+        assert unwrap_fenced_message(text) == (
+            "docs: explain commit format\n**Added:**\n"
+            "- Example message:\n```\nfeat: add a thing\n```"
+        )
+
     def test_allowed_type_title_is_recognised(self):
         text = "I will write it.\n```\ndev: add export\n\n## Description\n\n- x\n```"
         assert unwrap_fenced_message(text) == text
