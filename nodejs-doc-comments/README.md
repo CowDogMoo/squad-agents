@@ -9,7 +9,7 @@ and verifies TypeScript compilation.
 - **`system.md`** — Documentation framework and analysis rules
 - **`agent.md`** — Autonomous execution wrapper
 - **`task.md`** — Default task prompt
-- **`references/nodejs-documentation-standards.md`** — JSDoc/TSDoc standards reference
+- **[`nodejs-documentation-standards`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/nodejs-documentation-standards)** skill (squad-skills) — JSDoc/TSDoc standards reference
 
 ## What It Does
 

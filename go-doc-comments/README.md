@@ -156,7 +156,7 @@ func (b *BlobStore) Delete(name string) error {
 
 ## Reference
 
-See [references/go-documentation-standards.md](references/go-documentation-standards.md)
+See the [go-documentation-standards](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/go-documentation-standards) skill
 for the complete knowledge base covering syntax by declaration type, modern
 doc comment features, common mistakes, and quality checklist.
 

@@ -39,9 +39,9 @@ go-security-audit/
   resources-system.md        # resources stage system prompt
   resources-agent.md         # resources stage wrapper
   resources-task.md          # resources stage task
-  references/
-    golang-security-guide.md # shared security reference
 ```
+
+Both stages load the [`golang-security-guide`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/golang-security-guide) and [`security-audit-loop`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/security-audit-loop) skills from squad-skills.
 
 ## Version
 

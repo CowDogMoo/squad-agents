@@ -1,1 +1,0 @@
-../../skills/rust-review-criteria/SKILL.md

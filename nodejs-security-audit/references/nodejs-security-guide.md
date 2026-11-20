@@ -1,1 +1,0 @@
-../../skills/nodejs-security-guide/SKILL.md

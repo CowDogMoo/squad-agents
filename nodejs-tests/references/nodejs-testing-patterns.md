@@ -1,1 +1,0 @@
-../../skills/nodejs-testing-patterns/SKILL.md

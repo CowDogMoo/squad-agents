@@ -79,7 +79,7 @@ The agent uses these verification strategies based on role tasks:
 
 ## Knowledge Base
 
-The agent references `ansible-molecule-guide.md`. Its core covers:
+The agent loads the [`ansible-molecule-guide`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/ansible-molecule-guide) skill from squad-skills. Its core covers:
 
 - Scenario structure and converge essentials
 - Verification depth (check_mode, stat+assert, URI)

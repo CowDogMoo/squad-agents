@@ -11,9 +11,6 @@ models:
     provider: google
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/taskfile-best-practices.md
-  - references/taskfile-standards.md
 task: task.md
 disable_task: true
 max_iterations: 15

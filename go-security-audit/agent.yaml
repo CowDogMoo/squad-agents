@@ -12,10 +12,6 @@ stages:
     models:
       - model: claude-sonnet-5-5
         provider: anthropic
-    references:
-      - references/golang-security-guide.md
-      - references/golang-security-guide-injection.md
-      - references/security-audit-loop.md
   - name: resources
     entrypoint: resources-system.md
     wrapper: resources-agent.md
@@ -24,10 +20,6 @@ stages:
     models:
       - model: claude-sonnet-5-5
         provider: anthropic
-    references:
-      - references/golang-security-guide.md
-      - references/golang-security-guide-resources.md
-      - references/security-audit-loop.md
 
 gates:
   - after: injection

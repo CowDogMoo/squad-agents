@@ -7,13 +7,13 @@ A squad agent for generating Go tests following community best practices. This a
 This pattern includes:
 
 - **`system.md`** - The test generation framework and prompt engineering for LLM
-- **`go-testing-patterns.md`** - Comprehensive reference document with testing patterns (source of truth)
+- **`go-testing-patterns`** skill (squad-skills) - Comprehensive reference document with testing patterns (source of truth)
 - **`filter.sh`** - Post-processing to clean up output formatting
 - **`README.md`** - This documentation
 - **`test-code.go`** - Sample code for testing
 - **`test-pattern.sh`** - Automated testing script
 
-The pattern is designed with **separation of concerns**: the `go-testing-patterns.md` contains the knowledge base (testing patterns), while `system.md` contains the execution framework (how to generate tests).
+The pattern is designed with **separation of concerns**: the `go-testing-patterns` skill contains the knowledge base (testing patterns), while `system.md` contains the execution framework (how to generate tests).
 
 ## Purpose
 
@@ -234,7 +234,7 @@ func TestDivide(t *testing.T) {
 
 ### Extending Testing Patterns
 
-Edit `go-testing-patterns.md` to add organization-specific patterns:
+Edit the `go-testing-patterns` skill to add organization-specific patterns:
 
 ```markdown
 ## Company-Specific Patterns
@@ -274,7 +274,7 @@ Edit the `# OUTPUT FORMAT` section in `system.md` to customize test structure.
 
 ### Pattern Documentation
 
-- **`go-testing-patterns.md`** - Comprehensive testing patterns reference
+- **`go-testing-patterns`** skill (squad-skills) - Comprehensive testing patterns reference
 
 ### External Resources
 

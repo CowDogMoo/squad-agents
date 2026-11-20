@@ -8,7 +8,7 @@
     {
       "name": "squad-agents",
       "source": "./",
-      "description": "Language-specific code review, testing, documentation, and security-audit agents plus their reference skills."
+      "description": "Language-specific code review, testing, documentation, and security-audit agents. Requires the squad-skills plugin for the skills they load."
     },
     {
       "name": "squad-skills",
@@ -16,7 +16,7 @@
         "source": "github",
         "repo": "CowDogMoo/squad-skills"
       },
-      "description": "Model-agnostic, host-portable skills shared across squad agents: comment scrubbing, LLM-tell detection, coverage orchestration, doc-comment discovery loops, and test-writer discipline."
+      "description": "The skills squad agents load: language review, testing, documentation, and security knowledge bases, the shared review and security-audit loops, comment scrubbing, LLM-tell detection, coverage orchestration, doc-comment discovery loops, and test-writer discipline."
     }
   ]
 }

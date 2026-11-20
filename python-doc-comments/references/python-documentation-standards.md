@@ -1,1 +1,0 @@
-../../skills/python-documentation-standards/SKILL.md

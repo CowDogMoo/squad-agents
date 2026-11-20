@@ -26,10 +26,10 @@ rust-tests/
 ├── system.md                           # Core prompt (identity, rules, workflow)
 ├── agent.md                            # Execution wrapper
 ├── task.md                             # Default task instructions
-├── README.md                           # This file
-└── references/
-    └── rust-testing-patterns.md        # Testing patterns knowledge base
+└── README.md                           # This file
 ```
+
+The knowledge base is the [`rust-testing-patterns`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/rust-testing-patterns) skill in squad-skills.
 
 ## Usage
 

@@ -6,13 +6,13 @@ An agent for reviewing Go CLI applications built with Cobra and Viper against in
 
 This agent includes:
 
-- **`agent.yaml`** - Minimal manifest for metadata and references
+- **`agent.yaml`** - Minimal manifest for metadata
 - **`agent.md`** - Agent-mode wrapper instructions
 - **`system.md`** - The review framework and prompt
-- **`references/cobra-viper-best-practices.md`** - Comprehensive reference document with detailed criteria (source of truth)
+- **[`cobra-viper-best-practices`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/cobra-viper-best-practices)** skill (squad-skills) - Comprehensive reference document with detailed criteria (source of truth)
 - **`README.md`** - This documentation
 
-The agent is designed with **separation of concerns**: the `cobra-viper-best-practices.md` contains the comprehensive knowledge base (what to look for), while `system.md` contains the review framework (how to analyze and report). This keeps the agent maintainable and easy to customize.
+The agent is designed with **separation of concerns**: the `cobra-viper-best-practices` skill contains the comprehensive knowledge base (what to look for), while `system.md` contains the review framework (how to analyze and report). This keeps the agent maintainable and easy to customize.
 
 ## Purpose
 
@@ -196,7 +196,7 @@ func runServe(cmd *cobra.Command, args []string) error {
 
 **Explanation:** Reading directly from flags bypasses Viper's precedence
 system. Config files and environment variables are ignored. Always read
-from Viper after binding flags per cobra-viper-best-practices.md.
+from Viper after binding flags per the cobra-viper-best-practices skill.
 
 ---
 
@@ -243,7 +243,7 @@ in production CLIs per Production Readiness guidelines.
 
 ### Extending Review Criteria
 
-To add or modify review criteria, edit the `cobra-viper-best-practices.md` file:
+To add or modify review criteria, edit the `cobra-viper-best-practices` skill in squad-skills:
 
 1. **Add new categories** for organization-specific requirements
 2. **Modify existing criteria** to match your standards
@@ -300,7 +300,7 @@ cat cmd/*.go | squad run --agent go-cobra
 
 ### Agent Documentation
 
-- **`cobra-viper-best-practices.md`** - Comprehensive best practices reference
+- **`cobra-viper-best-practices`** skill (squad-skills) - Comprehensive best practices reference
 
 ### External Resources
 

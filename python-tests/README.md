@@ -118,7 +118,6 @@ class TestCalculator:
 python-tests/
 ├── README.md                      # This documentation
 ├── system.md                      # LLM instruction framework
-├── python-testing-patterns.md    # Knowledge base with testing patterns
 ├── test-code.py                   # Sample code for pattern testing
 ├── filter.sh                      # Post-processing script
 └── test-pattern.sh                # Automated testing script
@@ -138,7 +137,7 @@ python-tests/
 
 ### Modify Knowledge Base
 
-Edit `python-testing-patterns.md` to add or modify testing patterns for your specific needs.
+Edit the `python-testing-patterns` skill to add or modify testing patterns for your specific needs.
 
 ### Adjust System Prompt
 

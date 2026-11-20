@@ -1,1 +1,0 @@
-../../skills/rust-testing-patterns/SKILL.md

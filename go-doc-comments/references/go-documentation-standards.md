@@ -1,1 +1,0 @@
-../../skills/go-documentation-standards/SKILL.md

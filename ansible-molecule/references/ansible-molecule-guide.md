@@ -1,1 +1,0 @@
-../../skills/ansible-molecule-guide/SKILL.md

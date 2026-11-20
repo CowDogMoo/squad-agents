@@ -1,1 +1,0 @@
-../../skills/go-testing-patterns/SKILL.md

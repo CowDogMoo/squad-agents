@@ -1,1 +1,0 @@
-../../skills/changelog-standards/SKILL.md

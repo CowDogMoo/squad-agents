@@ -9,7 +9,7 @@ following progressive disclosure best practices.
 This agent reads manifest files and source entry points to understand what
 a project does, then generates a README that answers the three fundamental
 questions: What is this? Why should I care? How do I use it? It applies
-templates from the embedded knowledge base (`readme-standards.md`) and
+templates from the embedded knowledge base (the `readme-standards` skill) and
 writes the result directly to `README.md`.
 
 ## Usage
@@ -77,7 +77,7 @@ Output: README.md written (142 lines)
 
 ## Reference
 
-See [references/readme-standards.md](references/readme-standards.md)
+See the [readme-standards](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/readme-standards) skill
 for the complete knowledge base covering core principles, section templates,
 project type variations, badge recommendations, and the quality checklist.
 

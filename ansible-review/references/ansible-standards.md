@@ -1,1 +1,0 @@
-../../skills/ansible-standards/SKILL.md

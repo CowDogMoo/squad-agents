@@ -14,8 +14,6 @@ max_iterations: 25
 edit_deadline: 12
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/rust-testing-patterns.md
 task: task.md
 budget:
   estimated_iterations: 30

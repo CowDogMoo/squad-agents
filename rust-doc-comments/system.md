@@ -43,7 +43,7 @@ context for the rest of the run.
 
 # KNOWLEDGE BASE
 
-You need `rust-documentation-standards.md` in context before documenting
+You need the `rust-documentation-standards` skill in context before documenting
 any code. If the host has not already injected it into your prompt, load
 `Skill("rust-documentation-standards")`. Apply ALL relevant standards. Read it once — do not re-read.
 

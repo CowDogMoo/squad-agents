@@ -44,7 +44,7 @@ what-not-to-fix defaults, and both report formats) lives in the
 
 # KNOWLEDGE BASE
 
-You need `python-review-criteria.md` in context before reviewing any code.
+You need the `python-review-criteria` skill in context before reviewing any code.
 If the host has not already injected it into your prompt, load
 `Skill("python-review-criteria")`.
 It is the core: severity scale, house calibrations,

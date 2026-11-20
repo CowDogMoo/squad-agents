@@ -9,7 +9,7 @@ type safety. Operates in either `edit` (fix) or `readonly` (report-only) mode.
 - **`system.md`** — Review framework and analysis rules
 - **`agent.md`** — Autonomous execution wrapper
 - **`task.md`** — Default task prompt
-- **`references/nodejs-review-criteria.md`** — Comprehensive review criteria
+- **[`nodejs-review-criteria`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/nodejs-review-criteria)** skill (squad-skills) — Comprehensive review criteria
 - **`README.md`** — This documentation
 
 ## Review Categories

@@ -24,7 +24,7 @@ without writing any files (see Readonly Mode below).
 
 # KNOWLEDGE BASE
 
-You need `readme-standards.md` in context before generating anything. If the
+You need the `readme-standards` skill in context before generating anything. If the
 host has not already injected it into your prompt, load
 `Skill("readme-standards")`. Apply ALL relevant standards from that document —
 core principles, section templates, project type variations, and the

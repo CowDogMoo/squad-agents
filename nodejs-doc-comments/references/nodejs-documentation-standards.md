@@ -1,1 +1,0 @@
-../../skills/nodejs-documentation-standards/SKILL.md

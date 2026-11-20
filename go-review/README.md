@@ -7,13 +7,13 @@ A squad agent for reviewing Go code against industry best practices and idiomati
 This pattern includes:
 
 - **`system.md`** - The review framework and prompt engineering for LLM
-- **`go-review-criteria.md`** - Comprehensive reference document with detailed criteria (source of truth)
+- **`go-review-criteria`** skill (squad-skills) - Comprehensive reference document with detailed criteria (source of truth)
 - **`filter.sh`** - Post-processing to clean up output formatting
 - **`README.md`** - This documentation
 - **`test-code-issues.go`** - Sample code with various issues for testing
 - **`test-pattern.sh`** - Automated testing script
 
-The pattern is designed with **separation of concerns**: the `go-review-criteria.md` contains the comprehensive knowledge base (what to look for), while `system.md` contains the review framework (how to analyze and report). This makes the pattern easier to maintain and customize.
+The pattern is designed with **separation of concerns**: the `go-review-criteria` skill contains the comprehensive knowledge base (what to look for), while `system.md` contains the review framework (how to analyze and report). This makes the pattern easier to maintain and customize.
 
 ## Purpose
 
@@ -221,7 +221,7 @@ func StartWorker(ctx context.Context) {
 ```
 
 **Explanation:** Goroutines without cancellation support cause leaks.
-Use context.Context for lifecycle management per go-review-criteria.md.
+Use context.Context for lifecycle management per the go-review-criteria skill.
 
 ---
 
@@ -276,7 +276,7 @@ if result == nil {
 
 ### Extending Review Criteria
 
-To add or modify review criteria, edit the `go-review-criteria.md` file:
+To add or modify review criteria, edit the `go-review-criteria` skill in squad-skills:
 
 1. **Add new categories** for organization-specific requirements
 2. **Modify existing criteria** to match your standards
@@ -329,7 +329,7 @@ squad run --agent go-review --working-dir .  # reviews myfile.go | grep -A 20 "#
 
 ### Pattern Documentation
 
-- **`go-review-criteria.md`** - Comprehensive review criteria reference
+- **`go-review-criteria`** skill (squad-skills) - Comprehensive review criteria reference
 
 ### External Resources
 

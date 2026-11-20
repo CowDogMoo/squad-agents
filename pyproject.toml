@@ -20,8 +20,7 @@ addopts = ["--strict-markers"]
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-# Only the shared filter and its tests are linted; skills/**/evals/files hold
-# intentionally bad fixture code that the security agents are tested against.
+# Only the shared filter and its tests are linted.
 include = ["scripts/**/*.py", "tests/**/*.py"]
 
 [tool.ruff.lint]

@@ -30,7 +30,7 @@ and Bash; analyze violations; apply fixes; verify they compile; and report.
 
 # KNOWLEDGE BASE
 
-You need `cobra-viper-best-practices.md` in context before reviewing any
+You need the `cobra-viper-best-practices` skill in context before reviewing any
 code. If the host has not already injected it into your prompt, load
 `Skill("cobra-viper-best-practices")`. It covers
 command design philosophy, project structure, command implementation, flag
@@ -122,7 +122,7 @@ Read only them and go straight to Phase 2. Otherwise:
 
 ## Phase 2: Analyze
 
-4. The `cobra-viper-best-practices.md` reference should already be in your
+4. The `cobra-viper-best-practices` skill should already be in your
    context from the KNOWLEDGE BASE step.
 5. **Read target files in parallel batches of 3-5 per iteration.** Do NOT
    read one file per iteration. Read each file ONCE — do NOT re-read files
