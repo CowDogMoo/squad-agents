@@ -55,6 +55,12 @@ graders:
     target: { source: file, path: leakcheck/leak_test.go }
     pattern: '\b(?:t\.Skip(?:f|Now)?|testing\.Short|TestMain)\(|//go:build|// \+build|/\*'
     match: not_contains
+  - name: adds-no-file-to-leakcheck
+    type: regex
+    target: files
+    pattern: '(^|/)leakcheck/[^/\n]*\.go'
+    flags: m
+    match: not_contains
   - name: source-bug-left-for-its-owner
     type: regex
     target: { source: file, path: leakcheck/leak.go }
