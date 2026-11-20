@@ -79,14 +79,16 @@ The agent uses these verification strategies based on role tasks:
 
 ## Knowledge Base
 
-The agent references `ansible-molecule-guide.md` which covers:
+The agent references `ansible-molecule-guide.md`. Its core covers:
 
-- Scenario structure and configuration
-- molecule.yml driver and platform options
-- Verification patterns (check_mode, stat+assert, URI)
-- Multi-platform testing strategies
-- CI/CD integration (GitHub Actions, GitLab CI)
-- Common anti-patterns to avoid
+- Scenario structure and converge essentials
+- Verification depth (check_mode, stat+assert, URI)
+- Idempotence rules
+- Common anti-patterns and the quality checklist
+
+Topic files under the skill's `references/` (molecule.yml drivers and
+platforms, multi-platform testing, prepare/cleanup/side effects,
+troubleshooting) are read only when the core's read-when index applies.
 
 ## Example
 

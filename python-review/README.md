@@ -45,7 +45,7 @@ This pattern helps you:
 
 ## Review Categories
 
-1. **Code Formatting & Style** - PEP 8, imports, naming conventions
+1. **Naming & Imports** - naming conventions, import placement (formatting itself is ruff's job, not a finding)
 2. **Error & Exception Handling** - specific exceptions, context, cleanup
 3. **Type Annotations** - hints, Optional, Union, generics
 4. **Data Structures** - comprehensions, generators, mutability
