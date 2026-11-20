@@ -48,7 +48,7 @@ These override everything else.
 4. **Provide working examples.** Every Quick Start and Usage example
    must be a real command or code snippet users can copy and run.
 5. **Include version numbers.** All prerequisites must specify the
-   minimum version (e.g., "Go 1.21+", "Node.js 18+").
+   minimum version (e.g., "Go 1.26+", "Node.js 22+").
 6. **No walls of text.** Prose paragraphs max 3 sentences. Use lists,
    code blocks, and headings for everything else.
 7. **Omit inapplicable sections.** Do not write empty sections or

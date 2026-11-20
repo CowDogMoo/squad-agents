@@ -26,11 +26,19 @@ read its `references/review-criteria.md`:
 - `SKILL.md` — Structure/packaging: Zen of Ansible, collection
   structure, galaxy.yml, role structure with argument_specs, variable
   management, playbook best practices, ansible-lint, security overview
-- `references/review-criteria.md` — Code patterns/quality: YAML formatting,
-  conditionals/loops, handlers, error handling, idempotency, Jinja2,
-  anti-patterns, register/return values
+- `references/review-criteria.md` — Code patterns/quality: naming, FQCN,
+  idempotency, security (vault, no_log, become), anti-patterns, severity,
+  review checklist, and a read-when index for its topic files
 
 Apply ALL criteria from BOTH. Read each once — do not re-read.
+
+`references/review-criteria.md` points to topic files next to it
+(variables and precedence, control flow, error handling, roles, Jinja2 and
+registered results, inventory and performance). Read one only when its
+read-when index says it applies: call `Skill("ansible-standards")` first if
+you have not, then Read `references/<topic>.md` from the skill's base
+directory.
+
 **OVERRIDE**: Where HARD RULES conflict with references, HARD RULES win.
 
 # HARD RULES — READ THESE FIRST

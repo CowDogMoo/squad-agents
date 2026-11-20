@@ -634,7 +634,3 @@ got := string(data)
 - [Google Go Style Decisions](https://google.github.io/styleguide/go/decisions.html)
 - [golang/go#33688 — Test file organization](https://github.com/golang/go/issues/33688)
 - [Organizing Go Tests — Comprehensive Guide](https://moldstud.com/articles/p-best-practices-for-organizing-golang-tests-and-test-files-a-comprehensive-guide)
-
----
-
-*Last updated: 2026-01-10*

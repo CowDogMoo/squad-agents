@@ -1,0 +1,34 @@
+{
+  "skill_name": "review-loop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run the review loop in edit mode as python-review would on evals/files/edit/cart.py. Language: Python. Verify command: python -m py_compile evals/files/edit/cart.py. Revert mechanism: git checkout -- <file>. Fix what is worth fixing and give me the report.",
+      "expected_output": "The mutable default argument in add_item is fixed in place (default None, list created inside the function), the file still compiles, total() and the module docstring are left alone, and the report uses the edit-mode sections with a PASS validation line.",
+      "files": ["evals/files/edit/cart.py"],
+      "expectations": [
+        "add_item no longer uses a mutable list as its default argument, and calling it twice without the items argument returns independent lists",
+        "No docstrings, type annotations, or other cosmetic changes are added to cart.py, and total() is unchanged",
+        "python -m py_compile is run after the edit and its result is reported as PASS",
+        "The report contains, in order, the sections Changes Summary, Issues Found and Fixed, Issues Found but Skipped, Files Touched, and Validation",
+        "The fixed finding carries a severity, a category, the file path, and a line number"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Review this Go code, report only, do not modify anything.\n\nPre-discovered source files\nevals/files/readonly/store.go",
+      "expected_output": "A readonly-mode report covering only store.go: the string-concatenated SQL query in FindUser at CRITICAL and the ignored f.Close() error after a write in Save, each with file, line, and a suggested fix. notes.go is not read or reported because the pre-discovered list is authoritative, and no file is modified.",
+      "files": [
+        "evals/files/readonly/store.go",
+        "evals/files/readonly/notes.go"
+      ],
+      "expectations": [
+        "No Edit, MultiEdit, or Write call is made and both store.go and notes.go are byte-for-byte unchanged",
+        "The concatenated SQL query in FindUser is reported as a SQL injection risk at CRITICAL severity",
+        "The discarded f.Close() error in Save is reported because a failed close after writing can lose data",
+        "Nothing from notes.go (the unchecked type assertion in Label) appears in the report, since the injected file list is the complete set",
+        "The report contains, in order, the sections Analysis Summary, Findings, Priority Order, and Recommendations, and every finding names a file and line"
+      ]
+    }
+  ]
+}

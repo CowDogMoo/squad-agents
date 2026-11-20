@@ -192,8 +192,9 @@ These are the anti-patterns you MUST fix when found:
 - **Hardcoded values:** Extract to the GLOBAL `vars:` section ONLY when the same
   literal recurs 3+ times across tasks. Never extract a literal inside an
   `includes:` `vars:` block - there `'{{.SAMENAME}}'` loses the passed-in value.
-- **Hardcoded secrets:** Replace with `'{{.SECRET_VAR | default ""}}'` and
-  add precondition to validate it's set
+- **Hardcoded secrets:** Read the secret from the environment (`$SECRET_VAR`
+  in the shell, or `env:` from a secret tool) with a precondition; never as
+  `{{.SECRET_VAR}}` in a command, which Task echoes with the value expanded
 - **Missing preconditions:** Prefer Taskfile's native `requires:` block. Only
   add a precondition when the input is used unguarded AND there is no existing
   `requires:`, no `| default`, and no upstream/parent validation. Do NOT add

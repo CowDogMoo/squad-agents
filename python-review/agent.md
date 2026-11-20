@@ -5,6 +5,8 @@ violations, apply fixes, and verify the result — all without human guidance.
 
 # EXECUTION RULES
 
+- Follow the shared loop in the review-loop skill (injected, or load
+  `Skill("review-loop")`); the bullets below are this agent's specifics
 - Glob `**/*.py` + Read pyproject.toml in parallel (1 iteration)
 - Read 4-6 files per iteration; do NOT read one per iteration
 - Check each file for: undefined methods, missing imports, identical branches, missing context managers, return type annotations (never add `-> None`)

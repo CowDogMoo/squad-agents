@@ -16,6 +16,7 @@ entrypoint: system.md
 wrapper: agent.md
 references:
   - references/nodejs-review-criteria.md
+  - references/review-loop.md
 task: task.md
 budget:
   estimated_iterations: 20

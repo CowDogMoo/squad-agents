@@ -439,7 +439,3 @@ When creating a new dashboard, ask yourself:
 - [Dashboarding Best Practices - Grafana Learning Platform](https://learn.grafana.com/dashboarding-best-practices)
 - [Grafana Observability Dashboards: Insight & Best Practices](https://www.groundcover.com/learn/observability/grafana-dashboards)
 - [Visualizations | Grafana documentation](https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/)
-
----
-
-*Last updated: 2026-01-05*

@@ -10,24 +10,24 @@ on:
       - synchronize
       - reopened
     paths:
-      - '**/agent.yaml'
-      - '**/system.md'
-      - '**/agent.md'
-      - '**/task.md'
-      - '**/references/**'
-      - '_includes/**'
-      - '.github/workflows/validate-agents.yaml'
+      - "**/agent.yaml"
+      - "**/system.md"
+      - "**/agent.md"
+      - "**/task.md"
+      - "**/references/**"
+      - "_includes/**"
+      - ".github/workflows/validate-agents.yaml"
   push:
     branches:
       - main
     paths:
-      - '**/agent.yaml'
-      - '**/system.md'
-      - '**/agent.md'
-      - '**/task.md'
-      - '**/references/**'
-      - '_includes/**'
-      - '.github/workflows/validate-agents.yaml'
+      - "**/agent.yaml"
+      - "**/system.md"
+      - "**/agent.md"
+      - "**/task.md"
+      - "**/references/**"
+      - "_includes/**"
+      - ".github/workflows/validate-agents.yaml"
   workflow_dispatch:
 
 permissions:
@@ -482,7 +482,7 @@ jobs:
               check_section "$f" '^#.*HARD RULES' "HARD RULES" || failed=1
               check_section "$f" '^#.*WORKFLOW' "WORKFLOW" || failed=1
               check_section "$f" '^#.*INPUT' "INPUT" || failed=1
-              if ! grep -qE '(^#.*OUTPUT FORMAT|include.*output/.*format)' "$f"; then
+              if ! grep -qE '^#.*OUTPUT FORMAT' "$f"; then
                 echo "::error file=${f}::Missing required section: OUTPUT FORMAT"
                 failed=1
               fi

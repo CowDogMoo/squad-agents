@@ -32,18 +32,6 @@ A comprehensive guide to reviewing Go code for quality, correctness, performance
 **Simplicity Over Complexity**
 Go's coding conventions embody "simplicity beats complexity." Clarity and maintainability trump clever abstractions.
 
-**Share Memory by Communicating**
-Don't communicate by sharing memory; use channels to coordinate goroutines.
-
-**Constructive Feedback**
-
-- Be educational, not critical
-- Explain the "why" behind suggestions
-- Provide concrete examples with code
-- Acknowledge good practices
-- Prioritize actionable feedback
-- Focus on idiomatic Go patterns, not personal preferences
-
 ---
 
 ## Code Formatting and Style
@@ -52,7 +40,6 @@ Don't communicate by sharing memory; use channels to coordinate goroutines.
 
 | Check                                | Severity | Rationale                              |
 | ------------------------------------ | -------- | -------------------------------------- |
-| Code formatted with gofmt            | HIGH     | Non-negotiable Go standard             |
 | Imports organized with goimports     | MEDIUM   | Standard library → third-party → local |
 | MixedCaps naming (never underscores) | MEDIUM   | Go naming convention                   |
 | Short, meaningful names              | LOW      | Readability                            |
@@ -521,13 +508,13 @@ db.Query("SELECT * FROM users WHERE id = " + userID)  // SQL injection!
 | Integration tests | Critical paths | MEDIUM   |
 | Benchmark tests   | Hot paths      | LOW      |
 
-### Testing Tools (2026)
+### Testing Tools
 
-| Tool                                           | Adoption    | Use Case                   |
-| ---------------------------------------------- | ----------- | -------------------------- |
-| `testing` (stdlib)                             | Most common | Built-in testing package   |
-| [testify](https://github.com/stretchr/testify) | 27%         | Assertions and mocking     |
-| [gomock](https://github.com/uber-go/mock)      | 21%         | Enterprise mock generation |
+| Tool                                           | Use Case                 |
+| ---------------------------------------------- | ------------------------ |
+| `testing` (stdlib)                             | Built-in testing package |
+| [testify](https://github.com/stretchr/testify) | Assertions and mocking   |
+| [gomock](https://github.com/uber-go/mock)      | Mock generation          |
 
 ### Test Quality
 
@@ -655,7 +642,3 @@ Suggestions for optimization:
 - [Go Proverbs](https://go-proverbs.github.io/)
 - [Uber Go Style Guide](https://github.com/uber-go/guide/blob/master/style.md)
 - [Google Go Style Guide](https://google.github.io/styleguide/go/)
-
----
-
-_Last updated: 2026-01-10_

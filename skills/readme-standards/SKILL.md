@@ -147,7 +147,7 @@ install-command-here
 
 ### Prerequisites
 
-- Node.js 18 or higher
+- Node.js 22 or higher
 - npm 9 or higher
 - Git 2.30+
 
@@ -698,7 +698,7 @@ Run `make install` to install.
 ## Installation
 
 ### Prerequisites
-- Go 1.21 or higher
+- Go 1.26 or higher
 - Make 4.0+
 - PostgreSQL 14+ (for database features)
 
@@ -740,7 +740,3 @@ print(result)
 - [Awesome README](https://github.com/matiassingers/awesome-readme)
 - [Standard Readme](https://github.com/RichardLitt/standard-readme)
 - [Art of README](https://github.com/hackergrrl/art-of-readme)
-
----
-
-*Last updated: 2026-01-10*

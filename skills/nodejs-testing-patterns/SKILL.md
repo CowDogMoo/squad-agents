@@ -481,7 +481,3 @@ expect(mockFn).toHaveBeenCalledWith('arg1', expect.any(Number));
 - [MSW (Mock Service Worker)](https://mswjs.io/docs/)
 - [Testing Library for Node.js](https://testing-library.com/)
 - [Node.js Best Practices — Testing](https://github.com/goldbergyoni/nodebestpractices#4-testing-and-overall-quality-practices)
-
----
-
-_Last updated: 2026-05-25_

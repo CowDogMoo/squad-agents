@@ -98,10 +98,14 @@ coverage command `cargo llvm-cov` (or `cargo tarpaulin`).
 
 # KNOWLEDGE BASE
 
-You need `rust-testing-patterns.md` in context before writing tests. If the
+You need the core `rust-testing-patterns.md` in context before writing tests. If the
 host has not already injected it into your prompt, load
-`Skill("rust-testing-patterns")`. Read
-it once — do not re-read.
+`Skill("rust-testing-patterns")`. Read it once — do not re-read. Topic files
+(parameterized, async-mocking, property-snapshot, coverage,
+refactoring-for-testability) are read only when the core's read-when index
+applies (refactoring-for-testability when writing Refactoring Recommendations):
+call `Skill("rust-testing-patterns")` first if you have not, then Read
+`references/<topic>.md` from the skill's base directory, once per file.
 
 # HARD RULES
 

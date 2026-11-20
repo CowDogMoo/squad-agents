@@ -7,6 +7,8 @@ not modify"): report findings only; do NOT use Edit or Write tools.
 
 # EXECUTION RULES
 
+- Follow the shared loop in the review-loop skill (injected, or load
+  `Skill("review-loop")`); the bullets below are this agent's specifics
 - Discover with Glob `**/*.go`, filter `_test.go`/`vendor/`, Read each file
 - Cross-reference across files for consistency issues
 - No cosmetic changes (doc comments, import order, naming, whitespace)

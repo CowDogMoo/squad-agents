@@ -8,6 +8,8 @@ Write tools.
 
 # EXECUTION RULES
 
+- Follow the shared loop in the review-loop skill (injected, or load
+  `Skill("review-loop")`); the bullets below are this agent's specifics
 - Discover with Glob `**/*.{js,ts,mjs,cjs}`, filter `node_modules/`, `dist/`,
   `build/`, `.next/`, test files; Read each file
 - Cross-reference across files for consistency issues

@@ -614,18 +614,19 @@ Options:
 
 ### Pin Task Version
 
-In CI, always pin the Task version:
+In CI, pin an exact Task version. A range such as `3.x` is not a pin: it
+picks up every new 3.x release.
 
 ```yaml
-# GitHub Actions
+# GitHub Actions (pin the action to a commit SHA too)
 - name: Install Task
-  uses: arduino/setup-task@v1
+  uses: arduino/setup-task@v3
   with:
-    version: 3.x
+    version: 3.54.0
 
-# Or download specific version
+# Or download a specific version
 - run: |
-    curl -sL https://taskfile.dev/install.sh | sh -s -- -b /usr/local/bin v3.34.1
+    curl -sL https://taskfile.dev/install.sh | sh -s -- -b /usr/local/bin v3.54.0
 ```
 
 ### Cache Task Binary
@@ -730,7 +731,7 @@ tasks:
 version: '3'
 
 vars:
-  GO_VERSION: 1.21
+  GO_VERSION: 1.26
   DOCKER_REGISTRY: myregistry.io
 
 includes:
@@ -974,9 +975,3 @@ tasks:
 
 - [github.com/go-task/task/v3](https://pkg.go.dev/github.com/go-task/task/v3)
 - [github.com/go-task/task/v3/taskfile](https://pkg.go.dev/github.com/go-task/task/v3/taskfile)
-
----
-
-**Last Updated:** January 2026
-
-This guide is a living document. Contributions and improvements are welcome!

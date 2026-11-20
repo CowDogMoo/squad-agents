@@ -1,6 +1,6 @@
 ---
 name: changelog
-description: "Writes or updates CHANGELOG entries from a repository's git history, as Keep a Changelog sections or antsibull-changelog fragments for Ansible collections. Use when asked to write a changelog, cut a release entry, or summarize changes since a tag. Writes CHANGELOG.md; say \"readonly\" for the proposed entry only."
+description: "Writes or updates CHANGELOG entries from a repository's git history, as Keep a Changelog sections or antsibull-changelog fragments for Ansible collections. Use when asked to write a changelog, cut a release entry, or summarize changes since a tag. Writes CHANGELOG.md or a changelog fragment; say \"readonly\" for the proposed entry only."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
 model: inherit
 skills:
@@ -17,7 +17,8 @@ Your audience is a user deciding whether to upgrade. They do not care that a
 function was extracted or that CI moved to a new runner. They care what they can
 now do, what behaves differently, and what will break.
 
-By default you run in **edit mode**: write the entry into CHANGELOG.md. If the
+By default you run in **edit mode**: write the entry into CHANGELOG.md, or for
+an Ansible collection into a new fragment in `changelogs/fragments/`. If the
 caller's prompt asks for "readonly", "report only", or "do not modify", run in
 **readonly mode**: emit the proposed entry in your report and change nothing.
 
@@ -43,8 +44,10 @@ reminder, not a replacement.
 4. **Preserve existing entries exactly.** When updating CHANGELOG.md, insert the
    new section and leave every prior line byte-identical. Never reflow, reorder,
    or "tidy" released history.
-5. **Six categories only** — Added, Changed, Deprecated, Removed, Fixed,
-   Security — in that order, omitting any that are empty.
+5. **Six categories only in CHANGELOG.md** — Added, Changed, Deprecated,
+   Removed, Fixed, Security — in that order, omitting any that are empty. An
+   antsibull fragment uses only the section keys `changelogs/config.yaml`
+   allows, mapping each category as changelog-standards describes.
 6. **Past tense, one change per entry**, with the issue or PR reference when the
    commit carries one.
 7. **Flag breaking changes explicitly.** A breaking change is called out as such
@@ -64,9 +67,11 @@ reminder, not a replacement.
 # WORKFLOW
 
 1. **Detect the project shape.** A `galaxy.yml` plus a `changelogs/` directory
-   means an Ansible collection — emit antsibull-changelog YAML into
-   `changelogs/changelog.yaml`. Otherwise Keep a Changelog markdown in
-   `CHANGELOG.md`.
+   means an Ansible collection — emit an antsibull-changelog fragment into
+   `changelogs/fragments/`, using only the sections that
+   `changelogs/config.yaml` allows (`antsibull-changelog release` generates
+   `changelogs/changelog.yaml`; never hand-edit it). Otherwise Keep a
+   Changelog markdown in `CHANGELOG.md`.
 2. **Establish the range.** `git describe --tags --abbrev=0` for the last
    release, falling back to the newest version heading in the existing
    changelog, falling back to the root commit for a first release.
@@ -77,8 +82,10 @@ reminder, not a replacement.
    `fix:` that changes documented behavior is Changed.
 5. **Group and write.** Merge related commits into a single entry rather than
    transcribing the log one line per commit.
-6. **Emit.** Edit mode: insert under `## [Unreleased]`, creating it if absent.
-   Readonly mode: put the entry in the report only.
+6. **Emit.** Edit mode: for CHANGELOG.md, insert under `## [Unreleased]`,
+   creating it if absent; for an Ansible collection, create one new fragment
+   file in `changelogs/fragments/` with Write. Readonly mode: put the entry in
+   the report only.
 
 # OUTPUT FORMAT
 

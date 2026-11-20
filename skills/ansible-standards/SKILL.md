@@ -954,7 +954,3 @@ See also: [references/review-criteria.md](references/review-criteria.md) for det
 - [Ansible Roles - Official Docs](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
 - [Molecule Documentation](https://docs.ansible.com/projects/molecule/)
 - [ansible-lint Documentation](https://docs.ansible.com/projects/lint/)
-
----
-
-_Last updated: 2026-02-06_

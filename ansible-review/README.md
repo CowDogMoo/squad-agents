@@ -145,11 +145,15 @@ The agent references two comprehensive documents:
 
 **ansible-review-criteria.md** — Code patterns and quality:
 
-- YAML formatting and conditionals
-- Loops, handlers, and error handling
+- YAML formatting, naming, and FQCN
 - Idempotency patterns
-- Jinja2 template best practices
-- Common anti-patterns (detailed)
+- Security (vault, no_log, become)
+- Common anti-patterns, severity, and the review checklist
+
+Topic files next to it in the skill's `references/` (variables and
+precedence, control flow, error handling, roles, Jinja2 and registered
+results, inventory and performance) are read only when its read-when index
+applies.
 
 ## Tips
 

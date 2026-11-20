@@ -35,15 +35,6 @@ Node.js code is often asynchronous and callback-heavy. Prefer explicit, readable
 **Fail Fast and Loudly**
 Unhandled rejections and swallowed errors are production incidents waiting to happen. Every error path must be deliberate.
 
-**Constructive Feedback**
-
-- Be educational, not critical
-- Explain the "why" behind suggestions
-- Provide concrete examples with code
-- Acknowledge good practices
-- Prioritize actionable feedback
-- Focus on idiomatic Node.js patterns, not personal preferences
-
 ---
 
 ## Code Formatting and Style
@@ -590,7 +581,7 @@ db.query(`SELECT * FROM users WHERE id = '${userId}'`); // SQL injection!
 | Integration tests | Critical paths | MEDIUM |
 | E2E tests | Happy paths | LOW |
 
-### Testing Tools (2026)
+### Testing Tools
 
 | Tool | Use Case |
 |------|----------|
@@ -707,7 +698,3 @@ describe('getUserById', () => {
 - [OWASP Node.js Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)
 - [Express Security Best Practices](https://expressjs.com/en/advanced/best-practice-security.html)
 - [Google JavaScript Style Guide](https://google.github.io/styleguide/jsguide.html)
-
----
-
-_Last updated: 2026-05-25_
