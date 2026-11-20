@@ -41,7 +41,7 @@ Every agent must have:
 An agent's knowledge base (criteria, examples, patterns) is a skill in
 [squad-skills](https://github.com/CowDogMoo/squad-skills), not a file in the
 agent directory. Name it in the `skills:` frontmatter of `system.md` (see
-below) and load it with a `Skill("...")` call for hosts that do not preload.
+below) and load it with a `Skill("<name>")` call for hosts that do not preload.
 
 ## Agent Structure
 
