@@ -118,7 +118,7 @@ added a precondition to verify the variable is set.
 
 ## References
 
-The agent uses these knowledge bases:
+The agent loads the [`taskfile-standards`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/taskfile-standards) skill from squad-skills:
 
-- `references/taskfile-best-practices.md` - Review criteria and anti-patterns
-- `references/taskfile-standards.md` - Idiomatic Taskfile patterns
+- `references/best-practices.md` - Review criteria and anti-patterns
+- `SKILL.md` - Idiomatic Taskfile patterns

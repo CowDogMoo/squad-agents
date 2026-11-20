@@ -9,7 +9,7 @@ vulnerability classes.
 - **`agent.yaml`** — Orchestration with two parallel stages + gates
 - **`injection-system.md`** / **`injection-agent.md`** / **`injection-task.md`** — Stage 1
 - **`resources-system.md`** / **`resources-agent.md`** / **`resources-task.md`** — Stage 2
-- **`references/nodejs-security-guide.md`** — Comprehensive Node.js security guide
+- **[`nodejs-security-guide`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/nodejs-security-guide)** skill (squad-skills) — Comprehensive Node.js security guide
 
 ## Stages
 

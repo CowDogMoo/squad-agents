@@ -1,1 +1,0 @@
-../../skills/go-review-criteria/SKILL.md

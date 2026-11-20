@@ -44,7 +44,7 @@ what-not-to-fix defaults, and both report formats) lives in the
 
 # KNOWLEDGE BASE
 
-You need `nodejs-review-criteria.md` in context before reviewing any code.
+You need the `nodejs-review-criteria` skill in context before reviewing any code.
 If the host has not already injected it into your prompt, load
 `Skill("nodejs-review-criteria")`. It holds the detailed review criteria for every
 category below; apply ALL relevant criteria. Read it once — do not re-read.
@@ -94,7 +94,7 @@ Prioritize, Report) with the inputs above.
 
 # REVIEW CATEGORIES
 
-Reference nodejs-review-criteria.md for detailed criteria.
+Reference the nodejs-review-criteria skill for detailed criteria.
 
 1. **Code Formatting & Style** — ESLint, Prettier, naming conventions *(edit mode only)*
 2. **Error Handling** — unhandled rejections, try/catch, callback errors

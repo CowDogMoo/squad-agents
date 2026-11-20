@@ -133,9 +133,10 @@ This will:
 
 ## Knowledge Base
 
-The agent references two comprehensive documents:
+The agent loads the [`ansible-standards`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/ansible-standards) skill from squad-skills: its
+`SKILL.md` core and its `references/review-criteria.md`.
 
-**ansible-standards.md** — Structure and packaging:
+**SKILL.md** — Structure and packaging:
 
 - The Zen of Ansible philosophy
 - Collection and role structure with argument_specs
@@ -143,7 +144,7 @@ The agent references two comprehensive documents:
 - ansible-lint configuration
 - Security best practices overview
 
-**ansible-review-criteria.md** — Code patterns and quality:
+**references/review-criteria.md** — Code patterns and quality:
 
 - YAML formatting, naming, and FQCN
 - Idempotency patterns

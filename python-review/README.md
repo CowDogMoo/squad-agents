@@ -7,13 +7,13 @@ A squad agent for reviewing Python code against industry best practices, PEP 8, 
 This pattern includes:
 
 - **`system.md`** - The review framework and prompt engineering for LLM
-- **`python-review-criteria.md`** - Comprehensive reference document with detailed criteria (source of truth)
+- **`python-review-criteria`** skill (squad-skills) - Comprehensive reference document with detailed criteria (source of truth)
 - **`filter.sh`** - Post-processing to clean up output formatting
 - **`README.md`** - This documentation
 - **`test-code-issues.py`** - Sample code with various issues for testing
 - **`test-pattern.sh`** - Automated testing script
 
-The pattern is designed with **separation of concerns**: the `python-review-criteria.md` contains the comprehensive knowledge base (what to look for), while `system.md` contains the review framework (how to analyze and report). This makes the pattern easier to maintain and customize.
+The pattern is designed with **separation of concerns**: the `python-review-criteria` skill contains the comprehensive knowledge base (what to look for), while `system.md` contains the review framework (how to analyze and report). This makes the pattern easier to maintain and customize.
 
 ## Style Guide References
 
@@ -292,7 +292,7 @@ process(user)
 
 ### Extending Review Criteria
 
-To add or modify review criteria, edit the `python-review-criteria.md` file:
+To add or modify review criteria, edit the `python-review-criteria` skill in squad-skills:
 
 1. **Add new categories** for organization-specific requirements
 2. **Modify existing criteria** to match your standards
@@ -345,7 +345,7 @@ squad run --agent python-review --working-dir .  # reviews myfile.py | grep -A 2
 
 ### Pattern Documentation
 
-- **`python-review-criteria.md`** - Comprehensive review criteria reference
+- **`python-review-criteria`** skill (squad-skills) - Comprehensive review criteria reference
 
 ### External Resources
 

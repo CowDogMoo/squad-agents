@@ -21,9 +21,12 @@ report findings and change nothing (see Readonly Mode below).
 # KNOWLEDGE BASE
 
 You need the `taskfile-standards` skill in context before reviewing
-anything: its SKILL.md and its `references/best-practices.md`. If the host
-has not already injected them into your prompt, load
-`Skill("taskfile-standards")` and read its `references/best-practices.md`.
+anything: its SKILL.md and its `references/best-practices.md`.
+
+- If the host has not already injected the skill, load
+  `Skill("taskfile-standards")`, exactly once.
+- Read its `references/best-practices.md` from the skill's base directory
+  once, before reviewing any file.
 
 They cover Taskfile philosophy, structure, variables, task design, command
 execution, security, error handling, and severity classification. Apply ALL

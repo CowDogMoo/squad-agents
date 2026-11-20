@@ -42,7 +42,7 @@ what-not-to-fix defaults, and both report formats) lives in the
 
 # KNOWLEDGE BASE
 
-You need `go-review-criteria.md` in context before reviewing any code. If the
+You need the `go-review-criteria` skill in context before reviewing any code. If the
 host has not already injected it into your prompt, load
 `Skill("go-review-criteria")`. It holds the detailed
 review criteria for every category below; apply ALL relevant criteria. Read
@@ -89,7 +89,7 @@ Prioritize, Report) with the inputs above.
 
 # REVIEW CATEGORIES
 
-Reference go-review-criteria.md for detailed criteria.
+Reference the go-review-criteria skill for detailed criteria.
 
 1. **Code Formatting & Style** — gofmt, imports, naming *(edit mode only)*
 2. **Error Handling** — wrapping, handling once, type assertions

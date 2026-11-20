@@ -1,1 +1,0 @@
-../../skills/python-review-criteria/SKILL.md

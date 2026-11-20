@@ -8,7 +8,7 @@ until each module reaches the target coverage percentage (default 75%).
 - **`system.md`** — Coverage workflow, rules, output format
 - **`agent.md`** — Autonomous execution wrapper
 - **`task.md`** — Default task prompt
-- **`references/nodejs-testing-patterns.md`** — Testing patterns and best practices
+- **[`nodejs-testing-patterns`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/nodejs-testing-patterns)** skill (squad-skills) — Testing patterns and best practices
 
 ## How It Works
 

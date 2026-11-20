@@ -1,1 +1,0 @@
-../../skills/python-testing-patterns/SKILL.md

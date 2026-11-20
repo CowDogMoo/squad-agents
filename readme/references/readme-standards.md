@@ -1,1 +1,0 @@
-../../skills/readme-standards/SKILL.md

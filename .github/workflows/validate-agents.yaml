@@ -352,17 +352,13 @@ jobs:
                           failed = True
 
                   # Check all reference files exist
-                  references = data.get('references', [])
-                  if references:
-                      for ref in references:
-                          path = agent_dir / ref
-                          if path.exists():
-                              print(f"  ✓ reference: {ref}")
-                          else:
-                              print(f"  ✗ reference not found: {path}")
-                              failed = True
-                  else:
-                      print(f"  ⚠ No references defined")
+                  for ref in data.get('references', []):
+                      path = agent_dir / ref
+                      if path.exists():
+                          print(f"  ✓ reference: {ref}")
+                      else:
+                          print(f"  ✗ reference not found: {path}")
+                          failed = True
 
           if failed:
               print(f"\n::error::One or more agents have missing referenced files")

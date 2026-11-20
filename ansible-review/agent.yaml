@@ -12,9 +12,6 @@ models:
 max_iterations: 25
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/ansible-standards.md
-  - references/ansible-review-criteria.md
 task: task.md
 disable_task: true
 requires:

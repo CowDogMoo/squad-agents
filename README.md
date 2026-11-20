@@ -199,8 +199,8 @@ becomes the user message:
 
 | Command | System Bundle | User Message |
 |---------|---------------|--------------|
-| `squad run --agent go-review` | system.md + task.md + refs | `"Begin."` |
-| `squad run --agent go-review "Focus on cmd/"` | system.md + task.md + refs | `"Focus on cmd/"` |
+| `squad run --agent go-review` | system.md + task.md + skill catalog | `"Begin."` |
+| `squad run --agent go-review "Focus on cmd/"` | system.md + task.md + skill catalog | `"Focus on cmd/"` |
 
 ### Mode Support
 
@@ -242,12 +242,14 @@ Most agents use the three-file split:
 
 ```text
 agent-name/
-├── agent.yaml      # Manifest: metadata, model list, references, budget
+├── agent.yaml      # Manifest: metadata, model list, budget
 ├── agent.md        # Agent-mode wrapper with execution rules
 ├── system.md       # Core system prompt: identity, hard rules, capabilities
-├── task.md         # Default task instructions included in every run
-└── references/     # Knowledge base: criteria, patterns, guides
+└── task.md         # Default task instructions included in every run
 ```
+
+Knowledge bases are skills in squad-skills (see [Skills](#skills)), not
+files in the agent directory.
 
 Self-contained one-shot agents use an inline `prompt:` field in `agent.yaml`
 instead. Pipelines replace `entrypoint`/`wrapper` with a `stages:` block.
@@ -292,8 +294,6 @@ models:
     provider: google
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/go-review-criteria.md
 task: task.md
 budget:
   estimated_iterations: 20
@@ -382,70 +382,66 @@ Agents declare the skills they need in the `skills:` frontmatter of their
 `system.md`, which Claude Code preloads; on hosts that do not inject them
 (squad), the prompt falls back to a `Skill("<name>")` call. Both follow
 the open [Agent Skills standard](https://agentskills.io).
-The skills come from two collections, split by coupling:
 
-- **[`skills/`](./skills) (this repo)** — reference knowledge bases
-  coupled to exactly one agent (`go-review-criteria`,
-  `ansible-standards`, `rust-testing-patterns`, …), the loop skills
-  shared by one family of this repo's agents (`review-loop` for the
-  go/rust/python/nodejs review agents, `security-audit-loop` for the six
-  security stages), plus the orchestration skills that chain this repo's
-  agents (`go-pipeline`, `rust-pipeline`, `go-security-audit`). Each agent's `references/`
-  entries are symlinks into this directory, so an agent and its
-  reference docs always change in the same commit. Naming follows the
-  agent (`go-review` → `go-review-criteria`). Each one is also a
-  standalone knowledge base a human can call directly — see below.
-- **[squad-skills](https://github.com/cowdogmoo/squad-skills) (sibling
-  repo)** — reusable, host-portable procedures shared across agents and
-  hosts. See that repo for the catalog and authoring guide.
+Every skill these agents load lives in
+[squad-skills](https://github.com/cowdogmoo/squad-skills), and this repo
+holds none. The reference knowledge bases (`go-review-criteria`,
+`ansible-standards`, `rust-testing-patterns`, …), the loop skills shared
+by one family of agents (`review-loop` for the go/rust/python/nodejs
+review agents, `security-audit-loop` for the six security stages) and the
+orchestration skills that chain these agents (`go-pipeline`,
+`rust-pipeline`, `go-security-audit`) are in its
+[`engineering/`](https://github.com/cowdogmoo/squad-skills/tree/main/engineering)
+category. The host-portable procedures (`test-writer-honesty`,
+`doc-comments-discovery-and-fix-loop`, `detect-llm-tells`, …) are in its
+other categories.
 
 Large knowledge skills keep a short core in `SKILL.md` and move topic
-material into `references/<topic>.md` with a read-when index. squad
-injects only the core (the `references:` symlink points at `SKILL.md`);
-an agent that needs a topic file calls `Skill("<name>")` first, which
-makes the skill directory readable, then reads the file. A file a stage
-needs on every run gets its own `references:` symlink instead, as the
-go-security-audit stages do for their half of `golang-security-guide`.
+material into `references/<topic>.md` with a read-when index. An agent
+that needs a topic file calls `Skill("<name>")` first, which makes the
+skill directory readable, then reads the file.
 
-Rule of thumb: a skill that exists for one agent, or one family of
-this repo's agents, lives in `skills/` here; a skill reusable across agents or hosts lives in squad-skills.
-The split is about **coupling**, not how broad the topic is — "how to
-review Go code" is a universal topic and still belongs here, because
-exactly one agent loads it.
+For squad to resolve these names, squad-skills must be one of its skill
+catalog sources in `~/.config/squad/config.yaml` (a git repository or a
+local checkout):
 
-### Calling reference skills directly
+```yaml
+skills:
+  repositories:
+    squad-skills: https://github.com/CowDogMoo/squad-skills.git
+  local_paths:
+    - ~/cowdogmoo/squad-skills
+```
+
+### Calling skills directly
 
 Whether a human can invoke a skill is a property of the skill, not of
-which repo holds it. Every skill in `skills/` states what it covers and
-when to reach for it, so any of them can be called on its own. Symlink
-the ones you want into your host's skills directory:
+which repo holds it. Every skill states what it covers and when to reach
+for it, so any of them can be called on its own. Install the squad-skills
+plugin (below), or symlink the ones you want from a squad-skills checkout
+into your host's skills directory:
 
 ```bash
 # One skill
-ln -s "$PWD/skills/readme-standards" ~/.claude/skills/readme-standards
-
-# Or all of them
-for d in "$PWD"/skills/*/; do
-    ln -sfn "$d" ~/.claude/skills/"$(basename "$d")"
-done
+ln -s "$HOME/cowdogmoo/squad-skills/engineering/readme-standards" ~/.claude/skills/readme-standards
 ```
 
 Then `Skill("readme-standards")` works in any project — useful for
 reviewing a README by hand without running the full `readme` agent.
 
-When writing a new reference skill, make the `description` say what the
-skill covers and when to use it. Do not write it as "internal to agent
-X" — that hides the skill from the host's routing, which is what decides
-whether it ever gets loaded at all.
-
-### Shared-skill wirings
+### Skill wirings
 
 These agents load squad-skills skills at runtime, so squad-skills must
 be installed alongside this plugin — `squad-agents` declares it as a
-plugin dependency and will not enable without it:
+plugin dependency and will not enable without it. Each agent's
+`skills:` frontmatter lists its knowledge-base skill (the `engineering/`
+skill named after the agent, such as `go-review` → `go-review-criteria`);
+the shared skills are:
 
 | squad-skills skill | Loaded by |
 |--------------------|-----------|
+| `review-loop` | go-, python-, rust-, nodejs-review |
+| `security-audit-loop` | go-, python-, nodejs-security-audit stages |
 | `detect-llm-tells` | degpt, scrub-comments |
 | `comment-scrub-playbook` | scrub-comments |
 | `doc-comments-discovery-and-fix-loop` | go-, python-, rust-, nodejs-doc-comments |
@@ -485,8 +481,7 @@ CI checks:
 - Agent name matches directory name
 - All referenced files exist
 - Pipeline stages reference valid sub-agents
-- Every `Skill("<name>")` reference names a skill in `skills/` or
-  squad-skills
+- Every `Skill("<name>")` reference names a skill in squad-skills
 
 ### Commit Style
 

@@ -25,8 +25,6 @@ findings and changes nothing.
 You run the shared `security-audit-loop` skill with the LOOP INPUTS below,
 and use `python-security-guide` for Python vulnerable and secure patterns.
 
-- squad injects both (look for "Reference:" sections). Do not load or Read
-  injected files again.
 - If the host has not already injected the guide, load
   `Skill("python-security-guide")`, exactly once.
   It is large; never re-read it.

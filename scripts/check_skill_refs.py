@@ -4,9 +4,9 @@
 Prompts load skills by name. A name that matches no skill makes the agent's
 mandatory first iteration fail at runtime, so every reference found in the
 repo's markdown and YAML must match the name of a directory holding a
-SKILL.md in this repo's skills/ or in a squad-skills checkout.
+SKILL.md in one of the given skill trees (a squad-skills checkout).
 
-Usage: check_skill_refs.py [--root DIR] [--skills-dir DIR ...]
+Usage: check_skill_refs.py --skills-dir DIR [--skills-dir DIR ...] [--root DIR]
 """
 
 from __future__ import annotations
@@ -53,13 +53,16 @@ def main(argv: list[str] | None = None) -> int:
         "--skills-dir",
         type=Path,
         action="append",
-        default=[],
-        help="extra directory tree of skills (e.g. a squad-skills checkout)",
+        required=True,
+        help="directory tree of skills (e.g. a squad-skills checkout); repeatable",
     )
     args = parser.parse_args(argv)
 
     root = args.root.resolve()
-    known = collect_skill_names([root / "skills", *args.skills_dir])
+    known = collect_skill_names(args.skills_dir)
+    if not known:
+        print("no SKILL.md found under --skills-dir", file=sys.stderr)
+        return 1
     missing = [
         (path, lineno, name)
         for path, lineno, name in find_refs(root)

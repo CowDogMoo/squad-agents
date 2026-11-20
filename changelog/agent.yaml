@@ -11,8 +11,6 @@ models:
     provider: google
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/changelog-standards.md
 task: task.md
 budget:
   estimated_iterations: 8

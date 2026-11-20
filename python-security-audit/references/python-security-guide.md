@@ -1,1 +1,0 @@
-../../skills/python-security-guide/SKILL.md

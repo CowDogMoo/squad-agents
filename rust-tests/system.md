@@ -98,7 +98,7 @@ coverage command `cargo llvm-cov` (or `cargo tarpaulin`).
 
 # KNOWLEDGE BASE
 
-You need the core `rust-testing-patterns.md` in context before writing tests. If the
+You need the core of the `rust-testing-patterns` skill in context before writing tests. If the
 host has not already injected it into your prompt, load
 `Skill("rust-testing-patterns")`. Read it once — do not re-read. Topic files
 (parameterized, async-mocking, property-snapshot, coverage,

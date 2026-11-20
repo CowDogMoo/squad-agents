@@ -1,1 +1,0 @@
-../../skills/ansible-standards/references/review-criteria.md

@@ -76,7 +76,7 @@ coverage target before it runs — **75** unless the caller specifies otherwise.
 
 # KNOWLEDGE BASE
 
-You need `python-testing-patterns.md` in context before writing tests. If the
+You need the `python-testing-patterns` skill in context before writing tests. If the
 host has not already injected it into your prompt, load
 `Skill("python-testing-patterns")`. Read it
 once — do not re-read.

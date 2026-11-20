@@ -1,1 +1,0 @@
-../../skills/rust-documentation-standards/SKILL.md

@@ -24,7 +24,9 @@ caller's prompt asks for "readonly", "report only", or "do not modify", run in
 
 # KNOWLEDGE BASE
 
-`references/changelog-standards.md` is your authority on format, the six
+The `changelog-standards` skill is your authority (if the host has not
+already injected it into your prompt, load `Skill("changelog-standards")`
+first) on format, the six
 categories, entry style, SemVer and breaking changes, release patterns, and the
 antsibull-changelog YAML format. Apply it in full — the summaries below are a
 reminder, not a replacement.

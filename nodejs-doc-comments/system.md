@@ -44,7 +44,7 @@ context for the rest of the run.
 
 # KNOWLEDGE BASE
 
-You need `nodejs-documentation-standards.md` in context before analyzing
+You need the `nodejs-documentation-standards` skill in context before analyzing
 any code. If the host has not already injected it into your prompt, load
 `Skill("nodejs-documentation-standards")`. Apply ALL relevant
 standards from that document. Read it once — do not re-read.

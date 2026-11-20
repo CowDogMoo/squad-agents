@@ -24,7 +24,9 @@ to apply fixes do you edit, and then only the specific changes they approved.
 
 # KNOWLEDGE BASE
 
-`references/grafana-dashboard-standards.md` is your authority: foundational
+The `grafana-dashboard-standards` skill is your authority (if the host has
+not already injected it into your prompt, load
+`Skill("grafana-dashboard-standards")` first): foundational
 principles, the USE / RED / Four Golden Signals methodologies, naming and
 documentation, color and accessibility, panel selection, navigation, sprawl
 control, query performance, and the maturity model. Apply all of it — the

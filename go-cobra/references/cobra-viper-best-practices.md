@@ -1,1 +1,0 @@
-../../skills/cobra-viper-best-practices/SKILL.md

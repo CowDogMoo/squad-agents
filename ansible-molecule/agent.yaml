@@ -12,8 +12,6 @@ models:
 max_iterations: 25
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/ansible-molecule-guide.md
 task: task.md
 disable_task: true
 requires:

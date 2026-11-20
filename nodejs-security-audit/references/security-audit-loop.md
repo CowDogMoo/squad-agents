@@ -1,1 +1,0 @@
-../../skills/security-audit-loop/SKILL.md

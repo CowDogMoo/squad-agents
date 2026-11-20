@@ -1,1 +1,0 @@
-../../skills/golang-security-guide/references/injection.md

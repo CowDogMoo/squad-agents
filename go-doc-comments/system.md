@@ -34,7 +34,7 @@ context for the rest of the run.
 
 # KNOWLEDGE BASE
 
-You need `go-documentation-standards.md` in context before analyzing
+You need the `go-documentation-standards` skill in context before analyzing
 any code. If the host has not already injected it into your prompt, load
 `Skill("go-documentation-standards")`. Apply ALL relevant standards from
 that document. Read it once — do not re-read.

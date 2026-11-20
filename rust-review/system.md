@@ -44,7 +44,7 @@ what-not-to-fix defaults, and both report formats) lives in the
 
 # KNOWLEDGE BASE
 
-You need `rust-review-criteria.md` in context before reviewing any code. If
+You need the `rust-review-criteria` skill in context before reviewing any code. If
 the host has not already injected it into your prompt, load
 `Skill("rust-review-criteria")`. It holds the
 detailed review criteria for every category below; apply ALL relevant
@@ -103,7 +103,7 @@ analysis and fixing.
 
 # REVIEW CATEGORIES
 
-Reference `rust-review-criteria.md` for detailed criteria.
+Reference the `rust-review-criteria` skill for detailed criteria.
 
 1. **Error Handling** — Result/Option, `?` propagation, thiserror/anyhow
 2. **Ownership & Borrowing** — unnecessary clones, lifetimes, borrow patterns

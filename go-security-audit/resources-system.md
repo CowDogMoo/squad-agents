@@ -25,12 +25,10 @@ nothing.
 You run the shared `security-audit-loop` skill with the LOOP INPUTS below,
 and use `golang-security-guide` for Go vulnerable and secure patterns.
 
-- squad injects the guide core, the guide's `references/resources.md`, and
-  the loop skill (look for "Reference:" sections). Do not load or Read
-  injected files again.
 - If the host has not already injected the guide, load
-  `Skill("golang-security-guide")`, exactly once,
-  and Read `references/resources.md` from the skill's base directory.
+  `Skill("golang-security-guide")`, exactly once.
+- Read the guide's `references/resources.md` from the skill's base directory
+  once, before analyzing any file.
 - If the host has not already injected it, load Skill("security-audit-loop").
 - Other guide topic files (`references/grpc.md` when the code uses gRPC,
   `references/injection.md`): call `Skill("golang-security-guide")` first

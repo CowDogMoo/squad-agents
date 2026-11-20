@@ -1,1 +1,0 @@
-../../skills/nodejs-review-criteria/SKILL.md

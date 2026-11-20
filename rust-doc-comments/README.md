@@ -31,10 +31,10 @@ rust-doc-comments/
 ├── system.md                               # Core prompt
 ├── agent.md                                # Execution wrapper
 ├── task.md                                 # Default task instructions
-├── README.md                               # This file
-└── references/
-    └── rust-documentation-standards.md     # Documentation standards
+└── README.md                               # This file
 ```
+
+The knowledge base is the [`rust-documentation-standards`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/rust-documentation-standards) skill in squad-skills.
 
 ## Usage
 

@@ -14,8 +14,6 @@ max_iterations: 200
 edit_deadline: 6
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/nodejs-testing-patterns.md
 task: task.md
 budget:
   estimated_iterations: 30

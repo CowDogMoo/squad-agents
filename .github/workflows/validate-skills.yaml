@@ -4,8 +4,8 @@ on:
   merge_group:
   # No `paths` filter on pull_request: if the summary job is ever made a
   # required status check on main, a filtered-out workflow never reports,
-  # which would leave non-skill PRs unmergeable. The jobs only scan
-  # skills/, so running on every PR is correct and costs ~30s.
+  # which would leave non-skill PRs unmergeable. The job only scans
+  # prompts, so running on every PR is correct and costs ~30s.
   pull_request:
     branches:
       - main
@@ -17,7 +17,6 @@ on:
     branches:
       - main
     paths:
-      - "skills/**"
       - "scripts/check_skill_refs.py"
       - "**/*.md"
       - "**/*.yaml"
@@ -32,15 +31,9 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  # The validation logic lives in squad-skills so both repos run the same
-  # checks without a drifting copy. Skills here live under skills/.
-  skills:
-    name: Skills
-    uses: CowDogMoo/squad-skills/.github/workflows/reusable-validate-skills.yaml@1ad886c654d22f80d85fa8e1f95dbd7756328f5e # main
-    with:
-      skills-dir: skills
-
-  # Every skill a prompt loads by name must exist in skills/ or squad-skills,
+  # Every skill these agents load lives in squad-skills, which validates
+  # the skills themselves. This repo only checks that each skill a
+  # prompt loads with a Skill() call exists there,
   # otherwise the agent's mandatory first iteration fails at runtime.
   skill-refs:
     name: Skill References
@@ -66,13 +59,13 @@ jobs:
   summary:
     name: Skill Validation Summary
     runs-on: ubuntu-latest
-    needs: [skills, skill-refs]
+    needs: [skill-refs]
     if: always()
     steps:
       - name: Check results
         run: |
-          if [ "${{ needs.skills.result }}" != "success" ] || [ "${{ needs.skill-refs.result }}" != "success" ]; then
-            echo "::error::Skill validation failed (skills: ${{ needs.skills.result }}, skill-refs: ${{ needs.skill-refs.result }})"
+          if [ "${{ needs.skill-refs.result }}" != "success" ]; then
+            echo "::error::Skill validation failed (skill-refs: ${{ needs.skill-refs.result }})"
             exit 1
           fi
           echo "✓ All skill validations passed"

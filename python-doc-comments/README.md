@@ -209,7 +209,7 @@ class TokenBucket:
 
 ## Reference
 
-See [references/python-documentation-standards.md](references/python-documentation-standards.md)
+See the [python-documentation-standards](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/python-documentation-standards) skill
 for the complete knowledge base covering PEP 257, docstring styles, comment
 rules, type hints, codetags, linter directives, and quality checklist.
 

@@ -9,7 +9,7 @@ vulnerability classes.
 - **`agent.yaml`** — Orchestration with two parallel stages + gates
 - **`injection-system.md`** / **`injection-agent.md`** / **`injection-task.md`** — Stage 1
 - **`resources-system.md`** / **`resources-agent.md`** / **`resources-task.md`** — Stage 2
-- **`references/python-security-guide.md`** — Comprehensive Python security guide
+- **[`python-security-guide`](https://github.com/CowDogMoo/squad-skills/tree/main/engineering/python-security-guide)** skill (squad-skills) — Comprehensive Python security guide
 
 ## Stages
 
