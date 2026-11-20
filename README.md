@@ -462,6 +462,8 @@ CI checks:
 - Agent name matches directory name
 - All referenced files exist
 - Pipeline stages reference valid sub-agents
+- Every `Skill("<name>")` reference names a skill in `skills/` or
+  squad-skills
 
 ### Commit Style
 
