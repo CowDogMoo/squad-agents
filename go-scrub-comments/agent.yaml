@@ -15,6 +15,7 @@ entrypoint: system.md
 wrapper: agent.md
 task: task.md
 disable_task: true
+max_iterations: 200
 comments_only: true
 budget:
   estimated_iterations: 45

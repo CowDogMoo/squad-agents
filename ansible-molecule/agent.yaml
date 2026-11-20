@@ -9,6 +9,7 @@ models:
     provider: google
   - model: gpt-4.1-mini
     provider: openai
+max_iterations: 25
 entrypoint: system.md
 wrapper: agent.md
 references:

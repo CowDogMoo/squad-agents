@@ -39,8 +39,9 @@ discipline rules — never destroy tests, never fall back to Write when
 Edit fails, report = git-diff transcript — come from
 `Skill("test-writer-honesty")`.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-nodejs")` AND
-`Skill("test-writer-honesty")` in parallel.
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-nodejs")`, plus
+`Skill("test-writer-honesty")` in parallel if the host has not already
+injected it into your prompt.
 **Iteration 2:** the discovery Bash returned by the orchestrator.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
 
@@ -132,7 +133,7 @@ These override everything else.
     over an existing test file (it truncates and destroys prior tests).
     If `Edit` fails, re-Read and fix the anchor — NEVER fall back to
     `Write`. 3 failed Edits → skip the module. See
-    `Skill("test-writer-honesty")`. Cap 20 iterations per module.
+    `Skill("test-writer-honesty")`.
 15. **Wind-down protocol.** When approaching limit, stop writing, measure
     final coverage, produce report.
 16. **No variable shadowing.** Never reuse names that shadow outer-scope

@@ -14,7 +14,7 @@ version: 0.1.0
 - **One Write operation.** Generate the complete README in memory, then
   write it to README.md in a single Write call.
 - **Stop when done.** After writing README.md and emitting the report, stop.
-- **Efficient.** Target ≤8 iterations. Read each key file once.
+- **Efficient.** Read each key file once.
 
 # OUTPUT COMPLIANCE
 

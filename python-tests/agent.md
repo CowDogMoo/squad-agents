@@ -29,7 +29,6 @@ Missing Coverage Report with Before/After/Delta = pipeline failure.
 - **Write conftest.py FIRST** with module-level sys.modules stubs.
 - **Verify ALL tests at once** with `pytest -v` — not per-file.
 - **STOP after verification.** Emit report in same response.
-- **Budget:** Small <=15 files = 15 iter. Medium 16-30 = 25. Large 30+ = 35.
 - **Wind down gracefully.** Partial report with accurate numbers = success.
 - **Coverage:** `pytest --cov=<pkg> --cov-branch --cov-report=term-missing -q || true`. Do NOT use bare `--cov`.
 

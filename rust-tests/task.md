@@ -16,4 +16,4 @@ IMPORTANT CONSTRAINTS:
 - No `test_` prefix by default — use `<function>_<behavior>` naming
 - Calculate coverage ceiling. If below target, explain why with recommendations
 - Run `cargo test` after each batch. Check `--features` for gated modules
-- Per-module target: 75% unless the caller specifies otherwise. Budget: <=15 files = 15 iter
+- Per-module target: 75% unless the caller specifies otherwise

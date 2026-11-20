@@ -72,7 +72,6 @@ These override everything else.
 14. **Emit the report after writing.** See OUTPUT FORMAT for the
     required post-write summary.
 15. **Efficiency.** Read ≤5 key files in discovery, then generate.
-    Target ≤8 iterations for straightforward projects.
 
 # WORKFLOW
 

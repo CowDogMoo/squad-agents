@@ -16,7 +16,6 @@ pollution — do NOT duplicate that work.
   Use `offset` and `limit` to read them in 500-line sections.
 - **Grep before fixing.** When you find a pattern, grep for ALL occurrences
   repo-wide. Fix all instances, not just the first.
-- **Phase 1+2 MUST complete in <=4 iterations.**
 - **Early termination.** If no actionable findings in your categories,
   emit report IMMEDIATELY.
 - **Cost awareness.** Produce the report before spending 60% of budget.

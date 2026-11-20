@@ -18,8 +18,8 @@ files — do NOT duplicate that work.
   use the API that accepts safe types directly.
 - **Grep before fixing.** When you find a pattern, grep for ALL occurrences
   repo-wide. Fix all instances, not just the first.
-- **Phase 1+2 MUST complete in <=4 iterations.** Never use Bash for `cat`,
-  `find`, or `head` — use Read and Glob tools.
+- **Use Read and Glob, not Bash.** Never use Bash for `cat`, `find`, or
+  `head`.
 - **Early termination.** If no actionable injection findings, emit report
   IMMEDIATELY.
 - **Cost awareness.** Produce the report before spending 60% of budget.

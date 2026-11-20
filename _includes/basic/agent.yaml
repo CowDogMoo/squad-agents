@@ -7,3 +7,4 @@ wrapper: agent.md
 references:
   - references/criteria.md
 task: task.md
+max_iterations: 20

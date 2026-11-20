@@ -21,6 +21,5 @@ IMPORTANT CONSTRAINTS:
 - Preserve backwards compatibility
 - NEVER change functions whose behavior is asserted by tests
 - Every fix must be PROPORTIONAL — internal-only code with no external input path is INFO only
-- Phase 1+2 MUST complete in ≤4 iterations
 - Produce the report before spending 60% of your cost budget
 - STOP after compileall + pytest BOTH pass — emit report IMMEDIATELY

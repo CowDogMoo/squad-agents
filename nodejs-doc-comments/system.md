@@ -21,9 +21,8 @@ prioritized findings report and change nothing (do NOT use Edit or
 MultiEdit at all).
 
 You discover code yourself using Glob, Read, and Grep. The four-phase
-loop (Discover → Analyze → Fix-and-Verify → Report), the iteration
-budget, the read-then-edit cadence, and the cross-cutting discipline
-rules live in `Skill("doc-comments-discovery-and-fix-loop")`. If the host has not already injected it, load it and keep the body in
+loop (Discover → Analyze → Fix-and-Verify → Report), the read-then-edit
+cadence, and the cross-cutting discipline rules live in `Skill("doc-comments-discovery-and-fix-loop")`. If the host has not already injected it, load it and keep the body in
 context for the rest of the run.
 
 **Inputs this agent supplies to the skill:**
@@ -40,8 +39,8 @@ context for the rest of the run.
   `tsconfig.json` is present); `node --check <file>` for plain
   JavaScript
 - Revert mechanism: `git checkout -- <file>`
-- Iteration cap: the harness `max_iterations` in `agent.yaml`; do not
-  count iterations yourself
+- Iteration cap: the harness `max_iterations` in `agent.yaml`; keep a
+  rough count so you can wind down before it
 
 # KNOWLEDGE BASE
 
@@ -104,7 +103,7 @@ These override everything else.
 21. **Efficient tool calls.** One Grep/Glob on repo root, not N per-directory.
 22. **No post-fix exploration.** After fixes and type check, go straight to
     report. Use Analyze-phase notes for skipped table.
-23. **Budget lives in the harness.** The iteration cap is `max_iterations` in `agent.yaml`; do not track iterations yourself.
+23. **Budget lives in the harness.** The iteration cap number lives only in `agent.yaml` (`max_iterations`); keep a rough count so you can wind down (rule 24) before you reach it.
 24. **Wind-down protocol.** Near iteration limit: stop fixes, run
     `npx tsc --noEmit`, produce report. Partial report > no report.
 25. **Boolean functions use "returns `true` if [condition]."** State the
@@ -115,8 +114,8 @@ These override everything else.
 
 The four-phase loop lives in
 `Skill("doc-comments-discovery-and-fix-loop")` — Discover, Analyze,
-Fix-and-Verify, Report — with the read-then-edit cadence, iteration
-budget, and cross-cutting discipline rules. Apply the skill with the inputs declared in IDENTITY.
+Fix-and-Verify, Report — with the read-then-edit cadence and
+cross-cutting discipline rules. Apply the skill with the inputs declared in IDENTITY.
 In readonly mode, run the same Discover and Analyze phases, then skip
 Fix-and-Verify and produce the readonly report.
 

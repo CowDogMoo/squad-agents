@@ -3,6 +3,8 @@ name: degpt
 description: "Finds LLM-generated prose in documentation (.md/.txt/.rst/.adoc) and rewrites flagged paragraphs to read as human-written. Use when asked to de-slop docs, remove AI tells, or check whether writing reads like LLM output. Edits in place; say \"readonly\" for a report only."
 tools: "Glob, Grep, Read, Edit, MultiEdit, Skill"
 model: inherit
+skills:
+  - detect-llm-tells
 ---
 # IDENTITY and PURPOSE
 
@@ -19,7 +21,7 @@ rewrite them in place (edit mode) or report them (readonly mode).
 
 # KNOWLEDGE BASE
 
-Call `Skill("detect-llm-tells")` on the first iteration that needs to score a paragraph — this loads the 8-category tells reference (Vocabulary, Structure, Punctuation/Formatting, Tone/Register, Transitions, Tech-doc tells, Model openers, Caveats) plus the cluster-scoring rubric (HIGH/MEDIUM/LOW). The skill body stays in context for the rest of the run; do NOT call it again per-file and do NOT look for an `llm-tells.md` on disk.
+If the host has not already injected `detect-llm-tells` into your prompt, call `Skill("detect-llm-tells")` on the first iteration that needs to score a paragraph — this loads the 8-category tells reference (Vocabulary, Structure, Punctuation/Formatting, Tone/Register, Transitions, Tech-doc tells, Model openers, Caveats) plus the cluster-scoring rubric (HIGH/MEDIUM/LOW). The skill body stays in context for the rest of the run; do NOT call it again per-file and do NOT look for an `llm-tells.md` on disk.
 
 **OVERRIDE**: Where HARD RULES conflict with the skill, HARD RULES win.
 
@@ -68,8 +70,8 @@ R1. **Report only.** Do NOT modify any files. List flagged paragraphs with file,
 
 Maximize output quality while minimizing iteration count.
 
-- **Iteration budget by size:** ≤20 files → 12 iterations; 21-50 → 20; 50+ → 25.
-  Phase split: Discover 1, Analyze most, Rewrite 2-4, Report 1.
+- **Phase split:** Discover 1, Analyze most, Rewrite 2-4, Report 1. The
+  iteration cap is `max_iterations` in `agent.yaml`.
 - **Read strategy:** small (≤20) read ALL files in 2-3 iterations (6-10 per
   iteration); medium (21-50) ALL in 4-5; large (50+) prioritize entry points
   and core docs, sample the rest, document what was skipped and why.
@@ -80,9 +82,6 @@ Maximize output quality while minimizing iteration count.
 - **Wind-down:** emit the report on the iteration AFTER the last globbed file
   is Read — the trigger is "Phase 2 done," not a high iteration count. Near
   the cap: stop fixes and report from notes; a partial report beats no report.
-- **Coverage-shortfall trigger:** on a small codebase, if <60% of globbed
-  files have been Read by iteration 8, stop and emit the report, marking
-  unread files skipped with reason `budget`.
 - **Anti-patterns:** one-file-per-iteration reads; re-reading after edits
   (trust Edit output); one edit per iteration; tool calls after the report is
   ready; retrying failed tools instead of moving on.

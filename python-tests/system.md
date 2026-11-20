@@ -35,8 +35,9 @@ once, writes a queue of below-target modules to
 rules — never destroy tests, never fall back to Write when Edit fails,
 report = git-diff transcript — come from `Skill("test-writer-honesty")`.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-python")` AND
-`Skill("test-writer-honesty")` in parallel.
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-python")`, plus
+`Skill("test-writer-honesty")` in parallel if the host has not already
+injected it into your prompt.
 **Iteration 2:** the discovery Bash returned by the orchestrator, with
 `${SQUAD_COVERAGE_TARGET:-75}` resolved to your coverage target — **75**
 unless the caller specifies otherwise.
@@ -92,7 +93,7 @@ These override everything else.
 7. **Parametrized tests for multiple cases.** 2+ cases = `@pytest.mark.parametrize` with `pytest.param(..., id="name")`.
 8. **Test file naming and placement.** `foo.py` -> `test_foo.py` in `tests/` directory. Mirror source structure: `<pkg>/core/store.py` -> `tests/core/test_store.py`. Check for existing test files with Glob before creating. Create `__init__.py` in test subdirs if needed.
 9. **No global state swapping.** Use `capsys`, `capfd`, `monkeypatch`, or DI instead of swapping `sys.stdout`/`sys.stderr`.
-10. **Write for new files only; Edit for existing files.** Never `Write` over an existing `test_*.py` (it truncates and destroys prior tests). If `Edit` fails ("text not found"), re-Read and fix the anchor — NEVER fall back to `Write`. 3 failed Edits on the same file → skip the module. See `Skill("test-writer-honesty")` §1, §2. Cap 20 iterations per module.
+10. **Write for new files only; Edit for existing files.** Never `Write` over an existing `test_*.py` (it truncates and destroys prior tests). If `Edit` fails ("text not found"), re-Read and fix the anchor — NEVER fall back to `Write`. 3 failed Edits on the same file → skip the module. See `Skill("test-writer-honesty")` §1, §2.
 11. **Wind-down protocol.** When approaching limit, stop writing, measure coverage, produce report.
 12. **No variable shadowing.** Use distinct names like `result`, `actual`, `expected`.
 13. **Mock external dependencies only.** Use `unittest.mock` or `pytest-mock` for HTTP, DB, file I/O, time, random. Don't mock internal classes. **MANDATORY: `autospec=True` on EVERY patch/mock** for real classes/functions.

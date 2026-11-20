@@ -16,8 +16,8 @@ version: 0.1.0
 - **Insert with Edit.** Add the new section with one Edit so every prior
   line stays byte-identical; use Write only to create a new CHANGELOG.md.
 - **Stop when done.** After writing and emitting the report, stop.
-- **Efficient.** Target <=8 iterations. Only `git show` a commit whose subject
-  leaves user impact genuinely ambiguous.
+- **Efficient.** Only `git show` a commit whose subject leaves user impact
+  genuinely ambiguous.
 
 # OUTPUT COMPLIANCE
 

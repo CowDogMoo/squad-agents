@@ -13,6 +13,7 @@ entrypoint: system.md
 wrapper: agent.md
 task: task.md
 disable_task: true
+max_iterations: 25
 edit_deadline: 0
 # Hard gate: reject any edit that introduces non-ASCII characters (smart quotes,
 # em/en dashes, ellipsis) the original didn't have — a model cannot sneak in the

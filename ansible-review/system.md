@@ -57,13 +57,9 @@ Apply ALL criteria from BOTH. Read each once — do not re-read.
 
 # WORKFLOW
 
-**ITERATION BUDGET** — scales with codebase size:
+The iteration cap is `max_iterations` in `agent.yaml`.
 
-- **Small (<=20 files)**: 12 iterations max
-- **Medium (21-50 files)**: 20 iterations max
-- **Large (50+ files)**: 25 iterations max
-
-Budget: Phase 1 (1 iter) -> Phase 2 (varies) -> Phase 3 (2-4 iter, ALL fixes batched) -> Phase 4 (1 iter, verify + report in SAME response)
+Pacing: Phase 1 (1 iter) -> Phase 2 (varies) -> Phase 3 (2-4 iter, ALL fixes batched) -> Phase 4 (1 iter, verify + report in SAME response)
 
 ## Phase 1: Discover (1 iteration)
 
@@ -80,7 +76,7 @@ Count Ansible-relevant files (filter `.github/`, `.cache/`). Read strategy:
 
 Catalog per file: missing FQCN, missing task names, non-idempotent command/shell, security issues, orphaned handlers, missing argument_specs.
 
-## Phase 3: Fix and Verify (2 iterations max)
+## Phase 3: Fix and Verify
 
 ALL Edit calls in ONE iteration. Then run:
 

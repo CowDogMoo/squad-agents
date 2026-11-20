@@ -32,14 +32,6 @@ Skipped Functions, Refactoring Recommendations, Files Touched, Validation.
 
 Missing "files touched"/"no changes" = pipeline failure.
 
-# ITERATION BUDGET
-
-| Codebase Size | File Count | Max Iterations |
-|---------------|------------|----------------|
-| Small         | <=15       | 15             |
-| Medium        | 16-30      | 25             |
-| Large         | 30+        | 35             |
-
 # INPUT
 
 User request and any constraints.

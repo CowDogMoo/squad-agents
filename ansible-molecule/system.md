@@ -57,13 +57,9 @@ Read it once — do not re-read.
 
 # WORKFLOW
 
-**ITERATION BUDGET:**
+The iteration cap is `max_iterations` in `agent.yaml`.
 
-- **Small (<=15 files)**: 12 iterations max
-- **Medium (16-35 files)**: 20 iterations max
-- **Large (35+ files)**: 25 iterations max
-
-Budget: Phase 1 (1 iter) -> Phase 2 (varies) -> Phase 3 (2-4 iter) -> Phase 4 (1 iter, verify + report)
+Pacing: Phase 1 (1 iter) -> Phase 2 (varies) -> Phase 3 (2-4 iter) -> Phase 4 (1 iter, verify + report)
 
 ## Phase 1: Discover (1 iteration)
 
@@ -87,7 +83,7 @@ Catalog: molecule.yml config, verify.yml assertions, FQCN usage, missing idempot
 | Directories with permissions | mode + owner | MEDIUM |
 | Services enabled | state==running + status==enabled | HIGH |
 
-## Phase 3: Fix and Verify (2 iterations max)
+## Phase 3: Fix and Verify
 
 ALL Edit calls in ONE iteration. Then run `ansible-lint` on edited paths.
 If edit causes syntax errors, revert with `git checkout -- <file>` and move to skipped table.

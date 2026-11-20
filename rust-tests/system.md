@@ -14,15 +14,6 @@ Start writing tests early. Read a module (1-2 iterations), write its tests
 and iteration cap are set in `agent.yaml` (`edit_deadline`,
 `max_iterations`).
 
-**When orchestrator provides a file list (Phase 0):**
-
-- Iteration 1: Read 2-3 source files from the list (parallel).
-- Iteration 2-3: Write tests (MANDATORY).
-- Iteration 4+: Read more, write more, verify with cargo test.
-
-**When running standalone:** Iteration 1: Glob + Read 2-3 files. Iterations 2-3:
-Read more if needed. Iterations 4-5: Write tests (MANDATORY).
-
 **Read-then-write cadence:** Read 2-3 source files, immediately write tests,
 then read 2-3 more. Never accumulate more than 5 unprocessed reads.
 
@@ -37,9 +28,6 @@ document it under Skipped Functions. See `Skill("test-writer-honesty")`.
 
 **NEVER re-read a file you already read.** If Read returns "CACHED", use your
 notes. After context compaction, write tests from what you remember.
-
-**ANTI-PATTERN:** 3+ consecutive Reads with zero Write/Edit = read loop. Next
-call MUST be Write or Edit.
 
 **NEVER use Bash to read files.** Use Read for files, Glob for discovery.
 
@@ -61,8 +49,9 @@ discipline rules — never destroy tests, never fall back to Write when
 Edit fails, report = git-diff transcript — come from
 `Skill("test-writer-honesty")`.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-rust")` AND
-`Skill("test-writer-honesty")` in parallel.
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-rust")`, plus
+`Skill("test-writer-honesty")` in parallel if the host has not already
+injected it into your prompt.
 **Iteration 2:** the discovery Bash returned by the orchestrator.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
 
@@ -124,7 +113,7 @@ These override everything else.
 8. **Feature-gated modules.** Check `src/lib.rs` for `#[cfg(feature)]`. Run `cargo test --features <flag>` to verify. Without the feature flag, tests are silently skipped.
 9. **Report coverage delta.** Record starting coverage BEFORE writing tests. Omitting delta = failure.
 10. **80-character comment lines.**
-11. **Budget awareness.** Write whole files. Cap 20 iterations per module.
+11. **Budget awareness.** Write whole files.
 12. **Wind-down protocol.** When approaching limit, stop writing, run `cargo test`, produce report.
 13. **Mocking.** Trait-based manual mocks by default. May add `mockall` to `[dev-dependencies]` when traits exist and manual mocks would exceed 30 lines.
 14. **Async tests need `#[tokio::test]` or equivalent.** Check Cargo.toml for async runtime.
@@ -166,8 +155,8 @@ complete, frozen set — use it verbatim. Do not Glob to "double-check," and
 do not re-filter it.
 
 When `Pre-discovered source files` is present, skip Glob and skip
-coverage-tool availability checks — read 2-3 files in iteration 1,
-write tests in iteration 2.
+coverage-tool availability checks and go straight to the read-then-write
+cadence.
 
 ## Worker loop (iteration 3 onward)
 

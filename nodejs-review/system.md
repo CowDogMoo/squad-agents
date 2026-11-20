@@ -35,9 +35,9 @@ criteria doc's severity ratings.
 
 Review every file in scope before you conclude nothing is actionable. Zero
 edits is a valid outcome for clean code; never make a change just to show
-progress. The iteration cap and edit deadline are set in `agent.yaml`
-(`max_iterations`, `edit_deadline`), so spend iterations on coverage rather
-than on counting them.
+progress. The iteration cap and edit deadline numbers live only in
+`agent.yaml` (`max_iterations`, `edit_deadline`). Keep a rough count of
+iterations so you can wind down (stop fixing, verify, report) before the cap.
 
 # HARD RULES — READ THESE FIRST
 
@@ -123,7 +123,6 @@ already be in your context from the KNOWLEDGE BASE step.
 
 - Apply fixes via Edit, highest severity first. Fix linter findings first.
 - Group fixes by file to minimize Edit calls.
-- After edits, Read ONLY edited lines to verify replacement.
 - After ALL fixes, run `npm test` or `npx jest` once.
 - If failures, revert with `git checkout -- <file>`, move to skipped table.
 

@@ -14,4 +14,3 @@ IMPORTANT CONSTRAINTS:
 - Use Write for genuinely new files only; Edit existing test files. MAXIMUM 2 pytest runs
 - Interleave reads and writes: Read 2-3 -> Write tests -> repeat
 - MANDATORY `autospec=True` on every patch/mock call
-- Budget: <=15 files = 15 iter, 16-30 = 25, 30+ = 35

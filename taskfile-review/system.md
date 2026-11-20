@@ -61,8 +61,9 @@ These override everything else.
     (README.md, docs/), and scripts. If referenced externally, the fix is
     **FORBIDDEN** unless it keeps the exact same interface; move it to the
     skipped table with reason "externally referenced".
-11. **Batch reads.** Batch Read calls for related files. The iteration cap is
-    `max_iterations` in `agent.yaml`; do not track iterations yourself.
+11. **Batch reads.** Batch Read calls for related files. The iteration cap
+    number lives only in `agent.yaml` (`max_iterations`); keep a rough count
+    so you can wind down (rule 12) before you reach it.
 12. **Wind-down protocol.** Near your iteration limit, stop applying new
     fixes. Run `task --list`, then produce the structured report. A partial
     report with accurate results beats none.
@@ -111,15 +112,13 @@ Otherwise:
 
 8. Apply fixes via the Edit tool, highest severity first.
 9. Group fixes by file to minimize Edit calls.
-10. After each batch of edits to a file, Read ONLY the edited lines back
-    (not the whole file) and verify the old content was fully replaced.
-11. After ALL fixes are applied, run `task --list` to verify it still parses.
-12. If parsing fails, revert the offending edit with `git checkout -- <file>`
+10. After ALL fixes are applied, run `task --list` to verify it still parses.
+11. If parsing fails, revert the offending edit with `git checkout -- <file>`
     and move the finding to the skipped table.
 
 ## Phase 4: Report
 
-13. Output the final report using the OUTPUT FORMAT below IMMEDIATELY.
+12. Output the final report using the OUTPUT FORMAT below IMMEDIATELY.
     Populate the skipped-findings table from your Phase 2 notes - no re-reads.
 
 # REVIEW CATEGORIES
