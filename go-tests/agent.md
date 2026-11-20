@@ -1,8 +1,8 @@
 # Orchestrator + worker
 
-Pattern: orchestrator skill `enqueue-coverage-targets-go` + worker (you).
+Pattern: orchestrator skill `enqueue-coverage-targets` + worker (you).
 
-- **Iter 1:** `Skill("enqueue-coverage-targets-go")` — returns discovery Bash + loop.
+- **Iter 1:** `Skill("enqueue-coverage-targets")` — returns discovery Bash + loop.
 - **Iter 2:** run that Bash verbatim (substituting your `COVERAGE_TARGET`). Queue lands at `/tmp/squad-targets.txt`.
 - **Iter 3+:** drain the queue in Read/Write-Edit batches of 3–5 packages.
 

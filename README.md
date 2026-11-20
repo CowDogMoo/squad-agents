@@ -426,7 +426,7 @@ plugin dependency and will not enable without it:
 | `doc-comments-discovery-and-fix-loop` | go-, python-, rust-, nodejs-doc-comments |
 | `score-coverage-and-report-gaps` | go-, python-, rust-, nodejs-tests |
 | `test-writer-honesty` | go-, python-, rust-, nodejs-tests |
-| `enqueue-coverage-targets-<lang>` | the matching `<lang>-tests` agent |
+| `enqueue-coverage-targets` | go-, python-, rust-, nodejs-tests |
 
 ### Installing in Claude Code
 

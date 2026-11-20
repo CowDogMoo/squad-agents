@@ -27,13 +27,13 @@ stages:
 
 gates:
   - after: injection
-    command: "npm run build --if-present || npx tsc --noEmit 2>/dev/null || true"
+    command: "npm run build --if-present"
     on_failure: stop
   - after: resources
-    command: "npm run build --if-present || npx tsc --noEmit 2>/dev/null || true"
+    command: "npm run build --if-present"
     on_failure: stop
   - after: resources
-    command: "npm test -- --passWithNoTests 2>/dev/null || npx jest --passWithNoTests 2>/dev/null || true"
+    command: "npm run test --if-present -- --passWithNoTests"
     on_failure: stop
 
 requires:
