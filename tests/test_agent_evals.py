@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -47,11 +48,20 @@ def case_copy(tmp_path: Path) -> Path:
     return case_dir
 
 
-def rewrite(case_dir: Path, old: str, new: str) -> None:
+def edit_case(case_dir: Path, change) -> None:
+    """Apply change to the parsed case.yaml and write it back.
+
+    Editing the parsed data, not the text, keeps these tests independent of
+    how the file is formatted (quoting, flow vs block style).
+    """
     path = case_dir / "case.yaml"
-    text = path.read_text(encoding="utf-8")
-    assert old in text
-    path.write_text(text.replace(old, new), encoding="utf-8")
+    case = yaml.safe_load(path.read_text(encoding="utf-8"))
+    change(case)
+    path.write_text(yaml.safe_dump(case, sort_keys=False), encoding="utf-8")
+
+
+def grader(case: dict, name: str) -> dict:
+    return next(g for g in case["graders"] if g["name"] == name)
 
 
 def test_every_case_in_the_repo_is_valid() -> None:
@@ -66,40 +76,44 @@ def test_validate_command_passes() -> None:
     assert agent_evals.main(["validate"]) == 0
 
 
+def _prompt(case: dict, old: str, new: str) -> None:
+    case["execution"]["prompt"] = case["execution"]["prompt"].replace(old, new)
+
+
 @pytest.mark.parametrize(
-    ("old", "new", "message"),
+    ("change", "message"),
     [
-        ("name: go-cobra-cobra-mini", "name: other", "does not match the directory"),
-        ("squad-agents:go-cobra agent", "squad-agents:no-such-agent agent", "not in agents/"),
-        ("squad-agents:go-cobra agent", "go-cobra agent", "must name the agent"),
-        ("scaffold_script: scaffold.sh", "scaffold_script: setup.sh", "stage generates it"),
-        ("path: cmd/grade.go", "path: cmd/missing.go", "is not a file in the fixture"),
+        (lambda c: c.update(name="other"), "does not match the directory"),
         (
-            "allowed_tools: [Read, Glob, Grep, Skill, Bash, Edit, Write]",
-            "allowed_tools: [Read, Glob, Grep, Skill, Edit, Write]",
-            "must include",
+            lambda c: _prompt(c, "squad-agents:go-cobra", "squad-agents:no-such-agent"),
+            "not in agents/",
         ),
+        (lambda c: _prompt(c, "squad-agents:go-cobra", "go-cobra"), "must name the agent"),
+        (lambda c: c["context"].update(scaffold_script="setup.sh"), "stage generates it"),
         (
-            "  allowed_tools:",
-            '  env:\n    GOPROXY: "off"\n  allowed_tools:',
-            "accepts only EVAL_* keys",
+            lambda c: grader(c, "grade-adds-no-markflagrequired")["target"].update(
+                path="cmd/missing.go"
+            ),
+            "is not a file in the fixture",
         ),
-        ("pattern: 'MarkFlagRequired'", "pattern: 'Mark(Flag'", "does not compile"),
+        (lambda c: c["execution"]["allowed_tools"].remove("Bash"), "must include"),
+        (lambda c: c["execution"].update(env={"GOPROXY": "off"}), "accepts only EVAL_* keys"),
+        (
+            lambda c: grader(c, "grade-adds-no-markflagrequired").update(pattern="Mark(Flag"),
+            "does not compile",
+        ),
     ],
 )
-def test_problems_are_caught(case_copy: Path, old: str, new: str, message: str) -> None:
-    rewrite(case_copy, old, new)
+def test_problems_are_caught(case_copy: Path, change, message: str) -> None:
+    edit_case(case_copy, change)
     errors = agent_evals.check_case(case_copy, agent_evals.agent_names())
     assert any(message in e for e in errors), errors
 
 
 def test_only_tool_used_graders_are_refused(case_copy: Path) -> None:
-    path = case_copy / "case.yaml"
-    text = path.read_text(encoding="utf-8")
-    head, _graders = text.split("graders:\n", 1)
-    path.write_text(
-        head + "graders:\n  - name: delegated\n    type: tool_used\n    tool: Agent\n",
-        encoding="utf-8",
+    edit_case(
+        case_copy,
+        lambda c: c.update(graders=[{"name": "delegated", "type": "tool_used", "tool": "Agent"}]),
     )
     errors = agent_evals.check_case(case_copy, agent_evals.agent_names())
     assert any("grade outcomes" in e for e in errors), errors
