@@ -87,7 +87,8 @@ analysis and fixing.
   mode run clippy unless `CLIPPY_WARNINGS` was injected.
 - Phase 2 (edit mode: Analyze and Fix): read files in parallel batches of
   3-5, clippy-warning files and complex signatures first. If clippy is
-  clean, limit to the 5-10 most complex files. Fix as you read, highest
+  clean, still review every file in scope, starting with the most
+  complex. Fix as you read, highest
   severity first; do not catalog everything before fixing.
 - After all fixes, run build and test in one Bash call:
 
