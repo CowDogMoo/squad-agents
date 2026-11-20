@@ -63,7 +63,7 @@ file:
 - **Temp files:** Is the filename predictable (time-based, sequential)? Is
   it in a shared directory (`os.TempDir`)? Use `os.CreateTemp` instead.
 - **Path traversal:** Are file paths from user or config input validated?
-  Is `filepath.Clean` plus a boundary check (or `os.OpenRoot`) applied?
+  Is `filepath.Clean` plus a boundary check applied?
 - **Crypto:** `math/rand` for security? MD5/SHA-1 for passwords or
   signatures? Weak key sizes?
 - **Secrets:** Hardcoded passwords, API keys, or tokens in source?
@@ -113,7 +113,6 @@ Use the loop skill's severity scale (CRITICAL, HIGH, MEDIUM, LOW, INFO).
 - `TLSClientConfig: &tls.Config{InsecureSkipVerify: true}`
 - File paths from user input without `filepath.Clean` + boundary check
 - `unsafe.Pointer` arithmetic with user-controlled offsets
-- Integer overflow in size calculations from user input
 - `grpc.WithInsecure()` in production code
 - Missing `defer rows.Close()` / `defer resp.Body.Close()`
 - Sensitive data (passwords, tokens) logged in plaintext
@@ -134,15 +133,14 @@ The loop skill's list applies, plus intentional panics that tests assert.
   ```
 
 - **Weak crypto:** Replace `math/rand` with `crypto/rand`. Replace MD5/SHA-1
-  with SHA-256 (bcrypt, scrypt, or Argon2 for passwords).
+  with SHA-256.
 - **Hardcoded secrets:** Replace with `os.Getenv("KEY")`.
 - **HTTP client timeout:** Replace `http.DefaultClient` with
   `&http.Client{Timeout: 30 * time.Second}`.
 - **TLS skip verify:** Remove `InsecureSkipVerify: true` or skip if dev-only.
 - **Path traversal:** Clean and validate:
   `cleaned := filepath.Clean(input); full := filepath.Join(base, cleaned)`
-  then verify `strings.HasPrefix(full, filepath.Clean(base)+"/")`. On Go
-  1.24+ modules, `os.OpenRoot(base)` confines access instead.
+  then verify `strings.HasPrefix(full, filepath.Clean(base)+"/")`.
 
 # OUTPUT FORMAT
 

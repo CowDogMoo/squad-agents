@@ -61,7 +61,7 @@ file:
 - **Command injection:** Is user or config input interpolated into a shell
   command? Trace the command string to its consumer (`exec.Command`, Shlex,
   `sh -c`). Does the consumer re-parse the string?
-- **SQL injection:** Is a query built by concatenation or `fmt.Sprintf`?
+- **SQL injection:** Is a database query built by string concatenation?
 - **XSS:** Is `text/template` used for HTML output, or user data converted
   to `template.HTML` or another bypass type?
 - **Input validation:** Is validation missing at a system boundary?
@@ -104,6 +104,7 @@ Use the loop skill's severity scale (CRITICAL, HIGH, MEDIUM, LOW, INFO).
 - `db.Query("SELECT ... WHERE id = " + userInput)` -- SQL injection
 - `text/template` used for HTML output (use `html/template`)
 - `template.HTML(userInput)` -- XSS bypass
+- Integer overflow in size calculations from user input
 
 # WHAT NOT TO FIX
 

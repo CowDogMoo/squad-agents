@@ -254,14 +254,13 @@ for dir in "${AGENT_DIRS[@]}"; do
 	done
 
 	# ---- Severity section check (warn only) --------------------------------
-	# Severity levels are defined inline or by a shared loop skill the agent
-	# loads (review-loop, security-audit-loop).
+	# A prompt that mentions severity must carry a SEVERITY heading.
 	for f in "${system_files[@]}"; do
 		[ ! -f "$f" ] && continue
 		label="$(basename "$f")"
 		# Skip agents that don't use severity (e.g., scrub-comments)
 		if grep -qiE 'severity|CRITICAL.*HIGH.*MEDIUM' "$f"; then
-			if grep -qiE '^#+ *SEVERITY' "$f" || grep -qE 'Skill\("(review-loop|security-audit-loop)"\)' "$f"; then
+			if grep -qiE '^#+ *SEVERITY' "$f"; then
 				pass "${label}: severity levels defined"
 			else
 				warn "${label}: mentions severity but has no SEVERITY LEVELS section"
