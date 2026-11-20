@@ -1,0 +1,45 @@
+---
+schema_version: "1.0"
+name: go-cobra-cobra-mini
+description: >-
+  go-cobra on cobra-mini: fix the one real violation (Run instead of RunE in
+  cmd/version.go) and leave the two traps alone, a parent command with no
+  RunE (cmd/init.go) and a flag already validated in RunE (cmd/grade.go).
+  Both traps are false positives the agent produced on real codebases.
+tags: [go-cobra, regression, should-not-act]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: >-
+    Use the squad-agents:go-cobra agent to review the Cobra CLI in the current
+    directory and fix the problems it finds. Then summarize what changed.
+  max_turns: 15
+  timeout_seconds: 1200
+  allowed_tools: [Read, Glob, Grep, Skill, Bash, Edit, Write]
+runs: 3
+graders:
+  - name: version-uses-runE
+    type: regex
+    target: { source: file, path: cmd/version.go }
+    pattern: 'RunE:\s*\S'
+  - name: version-drops-run
+    type: regex
+    target: { source: file, path: cmd/version.go }
+    pattern: '\bRun:\s*\S'
+    match: not_contains
+  - name: init-parent-keeps-no-runE
+    type: regex
+    target: { source: file, path: cmd/init.go }
+    # The file's only RunE belongs to the `agent` subcommand.
+    pattern: "RunE:"
+    match: count:1
+  - name: grade-adds-no-markflagrequired
+    type: regex
+    target: { source: file, path: cmd/grade.go }
+    pattern: "MarkFlagRequired"
+    match: not_contains
+  - name: delegated-to-go-cobra
+    type: tool_used
+    tool: Agent
+    input_match: "go-cobra"
+    arm: with-only

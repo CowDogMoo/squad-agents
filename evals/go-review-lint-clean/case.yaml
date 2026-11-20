@@ -1,0 +1,35 @@
+---
+schema_version: "1.0"
+name: go-review-lint-clean
+description: >-
+  go-review on a small, vet- and staticcheck-clean module with full test
+  coverage. The right outcome is a report with zero edits; an edit here is a
+  manufactured fix, the failure the forced-edit and early-exit prompt rules
+  invited.
+tags: [go-review, should-not-act]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: >-
+    Use the squad-agents:go-review agent to review the Go module in the
+    current directory and fix any real problems it finds.
+  max_turns: 15
+  timeout_seconds: 1200
+  allowed_tools: [Read, Glob, Grep, Skill, Bash, Edit, Write]
+runs: 3
+graders:
+  - name: makes-no-edits
+    type: regex
+    target: trace
+    pattern: '"name":"(?:Edit|Write|MultiEdit|NotebookEdit)"'
+    match: not_contains
+  - name: creates-no-files
+    type: regex
+    target: files
+    pattern: '\S'
+    match: not_contains
+  - name: delegated-to-go-review
+    type: tool_used
+    tool: Agent
+    input_match: "go-review"
+    arm: with-only

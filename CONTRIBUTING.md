@@ -244,6 +244,20 @@ squad run --agent my-agent --mode readonly
 squad run --agent my-agent --print-bundle --dry-run
 ```
 
+### Regression Evals
+
+When an agent fails on a real codebase, capture the failure as a case under
+[`evals/`](./evals/README.md): a small fixture in the agent's `testdata/`,
+and a `case.yaml` whose graders check the outcome (file contents, files
+created, no edits in the trace) rather than the wording of the report. Keep
+the general rule in the prompt and the incident in the case. Run the cases
+before and after any prompt or `model:` change:
+
+```bash
+python3 scripts/agent_evals.py validate
+python3 scripts/agent_evals.py run --skills-dir ../squad-skills --runs 3
+```
+
 ### Grading Runs
 
 Compare agent output against expert review:
