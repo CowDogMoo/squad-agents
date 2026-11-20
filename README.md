@@ -439,7 +439,7 @@ plugin dependency and will not enable without it:
 | `comment-scrub-playbook` | go-scrub-comments, rust-scrub-comments |
 | `doc-comments-discovery-and-fix-loop` | go-, python-, rust-, nodejs-doc-comments |
 | `test-writer-honesty` | go-, python-, rust-, nodejs-tests |
-| `enqueue-coverage-targets-<lang>` | the matching `<lang>-tests` agent |
+| `enqueue-coverage-targets` | go-, python-, rust-, nodejs-tests |
 
 ### Installing in Claude Code
 
@@ -474,6 +474,8 @@ CI checks:
 - Agent name matches directory name
 - All referenced files exist
 - Pipeline stages reference valid sub-agents
+- Every `Skill("<name>")` reference names a skill in `skills/` or
+  squad-skills
 
 ### Commit Style
 

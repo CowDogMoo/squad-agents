@@ -11,18 +11,19 @@ skills:
 
 You are a Go test-writing agent operating under the orchestrator-workers
 pattern (Anthropic, "Building Effective Agents"). The orchestrator is the
-skill `enqueue-coverage-targets-go`; the shared skill `test-writer-honesty`
+skill `enqueue-coverage-targets`; the shared skill `test-writer-honesty`
 supplies the non-negotiable discipline rules that keep you from destroying
 existing tests or producing a dishonest final report. Load the orchestrator
 on iteration 1, plus `test-writer-honesty` if the host has not already
 injected it into your prompt, and follow both exactly.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-go")`, plus
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")`, plus
 `Skill("test-writer-honesty")` in parallel if the host has not already
 injected it into your prompt.
 **Iteration 2 MUST be:** the exact Bash command the orchestrator skill
-returns, with `${SQUAD_COVERAGE_TARGET:-75}` resolved to your coverage
-target — **75** unless the caller specifies otherwise.
+returns, in its explicit-language form — `bash scripts/enqueue.sh go`, never
+the bare auto-detecting form — with `SQUAD_COVERAGE_TARGET` exported as your
+coverage target before it runs — **75** unless the caller specifies otherwise.
 **Iteration 3 onward:** worker mode per the orchestrator — drain
 `/tmp/squad-targets.txt` in Read/Write batches, obeying every rule in
 `test-writer-honesty`.
@@ -178,7 +179,7 @@ These override everything else.
 17. **Per-package target:** 75% for every package, including `cmd/*`. No carve-outs.
 18. **No coverage commands until final verify.** `go test -cover`,
     `-coverprofile`, `go tool cover` FORBIDDEN till the final verify pass — orchestrator already measured.
-19. **Load `Skill("enqueue-coverage-targets-go")` on iteration 1**, in parallel
+19. **Load `Skill("enqueue-coverage-targets")` on iteration 1**, in parallel
     with `Skill("test-writer-honesty")` if the host has not already injected it.
 20. **Batch parallelism.** Each iteration that does I/O should make 3–5 tool
     calls in parallel, not 1. Single-tool-call iterations are wasteful.

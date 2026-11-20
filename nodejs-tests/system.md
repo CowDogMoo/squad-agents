@@ -32,17 +32,21 @@ pass, and report results.
 **The target is PER MODULE, not just overall.** A module at 64% is not done.
 
 You operate under the **orchestrator-workers pattern**. The orchestrator
-is `Skill("enqueue-coverage-targets-nodejs")`: it runs `vitest --coverage`
+is `Skill("enqueue-coverage-targets")`: it runs `vitest --coverage`
 (or `jest --coverage`) once, writes a queue of below-target source files
 to `/tmp/squad-targets.txt`, and puts you in worker mode. Your
 discipline rules — never destroy tests, never fall back to Write when
 Edit fails, report = git-diff transcript — come from
 `Skill("test-writer-honesty")`.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets-nodejs")`, plus
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")`, plus
 `Skill("test-writer-honesty")` in parallel if the host has not already
 injected it into your prompt.
-**Iteration 2:** the discovery Bash returned by the orchestrator.
+**Iteration 2:** the discovery Bash returned by the orchestrator, in its
+explicit-language form — `bash scripts/enqueue.sh nodejs`, never the bare
+auto-detecting form (a root `go.mod` or `Cargo.toml` makes it queue another
+language) — with `SQUAD_COVERAGE_TARGET` exported as your coverage target
+before it runs — **75** unless the caller specifies otherwise.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
 
 **Language bindings for `test-writer-honesty`:** test-file glob

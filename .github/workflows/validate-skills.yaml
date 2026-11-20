@@ -17,8 +17,11 @@ on:
     branches:
       - main
     paths:
-      - 'skills/**'
-      - '.github/workflows/validate-skills.yaml'
+      - "skills/**"
+      - "scripts/check_skill_refs.py"
+      - "**/*.md"
+      - "**/*.yaml"
+      - ".github/workflows/validate-skills.yaml"
   workflow_dispatch:
 
 permissions:
@@ -37,18 +40,39 @@ jobs:
     with:
       skills-dir: skills
 
+  # Every skill a prompt loads by name must exist in skills/ or squad-skills,
+  # otherwise the agent's mandatory first iteration fails at runtime.
+  skill-refs:
+    name: Skill References
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout git repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Checkout squad-skills
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: CowDogMoo/squad-skills
+          path: .squad-skills
+          persist-credentials: false
+
+      - name: Check Skill() references resolve
+        run: python3 scripts/check_skill_refs.py --skills-dir .squad-skills
+
   # Named "Skill Validation Summary" (not "Validation Summary") because
   # validate-agents.yaml already produces a check run with that name.
   summary:
     name: Skill Validation Summary
     runs-on: ubuntu-latest
-    needs: [skills]
+    needs: [skills, skill-refs]
     if: always()
     steps:
       - name: Check results
         run: |
-          if [ "${{ needs.skills.result }}" != "success" ]; then
-            echo "::error::Skill validation failed (result: ${{ needs.skills.result }})"
+          if [ "${{ needs.skills.result }}" != "success" ] || [ "${{ needs.skill-refs.result }}" != "success" ]; then
+            echo "::error::Skill validation failed (skills: ${{ needs.skills.result }}, skill-refs: ${{ needs.skill-refs.result }})"
             exit 1
           fi
           echo "✓ All skill validations passed"
