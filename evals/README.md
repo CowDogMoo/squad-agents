@@ -10,10 +10,9 @@ model change that brings one back shows up as a lower score.
 | `go-cobra-cobra-mini` | go-cobra | Fixes the one real violation (`Run` instead of `RunE`) and leaves both traps alone: a parent command with no `RunE`, and a flag already validated in `RunE`. Both were false positives on real codebases. |
 | `go-tests-covmini` | go-tests | The incidents its prompt narrates: work only the queued packages, never rename existing tests, no `_2`-suffix duplicates, no field from the wrong struct, edit only `_test.go` files, report a pre-existing failure instead of gutting the test, and report coverage as measured numbers. |
 | `go-review-lint-clean` | go-review | A vet- and staticcheck-clean module with full coverage. The right result is zero edits. |
-| `go-review-readonly` | go-review | Readonly mode on a module with a real finding: a report, and no edits. |
 
 Graders check outcomes first: file contents, files created, and, for the
-no-edit cases, that no `Edit` or `Write` call appears anywhere in the trace,
+no-edit case, that no `Edit` or `Write` call appears anywhere in the trace,
 including the subagent's calls. A `tool_used` grader on `Agent` shows whether
 the main session delegated to the agent; it is display-only (`arm:
 with-only`).
@@ -40,7 +39,7 @@ because a case may only set `EVAL_*` variables.
 `claude plugin eval` refuses to grant Bash on a machine whose `~/.aws`
 config uses `credential_process`. On such a machine add `--without-bash`:
 the cases still run, but go-tests cannot build or measure coverage, so only
-go-cobra and the readonly case are meaningful.
+the go-cobra case is meaningful.
 
 ## Ablation and model choice
 

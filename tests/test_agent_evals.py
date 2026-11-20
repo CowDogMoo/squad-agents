@@ -175,10 +175,8 @@ def test_eval_command_grants_and_flags(tmp_path: Path) -> None:
     assert tools == ["Edit", "Write"]
 
 
-def test_run_env_isolates_cloud_config_and_go(tmp_path: Path) -> None:
-    empty = tmp_path / "empty"
-    env = agent_evals.run_env(empty)
-    assert env["AWS_CONFIG_FILE"] == env["AWS_SHARED_CREDENTIALS_FILE"] == str(empty)
+def test_run_env_keeps_go_offline() -> None:
+    env = agent_evals.run_env()
     assert env["GOPROXY"] == "off"
     assert env["GOTOOLCHAIN"] == "local"
 

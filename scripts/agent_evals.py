@@ -278,7 +278,7 @@ def toolchain_path() -> str:
     return os.pathsep.join([*dirs, os.environ.get("PATH", "")])
 
 
-def run_env(empty: Path) -> dict[str, str]:
+def run_env() -> dict[str, str]:
     """The environment claude plugin eval and the agents under it run with.
 
     A case may only set EVAL_* variables, so the toolchain settings live here.
@@ -287,20 +287,12 @@ def run_env(empty: Path) -> dict[str, str]:
     offline: GOPROXY=off makes a missing module fail fast instead of hanging
     on a network the sandbox blocks, and GOTOOLCHAIN=local stops Go from
     fetching a newer toolchain.
-
-    claude plugin eval refuses to grant Bash when the operator's AWS config
-    runs a credential_process, because its sandbox cannot exclude what that
-    process reads. The agents never need cloud credentials, so the run points
-    the AWS config and credentials files at an empty file.
     """
     return {
         **os.environ,
-        "AWS_CONFIG_FILE": str(empty),
-        "AWS_SHARED_CREDENTIALS_FILE": str(empty),
         "PATH": toolchain_path(),
         "GOTOOLCHAIN": "local",
         "GOPROXY": "off",
-        "GOFLAGS": "-mod=mod",
     }
 
 
@@ -353,10 +345,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         plugin = stage(Path(args.skills_dir), Path(tmp), selected)
         cmd = eval_command(plugin, out, args)
         print("Running:", " ".join(cmd), flush=True)
-        empty = Path(tmp) / "empty"
-        empty.write_text("", encoding="utf-8")
         # The command is built here from fixed flags and parsed arguments.
-        code = subprocess.run(cmd, env=run_env(empty), check=False).returncode  # noqa: S603
+        code = subprocess.run(cmd, env=run_env(), check=False).returncode  # noqa: S603
     print(f"Results: {out / 'result.json'} (HTML report: {out / 'report.html'})")
     return code
 
