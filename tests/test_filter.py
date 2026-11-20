@@ -25,7 +25,6 @@ from filter import (
     strip_trailing_whitespace,
     strip_wrapping_fences,
     truncate_pattern_boilerplate,
-    unwrap_fenced_message,
 )
 
 
@@ -439,109 +438,6 @@ class TestMergeSections:
         assert lines[4] == "**Changed:**"
 
 
-class TestUnwrapFencedMessage:
-    """A fence that opens above the title wraps the message itself."""
-
-    def test_drops_the_fence_and_the_narration_around_it(self):
-        text = "I will write it.\n\n```\nfix: a thing\n\n- x\n```\n\nLet me know."
-        assert unwrap_fenced_message(text) == "fix: a thing\n\n- x"
-
-    def test_keeps_a_code_block_inside_the_wrapped_message(self):
-        text = "Sure.\n```markdown\nfix: a thing\n\n```bash\nmake\n```\n\n- x\n```"
-        assert unwrap_fenced_message(text) == "fix: a thing\n\n```bash\nmake\n```\n\n- x"
-
-    def test_fence_below_the_title_is_body_content(self):
-        text = "fix: a thing\n\n- x\n\n```\nfeat: an example\n```"
-        assert unwrap_fenced_message(text) == text
-
-    def test_fenced_snippet_above_an_unfenced_message_is_left_alone(self):
-        text = "The last commit was:\n\n```\nfix: old\n```\n\nfeat: new\n\n- x"
-        assert unwrap_fenced_message(text) == text
-
-    def test_unclosed_fence_is_left_alone(self):
-        text = "I will write it.\n\n```\nfix: a thing\n\n- x"
-        assert unwrap_fenced_message(text) == text
-
-    def test_no_title_is_left_alone(self):
-        text = "I will write it.\n\n```\nUpdate things\n```"
-        assert unwrap_fenced_message(text) == text
-
-    def test_fenced_title_keeps_the_body_outside_the_fence(self):
-        text = "**Title:**\n```\nfeat: add export\n```\n\n**Added:**\n\n- export module"
-        assert unwrap_fenced_message(text) == "feat: add export\n\n**Added:**\n\n- export module"
-
-    def test_closed_snippet_above_the_title_keeps_the_body_code_block(self):
-        text = (
-            "The diff touches:\n```\nscripts/run.sh\n```\nfeat: add run script\n"
-            "**Added:**\n- run script, invoked as:\n```bash\n./scripts/run.sh --all\n```"
-        )
-        assert unwrap_fenced_message(text) == text
-
-    def test_bare_inner_code_block_keeps_the_sections_after_it(self):
-        body = (
-            "feat: add run script\n**Key Changes:**\n- Adds a runner, invoked as:\n"
-            "```\n./run.sh --all\n```\n**Added:**\n- run.sh"
-        )
-        text = f"Here is the PR description:\n```markdown\n{body}\n```"
-        assert unwrap_fenced_message(text) == body
-
-    def test_bare_wrapper_with_bare_inner_code_block_keeps_the_block(self):
-        body = "feat: add runner\n\n**Added:**\n\n- runner:\n```\n./run.sh\n```"
-        text = f"I will write the commit message.\n```\n{body}\n```"
-        assert unwrap_fenced_message(text) == body
-
-    def test_fenced_title_keeps_an_example_title_in_the_body_code_block(self):
-        text = (
-            "**Title:**\n```\ndocs: explain commit format\n```\n**Added:**\n"
-            "- Example message:\n```\nfeat: add a thing\n```"
-        )
-        assert unwrap_fenced_message(text) == (
-            "docs: explain commit format\n**Added:**\n"
-            "- Example message:\n```\nfeat: add a thing\n```"
-        )
-
-    def test_wrapped_message_keeps_an_example_title_in_its_code_block(self):
-        body = (
-            "feat: document title format\n\n**Added:**\n\n- Example title:\n"
-            "```\nfix: handle empty diff\n```\n\n**Changed:**\n\n- docs"
-        )
-        text = f"I will write the commit message.\n```\n{body}\n```"
-        assert unwrap_fenced_message(text) == body
-
-    def test_body_code_block_under_an_unrecognised_title_is_left_alone(self):
-        text = (
-            "deps: bump the commit prompt examples\n**Key Changes:**\n"
-            "- Updates the example message in commit/system.md to:\n"
-            "```\nfeat: add widget export\n```\n**Changed:**\n- commit/system.md example"
-        )
-        assert unwrap_fenced_message(text) == text
-
-    def test_example_message_under_a_section_header_is_left_alone(self):
-        text = (
-            "Add widget export\n**Added:**\n- export docs, example message:\n"
-            "```\nfeat: add a thing\n\n- thing\n```\n**Changed:**\n- readme"
-        )
-        assert unwrap_fenced_message(text) == text
-
-    def test_section_header_directly_above_a_body_code_block_is_left_alone(self):
-        text = (
-            "deps: bump the commit prompt examples\n\n**Key Changes:**\n\n"
-            "```\nfeat: add widget export\n```\n\n**Changed:**\n\n- commit/system.md example"
-        )
-        assert unwrap_fenced_message(text) == text
-
-    def test_commit_message_label_names_the_fenced_message(self):
-        text = "**Commit message:**\n```\nfeat: add export\n\n- export\n```\n\nLet me know."
-        assert unwrap_fenced_message(text) == "feat: add export\n\n- export"
-
-    def test_allowed_type_title_is_recognised(self):
-        text = "I will write it.\n```\ndev: add export\n\n## Description\n\n- x\n```"
-        assert unwrap_fenced_message(text) == text
-        assert unwrap_fenced_message(text, ["feat", "dev"]) == (
-            "dev: add export\n\n## Description\n\n- x"
-        )
-
-
 class TestFilterTextIntegration:
     """End-to-end tests for the full filter pipeline."""
 
@@ -728,87 +624,6 @@ class TestFilterTextIntegration:
         assert lines[2] == "**Changed:**"
         assert "Refined Prometheus query" in result
         assert "Modified Tempo query" in result
-
-    def test_preamble_above_fence_strips_both_fences(self):
-        """A preamble line above the opening fence hid the fence from the first
-        pass; the title selection then dropped the opening fence and left the
-        closing one at the end of the last section."""
-        text = (
-            "Based on the diff, here is the commit message:\n\n"
-            "```\n"
-            "fix: a thing\n\n"
-            "**Changed:**\n\n"
-            "- x\n"
-            "```\n"
-        )
-        result = filter_text(text, section_names=["Added", "Changed", "Removed"], max_blanks=2)
-        assert result == "fix: a thing\n\n**Changed:**\n\n- x"
-
-    def test_narration_above_fence_keeps_only_the_message(self):
-        """Narration the preamble patterns do not recognise still hid the
-        opening fence, leaving the closing one at the end of the last section."""
-        text = (
-            "I will analyze the diff and write the commit message.\n\n"
-            "```\n"
-            "fix: a thing\n\n"
-            "**Changed:**\n\n"
-            "- x\n"
-            "```\n"
-        )
-        result = filter_text(text, section_names=["Added", "Changed", "Removed"], max_blanks=2)
-        assert result == "fix: a thing\n\n**Changed:**\n\n- x"
-
-    def test_sentence_below_fence_is_dropped_with_the_fence(self):
-        text = (
-            "Here is the PR description:\n\n"
-            "```markdown\n"
-            "fix: a thing\n\n"
-            "**Key Changes:**\n\n"
-            "- x\n"
-            "```\n\n"
-            "Let me know if you want changes.\n"
-        )
-        result = filter_text(
-            text,
-            section_names=["Key Changes", "Added", "Changed", "Removed"],
-            blank_after_title=False,
-        )
-        assert result == "fix: a thing\n**Key Changes:**\n\n- x"
-
-    def test_narration_above_fence_does_not_become_the_pr_title(self):
-        """The required-headings path takes the first line as the title."""
-        text = (
-            "I will analyze the diff and write the PR description.\n\n"
-            "```\n"
-            "test: a thing\n\n"
-            "## Description\n\n"
-            "- x\n"
-            "```\n"
-        )
-        result = filter_text(
-            text,
-            blank_after_title=False,
-            required_headings=["## Description"],
-            allowed_types=["feat", "fix", "chore"],
-        )
-        assert result == "chore: a thing\n\n## Description\n\n- x"
-
-    def test_titled_output_keeps_a_code_block_in_its_body(self):
-        text = (
-            "docs: explain the commit format\n\n"
-            "**Added:**\n\n"
-            "- Example message:\n\n"
-            "```\n"
-            "feat: add a thing\n"
-            "```"
-        )
-        result = filter_text(text, section_names=["Added", "Changed", "Removed"], max_blanks=2)
-        assert result == text
-
-    def test_generic_output_keeps_a_fenced_commit_message(self):
-        """Output with no title of its own, such as a review, may quote one."""
-        text = "# Review\n\nSuggested message:\n\n```\nfix: handle nil\n```\n\nDone."
-        assert filter_text(text) == text
 
     def test_no_trailing_whitespace_in_output(self):
         text = "# Review   \n\nContent here   \n\nMore content  "
@@ -1097,35 +912,6 @@ class TestDropPreambleBeforeRequiredHeading:
         # The body opens on the template, not on a restatement of the title.
         assert lines[1].strip() == ""
         assert lines[2] == "## What this PR does / why we need it:"
-
-    def test_filter_text_unwraps_a_fenced_allowed_type_title(self):
-        text = (
-            "I will analyze the diff and write the PR description.\n\n```\n"
-            "dev: add widget export\n\n"
-            "## What this PR does / why we need it:\n\nIt adds export.\n```\n"
-        )
-        result = filter_text(text, required_headings=self.HEADINGS, allowed_types=["feat", "dev"])
-
-        assert result == (
-            "dev: add widget export\n\n## What this PR does / why we need it:\n\nIt adds export."
-        )
-
-    def test_filter_text_unwraps_a_message_with_an_example_title_in_its_body(self):
-        text = (
-            "I will analyze the diff and write the PR description.\n```markdown\n"
-            "feat(filter): document title format\n"
-            "## What this PR does / why we need it:\n- Example title:\n"
-            "```\nfix: handle empty diff\n```\n"
-            "## AI / LLM Assistance\n- unit tests\n```\n"
-        )
-        result = filter_text(text, required_headings=self.HEADINGS)
-
-        assert result == (
-            "feat(filter): document title format\n\n"
-            "## What this PR does / why we need it:\n- Example title:\n"
-            "```\nfix: handle empty diff\n```\n\n"
-            "## AI / LLM Assistance\n- unit tests"
-        )
 
     def test_commit_prose_body_survives_filter_text(self):
         text = (

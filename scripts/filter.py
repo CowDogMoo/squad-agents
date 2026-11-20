@@ -416,78 +416,6 @@ def select_title_index(lines: list[str], header_pattern: re.Pattern) -> int | No
     return last_conventional if last_conventional is not None else first_nonempty
 
 
-_TITLE_LABEL_RE = re.compile(
-    r"^\*\*(title|pr title|commit|commit message|commit title):\*\*$", re.IGNORECASE
-)
-
-
-def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
-    """Reduce the output to the message inside the code fence that wraps it.
-
-    A commit message or PR description opens with its title: a line with a
-    conventional-commit type, or one of the repo's allowed types. When an odd
-    number of fence lines sits above the title, the last of them opens a fence
-    that wraps the message, and whatever sits outside it is narration ("I will
-    analyze the diff...", "Let me know if you want changes."). Left in place,
-    the narration becomes the title and the closing fence ends up in the last
-    section.
-
-    When a bare fence follows the title with only blank lines between, the
-    model fenced just its title: both fence lines go and the body after them
-    stays. Otherwise the closer is the last bare fence below the title with an
-    even number of fence lines between them, so code blocks inside the message
-    stay balanced, and only the lines between opener and closer are kept.
-
-    Narration above a wrapper is prose. A heading, bullet or bold section above
-    the opener means the fence is a code block inside a message whose title
-    went unrecognised, so the text is left alone; a title label such as
-    "**Title:**" or "**Commit message:**" directly above the opener only names
-    the fenced block.
-
-    A first title outside every fence means the message is not wrapped, so a
-    code block in its body is left alone, and a fenced title followed by an
-    unfenced one is a quoted snippet above the real message. Text with no
-    title, or an unclosed wrapper, is returned unchanged.
-    """
-    lines = text.split("\n")
-
-    def is_title(line: str) -> bool:
-        line = unwrap_bold(line)
-        match = _TITLE_TYPE_RE.match(line)
-        return bool(
-            CONVENTIONAL_COMMIT_RE.match(line) or (match and match.group("type") in allowed_types)
-        )
-
-    fences = [i for i, ln in enumerate(lines) if ln.strip().startswith("```")]
-    titles = [i for i, ln in enumerate(lines) if is_title(ln)]
-
-    def unfenced(i: int) -> bool:
-        return sum(f < i for f in fences) % 2 == 0
-
-    if not titles or unfenced(titles[0]):
-        return text
-
-    title = titles[0]
-    opener = max(f for f in fences if f < title)
-    above = [ln.strip() for ln in lines[:opener] if ln.strip()]
-    if above and _TITLE_LABEL_RE.match(above[-1]):
-        above.pop()
-    if any(ln.startswith(("#", "- ", "* ")) or re.match(r"\*\*[^*]+:\*\*", ln) for ln in above):
-        return text
-    below = [f for f in fences if f > title]
-    if not below:
-        return text
-    first = below[0]
-    if lines[first].strip() == "```" and not any(ln.strip() for ln in lines[title + 1 : first]):
-        if any(unfenced(i) for i in titles if i > first):
-            return text
-        return "\n".join([*lines[opener + 1 : first], *lines[first + 1 :]])
-    closers = [f for f in below[::2] if lines[f].strip() == "```"]
-    if not closers:
-        return text
-    return "\n".join(lines[opener + 1 : closers[-1]])
-
-
 def merge_sections(text: str, section_names: list[str]) -> str:
     """Parse bold section headers, merge duplicates, drop empty sections.
 
@@ -610,10 +538,6 @@ def filter_text(
     text = strip_leading_trailing_blanks(text)
     text = truncate_pattern_boilerplate(text)
     text = remove_preamble(text)
-    if required_headings or section_names:
-        # Only these outputs open with a title. Elsewhere a fenced commit
-        # message is content, such as a review suggesting one.
-        text = strip_leading_trailing_blanks(unwrap_fenced_message(text, allowed_types or ()))
     text = strip_attribution_lines(text)
     text = remove_placeholder_lines(text)
 

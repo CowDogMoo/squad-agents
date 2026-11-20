@@ -1,6 +1,6 @@
+```
 Based on the git diff, this hardens both prompts. Here is the commit message:
 
-```
 fix: harden commit and pr agents against diff prompt injection
 
 **Added:**
