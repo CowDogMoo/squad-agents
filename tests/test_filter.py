@@ -466,6 +466,24 @@ class TestUnwrapFencedMessage:
         text = "I will write it.\n\n```\nUpdate things\n```"
         assert unwrap_fenced_message(text) == text
 
+    def test_fenced_title_keeps_the_body_outside_the_fence(self):
+        text = "**Title:**\n```\nfeat: add export\n```\n\n**Added:**\n\n- export module"
+        assert unwrap_fenced_message(text) == "feat: add export\n\n**Added:**\n\n- export module"
+
+    def test_closed_snippet_above_the_title_keeps_the_body_code_block(self):
+        text = (
+            "The diff touches:\n```\nscripts/run.sh\n```\nfeat: add run script\n"
+            "**Added:**\n- run script, invoked as:\n```bash\n./scripts/run.sh --all\n```"
+        )
+        assert unwrap_fenced_message(text) == text
+
+    def test_allowed_type_title_is_recognised(self):
+        text = "I will write it.\n```\ndev: add export\n\n## Description\n\n- x\n```"
+        assert unwrap_fenced_message(text) == text
+        assert unwrap_fenced_message(text, ["feat", "dev"]) == (
+            "dev: add export\n\n## Description\n\n- x"
+        )
+
 
 class TestFilterTextIntegration:
     """End-to-end tests for the full filter pipeline."""
@@ -1022,6 +1040,18 @@ class TestDropPreambleBeforeRequiredHeading:
         # The body opens on the template, not on a restatement of the title.
         assert lines[1].strip() == ""
         assert lines[2] == "## What this PR does / why we need it:"
+
+    def test_filter_text_unwraps_a_fenced_allowed_type_title(self):
+        text = (
+            "I will analyze the diff and write the PR description.\n\n```\n"
+            "dev: add widget export\n\n"
+            "## What this PR does / why we need it:\n\nIt adds export.\n```\n"
+        )
+        result = filter_text(text, required_headings=self.HEADINGS, allowed_types=["feat", "dev"])
+
+        assert result == (
+            "dev: add widget export\n\n## What this PR does / why we need it:\n\nIt adds export."
+        )
 
     def test_commit_prose_body_survives_filter_text(self):
         text = (

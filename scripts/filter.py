@@ -419,29 +419,62 @@ def select_title_index(lines: list[str], header_pattern: re.Pattern) -> int | No
     return last_conventional if last_conventional is not None else first_nonempty
 
 
-def unwrap_fenced_message(text: str) -> str:
-    """Reduce the output to the inside of a code fence that wraps the message.
+def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
+    """Reduce the output to the message inside the code fence that wraps it.
 
-    A commit message or PR description opens with its conventional-commit
-    title, so a fence that opens above every title line and closes below them
-    wraps the message itself, and whatever sits outside it is narration ("I
-    will analyze the diff...", "Let me know if you want changes."). Left in
-    place, the narration becomes the title and the closing fence ends up in
-    the last section.
+    A commit message or PR description opens with its title: a line with a
+    conventional-commit type, or one of the repo's allowed types. A fence that
+    is open at the first title and closes below every title wraps the message
+    itself, and whatever sits outside it is narration ("I will analyze the
+    diff...", "Let me know if you want changes."). Left in place, the narration
+    becomes the title and the closing fence ends up in the last section.
+
+    Fences are paired as they nest: a fence with an info string always opens
+    one, and a bare fence closes the innermost open one. When the fence holds
+    only the title, the body follows it outside the fence and is kept.
 
     A fence that opens below the title is body content and is left alone, as
-    is a fenced snippet that closes before a title outside it. Text with no
-    title has nothing to anchor on and is returned unchanged.
+    is a fenced snippet that closes before the title or holds a title that
+    another one follows. Text with no title has nothing to anchor on and is
+    returned unchanged.
     """
     lines = text.split("\n")
-    titles = [i for i, ln in enumerate(lines) if CONVENTIONAL_COMMIT_RE.match(unwrap_bold(ln))]
-    opener = next((i for i, ln in enumerate(lines) if FENCE_OPEN_RE.match(ln.strip())), None)
-    closer = next((i for i in reversed(range(len(lines))) if lines[i].strip() == "```"), None)
-    if not titles or opener is None or closer is None:
+
+    def is_title(line: str) -> bool:
+        line = unwrap_bold(line)
+        match = _TITLE_TYPE_RE.match(line)
+        return bool(
+            CONVENTIONAL_COMMIT_RE.match(line) or (match and match.group("type") in allowed_types)
+        )
+
+    titles = [i for i, ln in enumerate(lines) if is_title(ln)]
+    if not titles:
         return text
-    if not opener < titles[0] <= titles[-1] < closer:
+
+    open_fences: list[int] = []
+    opener = closer = None
+    for i, line in enumerate(lines):
+        if i == titles[0]:
+            if not open_fences:
+                return text
+            opener = open_fences[0]
+        stripped = line.strip()
+        if not FENCE_OPEN_RE.match(stripped):
+            continue
+        if stripped == "```" and open_fences:
+            open_fences.pop()
+        else:
+            open_fences.append(i)
+        if opener is not None and not open_fences:
+            closer = i
+            break
+
+    if opener is None or closer is None or titles[-1] > closer:
         return text
-    return "\n".join(lines[opener + 1 : closer])
+    inside = lines[opener + 1 : closer]
+    if [ln.strip() for ln in inside if ln.strip()] == [lines[titles[0]].strip()]:
+        return "\n".join([*inside, *lines[closer + 1 :]])
+    return "\n".join(inside)
 
 
 def merge_sections(text: str, section_names: list[str]) -> str:
@@ -569,7 +602,7 @@ def filter_text(
     if required_headings or section_names:
         # Only these outputs open with a title. Elsewhere a fenced commit
         # message is content, such as a review suggesting one.
-        text = strip_leading_trailing_blanks(unwrap_fenced_message(text))
+        text = strip_leading_trailing_blanks(unwrap_fenced_message(text, allowed_types or ()))
     text = strip_attribution_lines(text)
     text = remove_placeholder_lines(text)
 
