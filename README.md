@@ -365,8 +365,10 @@ default task instructions.
 
 ## Skills
 
-Agents load skills via `Skill("<name>")` calls in their `system.md`,
-following the open [Agent Skills standard](https://agentskills.io).
+Agents declare the skills they need in the `skills:` frontmatter of their
+`system.md`, which Claude Code preloads; on hosts that do not inject them
+(squad), the prompt falls back to a `Skill("<name>")` call. Both follow
+the open [Agent Skills standard](https://agentskills.io).
 The skills come from two collections, split by coupling:
 
 - **[`skills/`](./skills) (this repo)** — reference knowledge bases
