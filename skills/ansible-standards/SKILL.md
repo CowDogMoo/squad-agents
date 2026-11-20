@@ -1,6 +1,6 @@
 ---
 name: ansible-standards
-description: "Authoring standards for Ansible collections, roles, and playbooks — naming conventions, task quality, Molecule testing, linting, security best practices, anti-patterns, and a quality checklist. Use when writing new Ansible content or setting repo-wide conventions. Also loaded by the ansible-review agent as its knowledge base."
+description: "Ansible authoring and review standards for collections, roles, and playbooks: the Zen of Ansible, naming, FQCN, variables, loops, handlers, error handling, idempotency, security, linting, and checklists. Use when writing, reviewing, or refactoring Ansible code."
 ---
 # Ansible Standards
 
@@ -8,7 +8,7 @@ A comprehensive guide to creating production-quality Ansible collections, roles,
 playbooks, and testing with Molecule. This document serves as the knowledge base
 for the ansible-review agent.
 
-**Companion document**: See [ansible-review-criteria.md](./ansible-review-criteria.md) for
+**Companion document**: See [references/review-criteria.md](references/review-criteria.md) for
 detailed coverage of conditionals, loops, handlers, error handling, and Jinja2 templates.
 
 ---
@@ -935,7 +935,7 @@ ansible-playbook site.yml --ask-vault-pass
 
 ### Companion Document
 
-See also: [ansible-review-criteria.md](./ansible-review-criteria.md) for detailed coverage of:
+See also: [references/review-criteria.md](references/review-criteria.md) for detailed coverage of:
 
 - Variable precedence (18 levels)
 - Conditionals and boolean handling

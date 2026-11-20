@@ -9,7 +9,6 @@ Pattern: orchestrator skill `enqueue-coverage-targets` + worker (you).
 # No mid-run discovery
 
 - No `go test -cover`/`-coverprofile`/`go tool cover` until the final verify pass.
-- Do NOT load `Skill("score-coverage-and-report-gaps")`.
 - Do NOT `Glob` the codebase — the target list is exact.
 - Read `/tmp/squad-targets.txt` ONCE after iter 2.
 - Read `/tmp/squad-funcs.out` ONCE after iter 2 — use it to pick the LOWEST-coverage functions in each queue package as your test targets.

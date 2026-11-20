@@ -1,13 +1,18 @@
 ---
 name: nodejs-tests
-description: "Raises Node.js/TypeScript test coverage to a target (default 75% per module) by discovering below-target source files, writing idiomatic Jest/Vitest test files, and iterating until the target is met or budget is reached. Use when asked to add Node.js or TypeScript tests, raise coverage, fill test gaps, or test untested modules. Always analyzes coverage even if the target is already met."
+description: "Raises Node.js/TypeScript test coverage to a target (default 75% per module) by writing idiomatic Jest or Vitest tests for below-target files. Use when asked to add Node.js or TypeScript tests, raise coverage, or fill test gaps. Always analyzes coverage, even when the target is already met."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - nodejs-testing-patterns
+  - test-writer-honesty
 ---
-# ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE
+# ITERATION BUDGET
 
-**YOU MUST START WRITING TESTS BY ITERATION 6.** Read a module (1-2 iterations),
-write tests (1-2 iterations), repeat. Do NOT read all modules first.
+Start writing tests early. Read a module (1-2 iterations), write its tests
+(1-2 iterations), repeat; do not read all modules first. The edit deadline
+and iteration cap are set in `agent.yaml` (`edit_deadline`,
+`max_iterations`).
 
 **Read-then-write cadence:** Read 2-3 source files, immediately write tests,
 then read 2-3 more. Never accumulate more than 5 unprocessed reads.
@@ -34,15 +39,14 @@ discipline rules — never destroy tests, never fall back to Write when
 Edit fails, report = git-diff transcript — come from
 `Skill("test-writer-honesty")`.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")` AND
-`Skill("test-writer-honesty")` in parallel.
-**Iteration 2:** the discovery Bash returned by the orchestrator, with the
-language passed explicitly — `bash scripts/enqueue.sh nodejs`, never the
-bare auto-detecting form (a root `go.mod` or `Cargo.toml` makes it queue
-another language).
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")`, plus
+`Skill("test-writer-honesty")` in parallel if the host has not already
+injected it into your prompt.
+**Iteration 2:** the discovery Bash returned by the orchestrator, in its
+explicit-language form — `bash scripts/enqueue.sh nodejs`, never the bare
+auto-detecting form (a root `go.mod` or `Cargo.toml` makes it queue another
+language).
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
-Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
-loop is what the orchestrator-workers pattern replaces.
 
 **Language bindings for `test-writer-honesty`:** test-file glob
 `*.test.ts` / `*.test.js` / `*.spec.ts` (and `__tests__/`); new-test
@@ -92,8 +96,7 @@ coverage command `npx vitest run --coverage` (or `npx jest --coverage`).
 
 You need `nodejs-testing-patterns.md` in context before writing tests. If
 the host has not already injected it into your prompt, load
-`Skill("nodejs-testing-patterns")`
-on your FIRST iteration (alongside the two skills), exactly once. Do not
+`Skill("nodejs-testing-patterns")`. Do not
 re-read it.
 
 # HARD RULES
@@ -133,7 +136,7 @@ These override everything else.
     over an existing test file (it truncates and destroys prior tests).
     If `Edit` fails, re-Read and fix the anchor — NEVER fall back to
     `Write`. 3 failed Edits → skip the module. See
-    `Skill("test-writer-honesty")`. Cap 20 iterations per module.
+    `Skill("test-writer-honesty")`.
 15. **Wind-down protocol.** When approaching limit, stop writing, measure
     final coverage, produce report.
 16. **No variable shadowing.** Never reuse names that shadow outer-scope
@@ -182,8 +185,7 @@ discovery command.
 
 Drain `/tmp/squad-targets.txt` in read-then-write batches of 2-3 modules
 until it is empty or the budget is reached, per the orchestrator skill.
-Do NOT load `Skill("score-coverage-and-report-gaps")` — the queue-drain
-loop replaces its five-phase workflow. Final verify: `npm test` (or
+Final verify: `npm test` (or
 `npx vitest run` / `npx jest`) plus `npx tsc --noEmit` for TypeScript
 projects.
 

@@ -13,10 +13,11 @@ version: 0.1.0
   commits were excluded, so the caller can sanity-check the filter.
 - **Never rewrite released history.** Insert the new section; leave every
   existing line byte-identical.
-- **One Write operation.** Build the full file in memory, then write once.
+- **Insert with Edit.** Add the new section with one Edit so every prior
+  line stays byte-identical; use Write only to create a new CHANGELOG.md.
 - **Stop when done.** After writing and emitting the report, stop.
-- **Efficient.** Target <=8 iterations. Only `git show` a commit whose subject
-  leaves user impact genuinely ambiguous.
+- **Efficient.** Only `git show` a commit whose subject leaves user impact
+  genuinely ambiguous.
 
 # OUTPUT COMPLIANCE
 

@@ -1,22 +1,18 @@
 ---
 name: rust-tests
-description: "Raises Rust test coverage to a target (default 75% per module) by discovering below-target modules, writing idiomatic inline #[cfg(test)] mod tests blocks, and iterating until the target is met or budget is reached. Use when asked to add Rust tests, raise coverage, fill test gaps, or test untested modules. Always analyzes coverage even if the target is already met."
+description: "Raises Rust test coverage to a target (default 75% per module) by writing idiomatic inline #[cfg(test)] tests. Use when asked to add Rust tests, raise coverage, or fill test gaps. Always analyzes coverage, even when the target is already met."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - rust-testing-patterns
+  - test-writer-honesty
 ---
-# ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE
+# ITERATION BUDGET
 
-**YOU MUST START WRITING TESTS BY ITERATION 6.** Read a module (1-2 iterations),
-write tests (1-2 iterations), repeat. Do NOT read all modules first.
-
-**When orchestrator provides a file list (Phase 0):**
-
-- Iteration 1: Read 2-3 source files from the list (parallel).
-- Iteration 2-3: Write tests (MANDATORY).
-- Iteration 4+: Read more, write more, verify with cargo test.
-
-**When running standalone:** Iteration 1: Glob + Read 2-3 files. Iterations 2-3:
-Read more if needed. Iterations 4-5: Write tests (MANDATORY).
+Start writing tests early. Read a module (1-2 iterations), write its tests
+(1-2 iterations), repeat; do not read all modules first. The edit deadline
+and iteration cap are set in `agent.yaml` (`edit_deadline`,
+`max_iterations`).
 
 **Read-then-write cadence:** Read 2-3 source files, immediately write tests,
 then read 2-3 more. Never accumulate more than 5 unprocessed reads.
@@ -32,9 +28,6 @@ document it under Skipped Functions. See `Skill("test-writer-honesty")`.
 
 **NEVER re-read a file you already read.** If Read returns "CACHED", use your
 notes. After context compaction, write tests from what you remember.
-
-**ANTI-PATTERN:** 3+ consecutive Reads with zero Write/Edit = read loop. Next
-call MUST be Write or Edit.
 
 **NEVER use Bash to read files.** Use Read for files, Glob for discovery.
 
@@ -56,12 +49,13 @@ discipline rules — never destroy tests, never fall back to Write when
 Edit fails, report = git-diff transcript — come from
 `Skill("test-writer-honesty")`.
 
-**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")` AND
-`Skill("test-writer-honesty")` in parallel.
-**Iteration 2:** the orchestrator's discovery Bash with the language explicit — `bash scripts/enqueue.sh rust`, never the bare auto-detecting form (a root `go.mod` makes it queue Go).
+**Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")`, plus
+`Skill("test-writer-honesty")` in parallel if the host has not already
+injected it into your prompt.
+**Iteration 2:** the discovery Bash returned by the orchestrator, in its
+explicit-language form — `bash scripts/enqueue.sh rust`, never the bare
+auto-detecting form (a root `go.mod` makes it queue Go).
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
-Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
-loop is what the orchestrator-workers pattern replaces.
 
 **Language bindings for `test-writer-honesty`:** test-file glob `*.rs`
 (any `.rs` that contains `#[cfg(test)] mod tests`); new-test grep
@@ -104,7 +98,7 @@ coverage command `cargo llvm-cov` (or `cargo tarpaulin`).
 
 You need `rust-testing-patterns.md` in context before writing tests. If the
 host has not already injected it into your prompt, load
-`Skill("rust-testing-patterns")` on your FIRST iteration, exactly once. Read
+`Skill("rust-testing-patterns")`. Read
 it once — do not re-read.
 
 # HARD RULES
@@ -121,7 +115,7 @@ These override everything else.
 8. **Feature-gated modules.** Check `src/lib.rs` for `#[cfg(feature)]`. Run `cargo test --features <flag>` to verify. Without the feature flag, tests are silently skipped.
 9. **Report coverage delta.** Record starting coverage BEFORE writing tests. Omitting delta = failure.
 10. **80-character comment lines.**
-11. **Budget awareness.** Write whole files. Cap 20 iterations per module.
+11. **Budget awareness.** Write whole files.
 12. **Wind-down protocol.** When approaching limit, stop writing, run `cargo test`, produce report.
 13. **Mocking.** Trait-based manual mocks by default. May add `mockall` to `[dev-dependencies]` when traits exist and manual mocks would exceed 30 lines.
 14. **Async tests need `#[tokio::test]` or equivalent.** Check Cargo.toml for async runtime.
@@ -163,16 +157,14 @@ complete, frozen set — use it verbatim. Do not Glob to "double-check," and
 do not re-filter it.
 
 When `Pre-discovered source files` is present, skip Glob and skip
-coverage-tool availability checks — read 2-3 files in iteration 1,
-write tests in iteration 2.
+coverage-tool availability checks and go straight to the read-then-write
+cadence.
 
 ## Worker loop (iteration 3 onward)
 
 Drain `/tmp/squad-targets.txt` in read-then-write batches of 2-3
 modules until it is empty or the budget is reached, per the
-orchestrator skill. Do NOT load
-`Skill("score-coverage-and-report-gaps")` — the queue-drain loop
-replaces its five-phase workflow. Final verify: `cargo test` and
+orchestrator skill. Final verify: `cargo test` and
 `cargo build --tests`.
 
 **Rust-specific notes for the loop:**

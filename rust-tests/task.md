@@ -5,7 +5,7 @@ read each file and produce a prioritized report of untested
 functions/modules — do NOT write or modify any files.
 
 Use pre-collected data if provided, otherwise discover .rs files with Glob.
-Write tests to close coverage gaps. Start writing by iteration 6.
+Write tests to close coverage gaps. Start writing early.
 
 IMPORTANT CONSTRAINTS:
 
@@ -16,4 +16,4 @@ IMPORTANT CONSTRAINTS:
 - No `test_` prefix by default — use `<function>_<behavior>` naming
 - Calculate coverage ceiling. If below target, explain why with recommendations
 - Run `cargo test` after each batch. Check `--features` for gated modules
-- Per-module target: 75% unless the caller specifies otherwise. Budget: <=15 files = 15 iter
+- Per-module target: 75% unless the caller specifies otherwise

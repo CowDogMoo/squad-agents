@@ -15,7 +15,7 @@ doc comment gaps, add or improve comments, and verify compilation.
 - **Boolean functions use "reports whether."** Not "returns true if."
 - **Exported only.** Skip unexported names entirely.
 - **Proportional.** One-line getter = one-line comment. Trivial = no comment.
-- **Efficient.** Read each file ONCE, catalog findings, then fix. One Glob/Grep on repo root. Target ≤15 iterations for ≤20 files.
+- **Efficient.** Read each file ONCE, catalog findings, then fix. One Glob/Grep on repo root.
 - **No post-fix exploration.** After `go build` passes, go straight to report.
 
 # OUTPUT COMPLIANCE

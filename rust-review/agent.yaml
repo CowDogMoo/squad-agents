@@ -3,7 +3,7 @@ name: rust-review
 version: 0.2.0
 description: Autonomous Rust code review agent that discovers code quality issues, fixes best-practice violations, and verifies the result compiles.
 models:
-  - model: claude-sonnet-4-6
+  - model: claude-sonnet-5-5
     provider: anthropic
   - model: gemini-2.5-flash
     provider: google

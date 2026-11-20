@@ -18,7 +18,7 @@ from pathlib import Path
 
 REF_RE = re.compile(r"""Skill\(\s*["']([^"']+)["']\s*\)""")
 SCAN_SUFFIXES = {".md", ".yaml", ".yml"}
-SKIP_DIRS = {".git", ".squad-skills", "node_modules", ".venv", "evals"}
+SKIP_DIRS = {".git", ".squad-skills", "_includes", "node_modules", ".venv", "evals"}
 
 
 def collect_skill_names(skills_dirs: list[Path]) -> set[str]:

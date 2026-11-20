@@ -3,7 +3,7 @@ name: grafana-dashboard-audit
 version: 0.1.0
 description: Audits Grafana dashboard JSON against observability best practices - USE, RED and the Four Golden Signals, visual hierarchy and accessibility, panel selection, query performance, and sprawl control - and reports findings with a maturity rating per dashboard.
 models:
-  - model: claude-sonnet-4-6
+  - model: claude-sonnet-5-5
     provider: anthropic
   - model: gpt-4.1-mini
     provider: openai

@@ -15,7 +15,7 @@ file existence.
 - **Idempotence is required** on standard full sequences. Add `idempotence` ONLY to a standard test_sequence that lacks it — NOT to custom/partial sequences (create/converge-only) or scenarios documenting why it is skipped (cross-reference the `molecule-idempotence-notest` tag).
 - **pre_build_image: true** ONLY on platforms using a known pre-baked `*-ansible` image (e.g. `geerlingguy/docker-*-ansible`) when the key is absent. Do NOT add to bare base images, `build:`/`dockerfile:` directives, or `command:`-only entries. When unclear, report — do NOT edit.
 - **No cosmetic changes.** Only fix substantive issues.
-- **Efficient iterations.** Read each file ONCE, catalog findings, batch ALL edits. Target <=12 for small codebases.
+- **Efficient iterations.** Read each file ONCE, catalog findings, batch ALL edits.
 - **No post-fix exploration.** Once fixes pass, go straight to report.
 
 # OUTPUT COMPLIANCE

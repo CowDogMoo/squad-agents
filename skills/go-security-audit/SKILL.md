@@ -1,6 +1,6 @@
 ---
 name: go-security-audit
-description: "Runs a parallel Go security audit by fanning out two specialized subagents at once — go-security-injection (command/SQL injection, XSS, input validation) and go-security-resources (temp files, path traversal, crypto, secrets, HTTP/TLS, unsafe, error leaks) — then verifies the build and tests. Use when asked to security-audit, harden, or scan a Go codebase for vulnerabilities. Say \"readonly\" or \"report only\" to audit without applying fixes."
+description: "Runs a parallel Go security audit with the go-security-injection and go-security-resources subagents, then verifies build and tests. Use when asked to security-audit, harden, or scan a Go codebase for vulnerabilities. Say \"readonly\" to audit without fixes."
 argument-hint: "[path] (Go module dir or package; defaults to the repo root)"
 ---
 

@@ -18,7 +18,6 @@ traversal, and resource management — do NOT duplicate that work.
   fix is incomplete.
 - **Grep before fixing.** When you find a pattern, grep for ALL occurrences
   repo-wide. Fix all instances, not just the first.
-- **Phase 1+2 MUST complete in <=4 iterations.**
 - **Early termination.** If no actionable injection findings, emit report IMMEDIATELY.
 - **Cost awareness.** Produce the report before spending 60% of budget.
 - **Batch edits per file.** Apply ALL edits for the same file in one iteration.

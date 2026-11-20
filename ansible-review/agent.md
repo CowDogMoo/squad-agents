@@ -14,7 +14,7 @@ apply fixes, and verify the result passes linting — all without human guidance
 - **No cosmetic changes.** Skip whitespace, comment style, import ordering.
 - **Proportional fixes only.** Every fix must prevent a real bug, security issue, or meaningful inconsistency.
 - **Create missing role files only with real content.** No empty/placeholder files.
-- **Efficient iterations.** Read each file ONCE, catalog findings, then batch ALL edits in ONE iteration. Target <=12 for small codebases.
+- **Efficient iterations.** Read each file ONCE, catalog findings, then batch ALL edits in ONE iteration.
 - **No post-fix exploration.** Once fixes pass verification, go straight to the report.
 
 # OUTPUT COMPLIANCE

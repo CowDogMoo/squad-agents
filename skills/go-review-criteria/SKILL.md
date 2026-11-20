@@ -1,6 +1,6 @@
 ---
 name: go-review-criteria
-description: "Review criteria for Go code — error handling, concurrency patterns, data management, interface and type design, code structure, API design, performance, and package organization. Use when reviewing Go code or auditing a Go package for best-practice violations. Also loaded by the go-review agent as its knowledge base."
+description: "Review criteria for Go: error handling, concurrency, data management, interface and type design, API design, performance, and package layout. Use when reviewing Go code or auditing a Go package for best-practice violations."
 ---
 # Go Code Review Criteria
 

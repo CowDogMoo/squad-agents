@@ -1,1 +1,1 @@
-../../skills/ansible-review-criteria/SKILL.md
+../../skills/ansible-standards/references/review-criteria.md

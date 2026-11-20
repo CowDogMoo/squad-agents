@@ -1,6 +1,6 @@
 ---
 name: rust-documentation-standards
-description: "Rustdoc conventions — doc-comment syntax, documentation by declaration type, special sections, intra-doc links, doc-test attributes, enforcing docs, deprecated items, and a quality checklist. Use when writing or auditing rustdoc comments on a crate. Also loaded by the rust-doc-comments agent as its knowledge base."
+description: "Rustdoc conventions: doc-comment syntax by item type, special sections, intra-doc links, doc tests, and a checklist. Use when writing or auditing rustdoc comments on a crate."
 ---
 # Rust Documentation Standards
 

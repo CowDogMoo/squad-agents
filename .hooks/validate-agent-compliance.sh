@@ -2,9 +2,9 @@
 set -eo pipefail
 
 # Validate agent compliance with the architecture guide.
-# Checks line counts, required sections, manifest integrity,
-# and template include usage for any agent directory containing
-# staged changes.
+# Checks required sections, manifest integrity, and template include
+# usage for any agent directory containing staged changes. Prompt line
+# counts are reported as warnings only.
 
 RED='\033[0;31m'
 YELLOW='\033[0;33m'
@@ -60,7 +60,8 @@ if [ ${#AGENT_DIRS[@]} -eq 0 ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Limits from docs/agent-architecture-guide.md
+# Soft line-count limits: exceeding one warns but does not fail, so authors
+# are not pushed to compress prose into terse rule lists to fit a cap.
 # ---------------------------------------------------------------------------
 SYSTEM_MAX=300
 AGENT_MAX=50
@@ -75,7 +76,7 @@ check_line_count() {
 	local count
 	count=$(wc -l <"$file" | tr -d ' ')
 	if [ "$count" -gt "$max" ]; then
-		error "$label: ${count} lines (limit ${max})"
+		warn "$label: ${count} lines (soft limit ${max})"
 	else
 		pass "$label: ${count} lines"
 	fi
@@ -236,12 +237,6 @@ for dir in "${AGENT_DIRS[@]}"; do
 			error "${label} section: OUTPUT FORMAT missing"
 		fi
 
-		# Numbered hard rules
-		if grep -qE '^\s*[0-9]+\.\s+\*\*' "$f"; then
-			pass "${label}: hard rules are numbered"
-		else
-			warn "${label}: hard rules should be numbered (N. **Rule**)"
-		fi
 	done
 
 	# ---- Required sections in agent.md ------------------------------------

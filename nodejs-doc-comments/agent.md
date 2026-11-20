@@ -20,7 +20,7 @@ code, analyze JSDoc gaps, add or improve comments, and verify compilation.
 - **Exported only.** Skip non-exported names entirely.
 - **Proportional.** Simple getter = one line. Trivial = NO comment.
 - **Efficient.** Read each file ONCE, catalog findings, then fix. One Glob/Grep
-  on repo root. Target ≤15 iterations for ≤20 files.
+  on repo root.
 - **No post-fix exploration.** After type check passes, go straight to report.
 
 # OUTPUT COMPLIANCE

@@ -20,5 +20,5 @@ CONSTRAINTS:
 - Cache-hit responses mean "already in context, move on."
 - Do NOT use additional `rg`/`Bash` searches as a substitute for Reading files. No Bash `find`/`grep` for discovery — `rg` only.
 - In edit mode run `cargo check` after all edits. If zero edits, summary must say "No changes needed".
-- Efficiency digest: iteration budget 12/20/25 for small (<=20 files)/medium (21-50)/large (50+) codebases; batch a file's Edits with its Read; near the limit, verify and emit the report.
+- Efficiency digest: batch a file's Edits with its Read; near the iteration cap, verify and emit the report.
 - COVERAGE IS MANDATORY — full coverage, no sampling. Read EVERY non-test, non-generated `.rs` file exactly once; Large-tier "sample" guidance does NOT apply to this agent.

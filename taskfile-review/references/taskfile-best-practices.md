@@ -1,1 +1,1 @@
-../../skills/taskfile-best-practices/SKILL.md
+../../skills/taskfile-standards/references/best-practices.md

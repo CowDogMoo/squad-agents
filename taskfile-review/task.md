@@ -15,7 +15,7 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
 - Every fix must be PROPORTIONAL — no complex preconditions for trivial edge cases
 - Path traversal validation: ONLY add for variables with NO default or unsafe defaults.
   Skip for variables with safe defaults like /tmp — local task runners don't need it
-- Read each file ONCE, catalog all findings, then fix — target ≤10 iterations
+- Read each file ONCE, catalog all findings, then fix
 - Use ONE Glob on repo root, not per-directory — minimize tool calls
 - After task --list passes, emit report IMMEDIATELY — no post-fix exploration
 - Every file touched must appear in the output report

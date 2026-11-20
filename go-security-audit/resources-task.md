@@ -20,6 +20,5 @@ IMPORTANT CONSTRAINTS:
 - Skip fixes needing 50+ lines or new files
 - Preserve backwards compatibility
 - NEVER change functions whose behavior is asserted by tests
-- Phase 1+2 MUST complete in <=4 iterations
 - Produce the report before spending 60% of your cost budget
 - STOP after go build + go test BOTH pass — emit report IMMEDIATELY

@@ -1,6 +1,6 @@
 ---
 name: python-security-guide
-description: "Security guide for Python — static-analysis tooling, common vulnerabilities, insecure deserialization, web framework security, cryptography, supply-chain risk, secrets management, and a security checklist. Use when security-auditing or hardening Python code. Also loaded by the python-security-injection and python-security-resources agents as their knowledge base."
+description: "Python security guide: static-analysis tools, common vulnerabilities, insecure deserialization, web frameworks, cryptography, supply chain, secrets, and a checklist. Use when security-auditing or hardening Python code."
 ---
 # Python Security: Comprehensive Guide to Identifying and Patching Vulnerabilities
 
