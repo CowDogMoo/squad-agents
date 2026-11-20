@@ -1,0 +1,25 @@
+---
+name: scrub-comments
+version: 0.2.0
+description: Autonomous agent that scans Go and Rust source files for useless, LLM-generated, and non-idiomatic comments, trimming mixed blocks and deleting pure narration only on request.
+models:
+  - model: claude-opus-4-6
+    provider: anthropic
+  - model: claude-sonnet-4-6
+    provider: anthropic
+  - model: gpt-4.1-mini
+    provider: openai
+  - model: gemini-2.5-flash
+    provider: google
+entrypoint: system.md
+wrapper: agent.md
+task: task.md
+disable_task: true
+comments_only: true
+budget:
+  estimated_iterations: 45
+  scale_factor: files
+  files_per_iteration: 5
+# No `requires:` block: the agent works on Go-only, Rust-only and mixed
+# repos, so neither `go` nor `cargo` is mandatory. The build-verify step
+# runs the toolchain for each language it edited and reports a missing one.

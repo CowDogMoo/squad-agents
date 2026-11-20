@@ -317,26 +317,42 @@ Always highlight breaking changes prominently:
 
 ### Ansible/antsibull-changelog Format
 
-For Ansible collections using antsibull-changelog:
+Ansible collections that use antsibull-changelog do not take Keep a Changelog
+headings. Each change is a YAML fragment in `changelogs/fragments/`, and the
+section keys must be ones the collection allows.
+
+The allowed keys come from the `sections` list in `changelogs/config.yaml`. When
+that file keeps the defaults, the keys are `major_changes`, `minor_changes`,
+`breaking_changes`, `deprecated_features`, `removed_features`,
+`security_fixes`, `bugfixes` and `known_issues`, plus the special
+`release_summary`. Read `changelogs/config.yaml` before writing anything, and
+use only the keys it lists: a collection can rename or add sections, and an
+unknown key fails `antsibull-changelog lint`.
 
 ```yaml
 ---
 release_summary: "Brief 1-2 sentence overview of this release"
-added:
+minor_changes:
   - "role_name - Added new feature X"
   - "module_name - Added Y capability"
-changed:
-  - "role_name - Enhanced Z functionality"
-fixed:
+bugfixes:
   - "role_name - Fixed issue with W"
 ```
 
 **Rules for antsibull-changelog:**
 
 - `release_summary` is a single string, not a list
-- All other categories are lists of strings
+- All other sections are lists of strings
+- Map Keep a Changelog categories onto the configured keys (with the
+  defaults: Added and most Changed go to `minor_changes`, Fixed to
+  `bugfixes`, Security to `security_fixes`, Deprecated to
+  `deprecated_features`, Removed to `removed_features`, incompatible changes
+  to `breaking_changes`)
 - Prefix changes with module/role/plugin name
 - Use past tense: "Added", "Enhanced", "Fixed"
+- Quote every entry; in an unquoted entry a space followed by `#` starts a
+  YAML comment and silently truncates the entry
+- Validate with `antsibull-changelog lint`
 - Output only raw YAML content
 
 ---
@@ -404,7 +420,3 @@ fixed:
 - [Semantic Versioning](https://semver.org/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [antsibull-changelog](https://github.com/ansible-community/antsibull-changelog)
-
----
-
-*Last updated: 2026-01-10*

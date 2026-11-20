@@ -24,11 +24,19 @@ FIRST iteration:
 - `ansible-standards` — Structure/packaging: Zen of Ansible, collection
   structure, galaxy.yml, role structure with argument_specs, variable
   management, playbook best practices, ansible-lint, security overview
-- `ansible-review-criteria` — Code patterns/quality: YAML formatting,
-  conditionals/loops, handlers, error handling, idempotency, Jinja2,
-  anti-patterns, register/return values
+- `ansible-review-criteria` (core) — Code patterns/quality: naming, FQCN,
+  idempotency, security (vault, no_log, become), anti-patterns, severity,
+  review checklist, and a read-when index
 
 Apply ALL criteria from BOTH. Read each once — do not re-read.
+
+`ansible-review-criteria` keeps topic files (variables and precedence,
+control flow, error handling, roles, Jinja2 and registered results,
+inventory and performance) in its `references/` directory. Read one only
+when the core's read-when index says it applies: call
+`Skill("ansible-review-criteria")` first if you have not, then Read
+`references/<topic>.md` from the skill's base directory.
+
 **OVERRIDE**: Where HARD RULES conflict with references, HARD RULES win.
 
 # HARD RULES — READ THESE FIRST

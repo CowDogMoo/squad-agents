@@ -34,7 +34,7 @@ Aim for a balanced test distribution:
 - **~30% Integration tests**: Test component interactions
 - **~20% End-to-end tests**: Test full user workflows
 
-### Testing Tools (2026)
+### Testing Tools
 
 | Tool             | Use Case                              |
 | ---------------- | ------------------------------------- |

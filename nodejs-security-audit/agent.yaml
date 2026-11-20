@@ -14,6 +14,7 @@ stages:
         provider: anthropic
     references:
       - references/nodejs-security-guide.md
+      - references/security-audit-loop.md
   - name: resources
     entrypoint: resources-system.md
     wrapper: resources-agent.md
@@ -24,6 +25,7 @@ stages:
         provider: anthropic
     references:
       - references/nodejs-security-guide.md
+      - references/security-audit-loop.md
 
 gates:
   - after: injection

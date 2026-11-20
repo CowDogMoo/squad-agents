@@ -3,7 +3,7 @@ set -eo pipefail
 
 # Validate agent compliance with the architecture guide.
 # Checks line counts, required sections, manifest integrity,
-# and template include usage for any agent directory containing
+# and severity definitions for any agent directory containing
 # staged changes.
 
 RED='\033[0;31m'
@@ -43,7 +43,7 @@ find_agent_dir() {
 
 raw_dirs=""
 for file in "$@"; do
-	case "$file" in _templates/*) continue ;; esac
+	case "$file" in _includes/*) continue ;; esac
 	adir=$(find_agent_dir "$file")
 	if [ -n "$adir" ]; then
 		raw_dirs="${raw_dirs}${adir}"$'\n'
@@ -229,8 +229,7 @@ for dir in "${AGENT_DIRS[@]}"; do
 		check_section "$f" '^#.*INPUT' \
 			"${label} section: INPUT"
 
-		# Output format: either inline section or include directive
-		if grep -qE '(^#.*OUTPUT FORMAT|include.*output/.*format)' "$f"; then
+		if grep -qE '^#.*OUTPUT FORMAT' "$f"; then
 			pass "${label} section: OUTPUT FORMAT"
 		else
 			error "${label} section: OUTPUT FORMAT missing"
@@ -255,14 +254,14 @@ for dir in "${AGENT_DIRS[@]}"; do
 	done
 
 	# ---- Severity section check (warn only) --------------------------------
-	# Inline severity definitions are the intended Claude-native form; the
-	# legacy severity include is also accepted for un-migrated agents.
+	# Severity levels are defined inline or by a shared loop skill the agent
+	# loads (review-loop, security-audit-loop).
 	for f in "${system_files[@]}"; do
 		[ ! -f "$f" ] && continue
 		label="$(basename "$f")"
 		# Skip agents that don't use severity (e.g., scrub-comments)
 		if grep -qiE 'severity|CRITICAL.*HIGH.*MEDIUM' "$f"; then
-			if grep -qiE '^#+ *SEVERITY' "$f" || grep -q 'include "severity/standard.md"' "$f"; then
+			if grep -qiE '^#+ *SEVERITY' "$f" || grep -qE 'Skill\("(review-loop|security-audit-loop)"\)' "$f"; then
 				pass "${label}: severity levels defined"
 			else
 				warn "${label}: mentions severity but has no SEVERITY LEVELS section"

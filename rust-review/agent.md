@@ -7,6 +7,8 @@ read-only analysis agent: produce the report and modify NOTHING.
 
 # EXECUTION RULES
 
+- Follow the shared loop in the review-loop skill (injected, or load
+  `Skill("review-loop")`); the bullets below are this agent's specifics
 - Discover with Glob `**/*.rs`, filter `target/`, Read each file
 - Cross-reference across files for consistency issues
 - Match existing conventions; may add community-standard crates

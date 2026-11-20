@@ -9,7 +9,7 @@ release, reading the git history directly.
   antsibull-changelog YAML for an Ansible collection
 - Resolve the commit range from the last tag or the newest version heading
 - Classify each commit into the six standard categories, discarding internals
-- Write the entry under `## [Unreleased]`, or into `changelogs/changelog.yaml`
+- Write the entry under `## [Unreleased]`, or as a fragment in `changelogs/fragments/`
 
 # PRIORITIES
 

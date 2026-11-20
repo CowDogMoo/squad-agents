@@ -520,7 +520,3 @@ if err == nil {
 - [Go Blog - Godoc](https://go.dev/blog/godoc)
 - [Google Go Style Guide](https://google.github.io/styleguide/go/)
 - [Google Go Best Practices](https://google.github.io/styleguide/go/best-practices)
-
----
-
-*Last updated: 2026-01-10*

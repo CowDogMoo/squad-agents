@@ -225,7 +225,7 @@ app.get('/file', (req, res) => {
 });
 ```
 
-**Secure (Node 18+):**
+**Secure:**
 
 ```js
 import path from 'path';
@@ -489,7 +489,8 @@ npm install --save-dev safe-regex
 ### Fix
 
 - Simplify regex to avoid nested quantifiers
-- Use atomic groups or possessive quantifiers (Node 16+)
+- JavaScript `RegExp` has no atomic groups or possessive quantifiers (`(?>...)` and `a++` are syntax errors in V8), so remove the ambiguity itself: make alternatives mutually exclusive and avoid a quantified group that contains another quantifier
+- For untrusted patterns or input, use a linear-time engine such as the `re2` package
 - Validate input length before applying complex regex
 - Set a timeout using `AbortSignal`:
 
@@ -557,9 +558,3 @@ async function safeMatch(regex, input) {
 - [Snyk Node.js Vulnerability Database](https://security.snyk.io/vuln/npm)
 - [npm audit documentation](https://docs.npmjs.com/cli/v10/commands/npm-audit)
 - [Node.js crypto module](https://nodejs.org/api/crypto.html)
-
----
-
-**Document Version:** 1.0
-**Last Updated:** May 2026
-**Author:** Compiled from OWASP resources, Node.js docs, and community security research

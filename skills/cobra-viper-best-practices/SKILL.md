@@ -1062,7 +1062,3 @@ Suggestions for optimization:
 - [Viper GitHub](https://github.com/spf13/viper)
 - [Cobra User Guide](https://github.com/spf13/cobra/blob/main/site/content/user_guide.md)
 - [Shell Completions Guide](https://cobra.dev/docs/how-to-guides/shell-completion/)
-
----
-
-_Last updated: 2026-01-13_

@@ -809,7 +809,3 @@ convention = "google"
 - [PEP 350 - Codetags](https://peps.python.org/pep-0350/)
 - [PEP 484 - Type Hints](https://peps.python.org/pep-0484/)
 - [Google Python Style Guide](https://google.github.io/styleguide/pyguide.html)
-
----
-
-_Last updated: 2026-03-17_

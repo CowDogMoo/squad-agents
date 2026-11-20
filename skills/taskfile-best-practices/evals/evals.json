@@ -4,11 +4,12 @@
     {
       "id": 1,
       "prompt": "Harden this Taskfile — audit it and fix everything you find.",
-      "expected_output": "A fixed Taskfile with the version field added, the hardcoded secret replaced by an environment-sourced variable, descriptions on every task, preconditions validating required inputs, and hardcoded values moved to variables.",
+      "expected_output": "A fixed Taskfile with the version field added, the hardcoded secret replaced by a value read from the environment (or an external secret tool) without templating it into an echoed command, descriptions on every task, preconditions validating required inputs, and hardcoded values moved to variables.",
       "files": ["evals/files/Taskfile.yaml"],
       "expectations": [
         "The missing version field is identified and 'version: \"3\"' is present in the fixed file",
         "The hardcoded API key is identified as a critical issue and no longer appears as a literal secret; it is sourced from the environment (empty default) or an external secret tool",
+        "The fixed deploy command does not interpolate the secret with {{.API_KEY}} (Task echoes commands with templates expanded); the secret reaches the tool through the environment, for example $API_KEY in the shell or an env: block",
         "Both the build and deploy tasks have a desc after the fix",
         "The deploy task validates its required inputs (API_KEY and ENV) before running, failing with a clear message when they are missing",
         "The hardcoded binary name and path in the build command are moved into variables"

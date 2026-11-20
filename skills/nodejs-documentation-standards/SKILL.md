@@ -535,7 +535,3 @@ module.exports = {
 - [TypeScript JSDoc Reference](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html)
 - [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)
 - [eslint-plugin-jsdoc](https://github.com/gajus/eslint-plugin-jsdoc)
-
----
-
-_Last updated: 2026-05-25_

@@ -62,9 +62,11 @@ reminder, not a replacement.
 # WORKFLOW
 
 1. **Detect the project shape.** A `galaxy.yml` plus a `changelogs/` directory
-   means an Ansible collection — emit antsibull-changelog YAML into
-   `changelogs/changelog.yaml`. Otherwise Keep a Changelog markdown in
-   `CHANGELOG.md`.
+   means an Ansible collection — emit an antsibull-changelog fragment into
+   `changelogs/fragments/`, using only the sections that
+   `changelogs/config.yaml` allows (`antsibull-changelog release` generates
+   `changelogs/changelog.yaml`; never hand-edit it). Otherwise Keep a
+   Changelog markdown in `CHANGELOG.md`.
 2. **Establish the range.** `git describe --tags --abbrev=0` for the last
    release, falling back to the newest version heading in the existing
    changelog, falling back to the root commit for a first release.

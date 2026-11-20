@@ -133,6 +133,7 @@ See the [decision guide](https://github.com/cowdogmoo/squad/blob/main/docs/agent
 | Agent | Description |
 |-------|-------------|
 | [degpt](./degpt) | Detects and rewrites LLM-generated prose to sound human-written |
+| [scrub-comments](./scrub-comments) | Trims useless, LLM-generated, and non-idiomatic comments in Go and Rust code; comment-only edits enforced by squad's `comments_only` guard |
 | [readme](./readme) | Analyzes project structure and generates a comprehensive README.md following progressive disclosure best practices |
 | [taskfile-review](./taskfile-review) | go-task Taskfile best practices, security, and maintainability — language-agnostic |
 
@@ -371,9 +372,11 @@ The skills come from two collections, split by coupling:
 
 - **[`skills/`](./skills) (this repo)** — reference knowledge bases
   coupled to exactly one agent (`go-review-criteria`,
-  `ansible-standards`, `rust-testing-patterns`, …), plus the
-  orchestration skills that chain this repo's agents (`go-pipeline`,
-  `rust-pipeline`, `go-security-audit`). Each agent's `references/`
+  `ansible-standards`, `rust-testing-patterns`, …), the loop skills
+  shared by one family of this repo's agents (`review-loop` for the
+  go/rust/python/nodejs review agents, `security-audit-loop` for the six
+  security stages), plus the orchestration skills that chain this repo's
+  agents (`go-pipeline`, `rust-pipeline`, `go-security-audit`). Each agent's `references/`
   entries are symlinks into this directory, so an agent and its
   reference docs always change in the same commit. Naming follows the
   agent (`go-review` → `go-review-criteria`). Each one is also a
@@ -382,8 +385,16 @@ The skills come from two collections, split by coupling:
   repo)** — reusable, host-portable procedures shared across agents and
   hosts. See that repo for the catalog and authoring guide.
 
-Rule of thumb: a skill that exists for one agent lives in `skills/`
-here; a skill reusable across agents or hosts lives in squad-skills.
+Large knowledge skills keep a short core in `SKILL.md` and move topic
+material into `references/<topic>.md` with a read-when index. squad
+injects only the core (the `references:` symlink points at `SKILL.md`);
+an agent that needs a topic file calls `Skill("<name>")` first, which
+makes the skill directory readable, then reads the file. A file a stage
+needs on every run gets its own `references:` symlink instead, as the
+go-security-audit stages do for their half of `golang-security-guide`.
+
+Rule of thumb: a skill that exists for one agent, or one family of
+this repo's agents, lives in `skills/` here; a skill reusable across agents or hosts lives in squad-skills.
 The split is about **coupling**, not how broad the topic is — "how to
 review Go code" is a universal topic and still belongs here, because
 exactly one agent loads it.
@@ -421,8 +432,8 @@ plugin dependency and will not enable without it:
 
 | squad-skills skill | Loaded by |
 |--------------------|-----------|
-| `detect-llm-tells` | degpt, go-scrub-comments, rust-scrub-comments |
-| `comment-scrub-playbook` | go-scrub-comments, rust-scrub-comments |
+| `detect-llm-tells` | degpt, scrub-comments |
+| `comment-scrub-playbook` | scrub-comments |
 | `doc-comments-discovery-and-fix-loop` | go-, python-, rust-, nodejs-doc-comments |
 | `score-coverage-and-report-gaps` | go-, python-, rust-, nodejs-tests |
 | `test-writer-honesty` | go-, python-, rust-, nodejs-tests |

@@ -133,9 +133,13 @@ tasks:
 ```yaml
 vars:
   PROVIDER: '{{.PROVIDER | default "local"}}'
-  API_KEY: '{{.API_KEY | default ""}}'
-  _API_KEY_FLAG: '{{if .API_KEY}}--api-key {{.API_KEY}}{{end}}'
+  REGION: '{{.REGION | default ""}}'
+  _REGION_FLAG: '{{if .REGION}}--region {{.REGION}}{{end}}'
 ```
+
+Do not build flags from secrets this way: Task expands template variables
+before it echoes the command, so the value lands in the log (see Secret
+Handling).
 
 **Anti-pattern - Hardcoded secrets:**
 
@@ -390,27 +394,49 @@ tasks:
 
 ### Secret Handling
 
-**Good - Environment variable with no default:**
+Task prints every command before running it unless `silent` is set, and it
+expands `{{.VAR}}` templates first, so `deploy --api-key {{.API_KEY}}` writes
+the secret to the terminal and CI log. `silent: true` hides the echo but is not
+a secret-masking feature, and a secret on the command line is still visible in
+`ps`. Keep secrets in the environment and let the shell or the tool read them.
+
+**Good - Secret read from the environment, never templated:**
 
 ```yaml
-vars:
-  API_KEY: '{{.API_KEY | default ""}}'
-
 tasks:
   deploy:
     preconditions:
-      - sh: test -n "{{.API_KEY}}"
+      - sh: test -n "$API_KEY"
         msg: "API_KEY environment variable is required"
     cmds:
-      - deploy --api-key {{.API_KEY}}
+      # deploy reads API_KEY from its environment; the echoed line shows
+      # no value.
+      - deploy
 ```
 
-**Good - External secret tool:**
+If the tool only accepts a flag, use `deploy --api-key "$API_KEY"`: the shell
+expands it after Task echoes the literal `$API_KEY`, though the value is still
+in `ps` while the command runs.
+
+**Good - External secret tool, exported through `env:`:**
 
 ```yaml
-vars:
-  API_KEY:
-    sh: op item get "MyService" --fields password 2>/dev/null || echo ""
+tasks:
+  deploy:
+    env:
+      API_KEY:
+        sh: op item get "MyService" --fields password
+    cmds:
+      - deploy
+```
+
+**Bad - Secret interpolated into the command:**
+
+```yaml
+tasks:
+  deploy:
+    cmds:
+      - deploy --api-key {{.API_KEY}}  # echoed with the value expanded
 ```
 
 **Bad - Hardcoded secrets:**
@@ -670,7 +696,3 @@ task --force build
 - [Taskfile Schema](https://taskfile.dev/schema.json)
 - [Taskfile GitHub](https://github.com/go-task/task)
 - [Taskfile Best Practices (Community)](https://taskfile.dev/usage/#best-practices)
-
----
-
-*Last updated: 2026-02-04*

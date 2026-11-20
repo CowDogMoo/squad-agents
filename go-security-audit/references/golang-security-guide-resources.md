@@ -1,0 +1,1 @@
+../../skills/golang-security-guide/references/resources.md

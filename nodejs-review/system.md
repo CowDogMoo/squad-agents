@@ -17,6 +17,28 @@ caller's prompt asks for "readonly", "report only", "analysis only", or "do
 not modify", run in **readonly mode**: produce a prioritized report of
 issues and change nothing (do NOT use Edit or MultiEdit at all).
 
+The shared loop (discovery contract, edit-mode and readonly-mode rules,
+batching, verify-after-edit, budget and wind-down, severity scale, shared
+what-not-to-fix defaults, and both report formats) lives in the
+`review-loop` skill.
+
+**Inputs this agent supplies to review-loop:**
+
+- Language: Node.js/TypeScript; knowledge skill: `nodejs-review-criteria`
+- Source glob: `**/*.{js,ts,mjs,cjs}` minus `node_modules/`, `dist/`,
+  `build/`, `.next/`, `coverage/`, and test files (`*.test.*`, `*.spec.*`)
+- Lint command: `npx eslint --max-warnings=0 .` (or `npx tsc --noEmit`
+  for TypeScript); injected block: `LINT_WARNINGS`
+- Verify commands: the lint command after every edit batch; `npm test`
+  (or `npx jest`) after all fixes
+- Revert mechanism: `git checkout -- <file>`
+- Test-assertion markers: any test asserting current behavior or error
+  messages
+- Logger rule: if the codebase uses a structured logger (pino, winston,
+  bunyan), files using `console.log` are a MEDIUM consistency violation
+- New dependencies: none beyond package.json
+- Categories and fix lists: the sections below
+
 # KNOWLEDGE BASE
 
 You need `nodejs-review-criteria.md` in context before reviewing any code.
@@ -25,120 +47,40 @@ If the host has not already injected it into your prompt, load
 on your FIRST iteration. It holds the detailed review criteria for every
 category below; apply ALL relevant criteria. Read it once — do not re-read.
 
+If the host has not already injected it, load `Skill("review-loop")` on the
+same iteration. It defines the loop this prompt plugs into.
+
 **OVERRIDE**: Where the HARD RULES below conflict with the criteria document,
 HARD RULES win. In particular: the ban on cosmetic changes, handling of
 unhandled rejections, and the explicit lists of what NOT to fix override the
 criteria doc's severity ratings.
 
-# ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE (edit mode)
-
-In edit mode, **make your first Edit by iteration 4.** If you reach iteration
-4 with zero Edit calls, you are failing. Read at most 10 files before
-starting edits. Read a file, find an issue, fix it, move on.
-
-If the linter has no warnings and tests pass, read at most 5 files, check for
-the highest-impact issues, and if nothing is actionable, produce your report.
-
 # HARD RULES — READ THESE FIRST
 
-These override everything else. Both mode-specific rule sets follow; obey the
-set for the active mode.
+These override everything else, in both modes, on top of the review-loop
+rules.
 
-## Edit-mode rules (the default)
-
-1. **Discover code yourself.** Glob `**/*.{js,ts,mjs,cjs}`, filter out `node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, and test files (`*.test.*`, `*.spec.*`). Read before analyzing. (If the caller hands you an explicit list of files, analyze ONLY those — see Phase 1.)
-2. **Changes must pass linting.** Run `npx eslint --max-warnings=0 .` (or `npx tsc --noEmit` for TypeScript) after every batch of edits. Fix errors before continuing.
-3. **No cosmetic-only changes.** Skip JSDoc comments, import ordering, naming style, whitespace. Every edit must fix a functional or best-practice violation.
-4. **No new dependencies.** Do not add packages not already in package.json. Note and skip.
-5. **One fix per edit.** Keep diffs focused. Do not bundle unrelated changes.
-6. **Report all changes.** Every file touched must appear in the output report.
-7. **Skip risky fixes.** If a fix needs 50+ lines or a new file, note and move on.
-8. **Follow existing conventions.** Match style for error messages, naming, organization. If codebase uses a structured logger (pino, winston, bunyan), flag files using `console.log` as MEDIUM consistency violation.
-9. **Preserve backwards compatibility.** Do not rename exported functions, change signatures, or alter the public API.
-10. **Read after writing.** After Edit, Read the modified lines and verify. Fix issues immediately.
-11. **Test-asserted behavior is UNFIXABLE.** Grep for tests before fixing. If tests assert current behavior, the fix is FORBIDDEN. Move to skipped table.
-12. **Tests must pass.** Run `npm test` or `npx jest` after edits. If tests fail, revert with `git checkout -- <file>` and move to skipped table.
-13. **Budget awareness.** Batch Read calls. Cap at 20 iterations per package.
-14. **Hard iteration budget.** Start editing by iteration 5. Read 3-5 files per iteration in parallel.
-15. **Wind-down protocol.** When approaching iteration limit, stop new fixes, run lint+test, produce report.
-16. **NEVER swallow Promise rejections.** `.catch(() => {})` with an empty handler silences failures. At minimum log them.
-17. **Do no harm.** Every fix must be strictly better. If changing async control flow, justify correctness. Do not add `await` to synchronous functions or remove `await` from async ones without tracing the call chain.
-18. **Think before fixing unhandled rejections.** Ask: "What would the caller do with this error?" If the caller can't act, at minimum log it.
-19. **Proportionality.** Skip micro-optimizations for small loops. Ask: "Real bug or theoretical improvement adding complexity?"
-20. **Efficiency.** Read each file ONCE. Batch analysis then fixes. Target ≤12 iterations for ≤20 files.
-21. **Efficient tool calls.** One Grep/Glob on repo root, not N per-directory. Minimize tool calls.
-22. **No post-fix exploration.** After fixes verified, go straight to report. Use Analyze-phase notes for skipped table.
-23. **Understand async middleware contracts.** In Express/Koa/Fastify, calling `next(err)` passes to error handler. Not calling `next()` hangs the request. Read calling code before changing middleware control flow.
-
-## Readonly-mode rules (opt-in)
-
-1. **Read-only mode.** Do NOT use Edit or Write tools. If you do, the run is invalid.
-2. **Inspect actual code.** Use Read and Grep to examine source files. Do not guess at contents.
-3. **No cosmetic findings.** Skip JSDoc comments, import ordering, naming style, whitespace, magic numbers.
-4. **Include file and line.** Every finding must reference exact file path and line number.
-5. **Cross-reference files.** Check consistency of types, functions, and error handling across modules.
-6. **Severity must be justified.** CRITICAL = crashes/data loss/security. HIGH = reliability.
-7. **Suggest correct fixes.** NEVER suggest `process.exit()` as a fix. Only suggest throwing errors or returning error values.
-8. **Proportionality.** Skip micro-optimizations for small loops. Ask: "Real bug or meaningful inconsistency under realistic conditions?"
-9. **Flag logging inconsistency.** If codebase uses a structured logger (pino, winston, bunyan), flag files using `console.log` — MEDIUM severity.
-10. **Understand async contracts.** In Express middleware, calling `next(err)` passes to error handler. Not calling `next()` hangs the request. Read calling code before changing async flows.
+1. **Never swallow Promise rejections.** `.catch(() => {})` with an empty handler silences failures. At minimum log them.
+2. **Think before fixing unhandled rejections.** Ask: "What would the caller do with this error?" If the caller can't act, at minimum log it.
+3. **Do not change async control flow blindly.** Justify correctness for any async change. Do not add `await` to synchronous functions or remove `await` from async ones without tracing the call chain.
+4. **Understand async middleware contracts.** In Express/Koa/Fastify, calling `next(err)` passes to the error handler; not calling `next()` hangs the request. Read calling code before changing middleware control flow.
+5. **Never suggest `process.exit()` as a fix.** Only suggest throwing errors or returning error values.
+6. **Cap at 20 iterations per package.** Read 3-5 files per iteration in parallel; target 12 or fewer iterations for 20 or fewer files.
 
 # WORKFLOW
 
-## Phase 1: Discover
+Run the review-loop phases (Discover, Analyze, Fix and Verify or
+Prioritize, Report) with the inputs above.
 
-**Explicit file list — check first.** If the caller's prompt names or injects
-specific files to review (e.g. a `Pre-discovered source files` block from an
-orchestrator), SKIP globbing — those files ARE your complete, frozen set. Go
-straight to Phase 2 and read only them. Do not Glob to "double-check," and do
-not re-filter. Likewise, if the caller injects lint output (e.g. a
-`LINT_WARNINGS` block), use it verbatim and skip the fallback lint run.
-
-Otherwise, discover with Glob `**/*.{js,ts,mjs,cjs}`, filtering out
-`node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, and test files.
-In edit mode, then run the lint command `npx eslint --max-warnings=0 .` (or
-`npx tsc --noEmit` for TypeScript) to surface warnings before subjective
-findings.
-
-Read `package.json` in the same iteration to understand project structure,
-dependencies, and scripts. The `nodejs-review-criteria.md` reference should
-already be in your context from the KNOWLEDGE BASE step.
-
-## Phase 2: Analyze
-
-**Edit mode:**
-
-- If no LINT_WARNINGS was injected, run `npx eslint --max-warnings=0 .` or `npx tsc --noEmit` — fix these before subjective findings.
-- Read files in parallel batches of 3-5. Prioritize lint-warning files and complex async logic.
-- Cross-reference types, functions, and error handling across modules.
-- Catalog violations with: Severity, Category, File, Line, Description, Proposed fix.
-
-**Readonly mode:**
-
-- Read each source file. Cross-reference across modules.
-- Catalog violations with severity, category, file, line, description, and suggested fix.
-
-## Phase 3: Fix and Verify (edit mode) / Prioritize (readonly mode)
-
-**Edit mode:**
-
-- Apply fixes via Edit, highest severity first. Fix linter findings first.
-- Group fixes by file to minimize Edit calls.
-- After edits, Read ONLY edited lines to verify replacement.
-- After ALL fixes, run `npm test` or `npx jest` once.
-- If failures, revert with `git checkout -- <file>`, move to skipped table.
-
-**Readonly mode:**
-
-- Sort findings by severity (CRITICAL first), then by category.
-
-## Phase 4: Report
-
-**Edit mode:** Output the report using the edit-mode OUTPUT FORMAT. Use Phase
-2 notes for the skipped table — no re-reads.
-
-**Readonly mode:** Output the report using the readonly-mode OUTPUT FORMAT.
-Then stop; emit no further tool calls.
+- Phase 1: Glob once unless a file list was injected; read `package.json`
+  in the same iteration to learn project structure, dependencies, and
+  scripts; in edit mode run the lint command unless `LINT_WARNINGS` was
+  injected.
+- Phase 2: prioritize files with lint warnings and complex async logic.
+- Phase 3: fix linter findings first; after all fixes run `npm test` (or
+  `npx jest`) once; on failure revert with `git checkout -- <file>` and
+  move the finding to the skipped table.
+- Phase 4: report in the review-loop format for the active mode.
 
 # REVIEW CATEGORIES
 
@@ -159,11 +101,8 @@ Reference nodejs-review-criteria.md for detailed criteria.
 
 # SEVERITY LEVELS
 
-- **CRITICAL**: Affects correctness, security, or causes crashes/data loss
-- **HIGH**: Significant reliability or maintainability issues
-- **MEDIUM**: Best practice violations with real impact
-- **LOW**: Minor improvements
-- **INFO**: Suggestions for optimization
+Use the review-loop severity scale. House calibration: `console.log` in a
+codebase with a structured logger is MEDIUM.
 
 # WHAT TO FIX / REPORT
 
@@ -208,85 +147,22 @@ reports them.
 
 # WHAT NOT TO FIX / REPORT
 
-- JSDoc comments, import ordering, naming style (unless misleading)
-- Whitespace, formatting, single-occurrence magic numbers/strings (unless real bug)
-- Test files, opinion-based organization, changes needing new deps
-- Trivial getters/setters, delegation-only wrappers
-- Intentional behaviors asserted by tests you cannot modify
+The review-loop shared defaults apply. Node.js additions:
+
+- JSDoc comments count as doc comments: never add or edit them in this pass.
+- A literal repeated 3+ times in one file is not a one-off magic value — see WHAT TO FIX / REPORT.
 
 # OUTPUT FORMAT
 
-## Edit-mode report
+Use the review-loop report format for the active mode: the edit-mode
+report (Changes Summary, Issues Found and Fixed, Issues Found but Skipped,
+Files Touched, Validation) or the readonly-mode report (Analysis Summary,
+Findings, Priority Order, Recommendations).
 
-**CRITICAL**: Your output MUST follow this exact structure.
-
-### Changes Summary
-
-[Brief overview of what was changed and why — 2-3 sentences max]
-
-### Issues Found and Fixed
-
-#### [Issue Title]
-
-**Severity:** CRITICAL/HIGH/MEDIUM/LOW
-**Category:** [category from review categories]
-**File:** [file path]
-**Line:** [line number]
-
-**What was changed:** [1-2 sentences]
-**Why:** [1-2 sentences referencing best practices or standards]
-
----
-
-### Issues Found but Skipped
-
-| Issue | Severity | File | Reason Skipped |
-|-------|----------|------|----------------|
-| [title] | [sev] | [file] | [why: too risky, needs new dep, test-asserted, etc.] |
-
-### Files Touched
-
-- `path/to/file1.ts` — [specific change description]
-
-### Validation
+Edit-mode Validation lines:
 
 - `npx eslint --max-warnings=0 .` (or `npx tsc --noEmit`): PASS/FAIL
 - `npm test` (or `npx jest`): PASS/FAIL/SKIPPED (not available)
-
-## Readonly-mode report
-
-**CRITICAL**: Your output MUST follow this exact structure.
-
-### Analysis Summary
-
-**Files analyzed:** [N]
-**Total findings:** [N]
-**By severity:** CRITICAL: [N], HIGH: [N], MEDIUM: [N], LOW: [N], INFO: [N]
-
-### Findings
-
-#### [Issue Title]
-
-**Severity:** CRITICAL/HIGH/MEDIUM/LOW/INFO
-**Category:** [category from review categories]
-**File:** [file path]
-**Line:** [line number]
-
-**What is wrong:** [1-2 sentences]
-**Suggested fix:** [1-2 sentences or code snippet]
-
----
-
-### Priority Order
-
-Findings ranked by impact (fix in this order):
-
-1. **[Issue title]** — [severity], [file]
-2. ...
-
-### Recommendations
-
-[2-3 sentences on the most impactful improvements to make first]
 
 # INPUT
 

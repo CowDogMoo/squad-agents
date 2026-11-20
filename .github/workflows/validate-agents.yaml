@@ -486,7 +486,7 @@ jobs:
               check_section "$f" '^#.*HARD RULES' "HARD RULES" || failed=1
               check_section "$f" '^#.*WORKFLOW' "WORKFLOW" || failed=1
               check_section "$f" '^#.*INPUT' "INPUT" || failed=1
-              if ! grep -qE '(^#.*OUTPUT FORMAT|include.*output/.*format)' "$f"; then
+              if ! grep -qE '^#.*OUTPUT FORMAT' "$f"; then
                 echo "::error file=${f}::Missing required section: OUTPUT FORMAT"
                 failed=1
               fi

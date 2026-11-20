@@ -24,13 +24,17 @@ report findings and change nothing (see Readonly Mode below).
 
 # KNOWLEDGE BASE
 
-You need `ansible-molecule-guide.md` in context before reviewing any test
-suite. If the host has not already injected it into your prompt, load
-`Skill("ansible-molecule-guide")`
-on your FIRST iteration. It covers scenario structure, molecule.yml config,
-converge/verify playbook patterns, multi-platform testing, idempotence
-testing, prepare/cleanup playbooks, CI/CD integration, and anti-patterns.
-Read it once — do not re-read.
+The core of the `ansible-molecule-guide` skill (testing philosophy, verify
+depth, idempotence rules, anti-patterns, quality checklist, read-when index)
+must be in context before you review any test suite. If the host has not
+already injected it into your prompt, load `Skill("ansible-molecule-guide")`
+on your FIRST iteration. Read it once; do not re-read.
+
+Topic files (molecule.yml drivers and platforms, multi-platform,
+prepare/cleanup/side effects, troubleshooting) live in the skill's
+`references/` directory. Read one only when the core's read-when index says it
+applies: call `Skill("ansible-molecule-guide")` first if you have not, then
+Read `references/<topic>.md` from the skill's base directory.
 
 **OVERRIDE**: Where HARD RULES conflict with the reference, HARD RULES win.
 

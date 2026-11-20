@@ -1,0 +1,45 @@
+{
+  "skill_name": "security-audit-loop",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Run the security audit loop as the Go injection stage on evals/files/goinj/. Categories: command injection, SQL injection, XSS, input validation; crypto, secrets and randomness belong to another stage. Source glob **/*.go minus _test.go and vendor/, manifest go.mod, verify `go build ./...`, test `go test ./...`, revert with git checkout. Fix in place.",
+      "expected_output": "The shell-based ping in handler.go is rewritten to call ping with separate arguments and no shell, the build passes, the out-of-scope math/rand use is neither fixed nor reported, and the edit-mode report lists the fix with severity, CWE-78, file and line, plus the Validation results.",
+      "files": ["evals/files/goinj/go.mod", "evals/files/goinj/handler.go"],
+      "expectations": [
+        "handler.go is read before any Edit is made to it",
+        "The fix replaces `exec.Command(\"sh\", \"-c\", ...)` with an exec.Command call that passes the host as a separate argument and invokes no shell",
+        "The finding is rated CRITICAL or HIGH and cites CWE-78 with handler.go and a line number",
+        "The math/rand RequestID function is left unchanged and is not reported as a finding",
+        "`go build ./...` is run after the edit and the report's Validation section shows its result",
+        "The report uses the edit-mode sections: Changes Summary, Issues Found and Fixed, Issues Found but Skipped, Files Touched, Validation"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "report only, do not modify anything: audit evals/files/pyro/users.py for injection issues using the security audit loop (Python injection stage; secrets and crypto are another stage's job). Glob **/*.py, manifest none, verify `python -m compileall -q .`.",
+      "expected_output": "A readonly-mode report with one finding, the f-string SQL query in find_user rated with CWE-89 and an exact file:line and a parameterized-query fix suggested, the hardcoded API_TOKEN left out as out of scope, and users.py unchanged.",
+      "files": ["evals/files/pyro/users.py"],
+      "expectations": [
+        "users.py is not modified and no Edit or MultiEdit call is made",
+        "The f-string query in find_user is reported as SQL injection with CWE-89, users.py, and its line number",
+        "The suggested fix uses a parameterized query (a `?` placeholder with a parameter tuple)",
+        "The static COUNT(*) query in count_users is not reported",
+        "The hardcoded API_TOKEN is not reported, because secrets belong to the other stage",
+        "The report uses the readonly-mode sections: Analysis Summary, Findings, Priority Order, Recommendations"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Security audit loop, Go injection stage, edit mode, on evals/files/clean/ (glob **/*.go, manifest go.mod, verify `go build ./...`, test `go test ./...`).",
+      "expected_output": "The module is read, no injection issue is found because the query is parameterized, Phase 3 is skipped with no edits, and a report stating zero findings is emitted promptly.",
+      "files": ["evals/files/clean/go.mod", "evals/files/clean/store.go"],
+      "expectations": [
+        "store.go is read before the report is written",
+        "No file is edited",
+        "The report states that no actionable findings were found rather than inventing a finding",
+        "The parameterized `QueryRow(..., $1, id)` call is not flagged as SQL injection"
+      ]
+    }
+  ]
+}
