@@ -731,7 +731,7 @@ tasks:
 version: '3'
 
 vars:
-  GO_VERSION: 1.21
+  GO_VERSION: 1.26
   DOCKER_REGISTRY: myregistry.io
 
 includes:

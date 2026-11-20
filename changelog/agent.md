@@ -13,8 +13,9 @@ version: 0.1.0
   commits were excluded, so the caller can sanity-check the filter.
 - **Never rewrite released history.** Insert the new section; leave every
   existing line byte-identical.
-- **Insert with Edit.** Add the new section with one Edit so every prior
-  line stays byte-identical; use Write only to create a new CHANGELOG.md.
+- **Insert with Edit.** In CHANGELOG.md, add the new section with one Edit
+  so every prior line stays byte-identical; use Write only to create a new
+  CHANGELOG.md or a new fragment in `changelogs/fragments/`.
 - **Stop when done.** After writing and emitting the report, stop.
 - **Efficient.** Only `git show` a commit whose subject leaves user impact
   genuinely ambiguous.
