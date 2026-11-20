@@ -3,7 +3,7 @@ name: readme
 version: 0.1.0
 description: Autonomous README generation agent that analyzes project structure, identifies the project type, and creates comprehensive GitHub README documentation following progressive disclosure best practices.
 models:
-  - model: claude-sonnet-4-6
+  - model: claude-sonnet-5-5
     provider: anthropic
   - model: gpt-4.1-mini
     provider: openai

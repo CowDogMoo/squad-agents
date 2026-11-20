@@ -1,6 +1,6 @@
 ---
 name: go-pipeline
-description: "Runs the full Go quality pipeline over a module by chaining the go-cobra, go-review, go-tests, and go-doc-comments subagents in sequence with build/test gates between stages. Use when asked to run the Go quality pipeline, or to review, test, and document a Go module end to end in one pass. Stops at the first failing gate."
+description: "Runs the Go quality pipeline over a module: go-cobra, go-review, go-tests, then go-doc-comments, with build and test gates between stages. Use when asked to run the Go pipeline or to review, test, and document a Go module end to end."
 argument-hint: "[path] (Go module dir or package; defaults to the repo root)"
 ---
 

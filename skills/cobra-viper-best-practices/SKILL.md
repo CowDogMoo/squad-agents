@@ -1,6 +1,6 @@
 ---
 name: cobra-viper-best-practices
-description: "Best practices for Go CLIs built on Cobra and Viper — command design, project structure, flag management, Viper configuration and binding, error handling, testing strategies, shell completions, and anti-patterns. Use when building or auditing a Cobra/Viper CLI. Also loaded by the go-cobra agent as its knowledge base."
+description: "Best practices for Go CLIs built on Cobra and Viper: command design, flags, config binding, error handling, testing, completions, and anti-patterns. Use when building or auditing a Cobra/Viper CLI."
 ---
 # Cobra & Viper Best Practices
 

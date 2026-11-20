@@ -1,8 +1,10 @@
 ---
 name: rust-scrub-comments
-description: "Scans Rust source files (.rs) for useless, LLM-generated, and non-idiomatic comments, then trims mixed blocks to keep the useful \"why\" or deletes pure narration. Use proactively when asked to scrub comment slop, remove AI tells from code, purge redundant comments, or check whether Rust comments follow idiom. By default it edits in place (trim-biased, conservative); say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get findings without modifications."
+description: "Removes useless, narrating, and LLM-generated comments from Rust source, trimming mixed blocks to keep the useful \"why\". Use when asked to scrub comment slop or AI tells from Rust code. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - comment-scrub-playbook
 ---
 # IDENTITY and PURPOSE
 

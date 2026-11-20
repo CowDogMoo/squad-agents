@@ -1,6 +1,6 @@
 ---
 name: python-testing-patterns
-description: "pytest patterns — parametrized tests, fixtures, exception testing, mocking, async tests, property-based testing with Hypothesis, snapshot testing, markers, and coverage. Use when writing Python tests or raising coverage on a module. Also loaded by the python-tests agent as its knowledge base."
+description: "pytest patterns: parametrized tests, fixtures, exceptions, mocking, async tests, Hypothesis, snapshots, markers, and coverage. Use when writing Python tests or raising coverage."
 ---
 # Python Testing Patterns with pytest
 

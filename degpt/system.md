@@ -1,8 +1,8 @@
 ---
 name: degpt
-description: "Scans documentation and text files (.md/.txt/.rst/.adoc) for LLM-generated prose and rewrites flagged paragraphs to sound human-written. Use proactively when asked to \"de-slop\" docs, remove AI tells, or check whether writing reads like LLM output. By default it edits in place; say \"readonly\" or \"report only\" to get findings without modifications."
+description: "Finds LLM-generated prose in documentation (.md/.txt/.rst/.adoc) and rewrites flagged paragraphs to read as human-written. Use when asked to de-slop docs, remove AI tells, or check whether writing reads like LLM output. Edits in place; say \"readonly\" for a report only."
 tools: "Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
 ---
 # IDENTITY and PURPOSE
 

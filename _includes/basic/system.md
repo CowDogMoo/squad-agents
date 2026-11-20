@@ -1,8 +1,8 @@
 ---
 name: my-agent
-description: "Short description of what this agent does. Use proactively when asked to [describe the trigger]. By default it fixes issues in place; say \"readonly\" or \"report only\" for a findings report with no edits."
+description: "Short description of what this agent does. Use when asked to [describe the trigger]. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
-model: opus
+model: inherit
 ---
 # IDENTITY
 

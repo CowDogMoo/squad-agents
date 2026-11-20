@@ -5,7 +5,7 @@ read each file and produce a prioritized report of untested
 functions/modules — do NOT write or modify any files.
 
 Use pre-collected data if provided, otherwise discover .rs files with Glob.
-Write tests to close coverage gaps. Start writing by iteration 6.
+Write tests to close coverage gaps. Start writing early.
 
 IMPORTANT CONSTRAINTS:
 

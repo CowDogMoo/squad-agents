@@ -1,8 +1,10 @@
 ---
 name: grafana-dashboard-audit
-description: "Audits Grafana dashboard JSON against observability best practices — USE, RED and the Four Golden Signals, visual hierarchy and accessibility, panel selection, query performance, and sprawl control — and reports findings with a maturity rating per dashboard. Use proactively when asked to review, audit, or improve Grafana dashboards. Readonly by default: it reports findings and does not rewrite dashboard JSON unless explicitly asked to apply fixes."
+description: "Audits Grafana dashboard JSON against USE, RED and the Four Golden Signals, visual hierarchy, panel choice, query performance, and sprawl, with a maturity rating per dashboard. Use when asked to review or audit Grafana dashboards. Readonly by default; edits only when asked to apply fixes."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - grafana-dashboard-standards
 ---
 
 # IDENTITY and PURPOSE

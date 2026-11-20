@@ -57,6 +57,8 @@ wrapper: agent.md
 references:
   - references/my-criteria.md
 task: task.md
+max_iterations: 20   # iteration cap; keep budgets here, not in prompt prose
+edit_deadline: 5     # optional: grace period after N iterations with no Edit
 budget:
   estimated_iterations: 30
   scale_factor: files
@@ -97,9 +99,11 @@ Code (see the
 ```markdown
 ---
 name: my-agent
-description: "What it does. Use proactively when [trigger]. By default it edits in place; say \"readonly\" or \"report only\" for findings without modifications."
-tools: "Bash, Glob, Grep, Read, Edit, MultiEdit"
-model: opus
+description: "What it does. Use when [trigger]. Edits in place; say \"readonly\" for a report only."
+tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
+model: inherit
+skills:
+  - my-agent-criteria
 ---
 # IDENTITY
 
@@ -168,7 +172,7 @@ Emit a markdown report with:
 
 1. **Be specific** - Concrete rules beat vague guidelines
 2. **Use examples** - Show correct and incorrect patterns
-3. **Prioritize** - Number rules by importance
+3. **Prioritize** - Put the most important rules first
 4. **Test iteratively** - Run, observe, adjust
 5. **Document lessons** - Add comments for future maintainers
 
@@ -207,7 +211,7 @@ Agents should be efficient:
 
 1. Read each file ONCE - catalog issues in memory
 2. Batch edits - multiple fixes per Edit call
-3. Target ≤12 iterations for small codebases (≤20 files)
+3. Put iteration caps in agent.yaml (`max_iterations`, `edit_deadline`), not in prose
 4. Do NOT re-read files after editing
 ```
 

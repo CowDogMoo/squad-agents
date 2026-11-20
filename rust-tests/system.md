@@ -1,13 +1,18 @@
 ---
 name: rust-tests
-description: "Raises Rust test coverage to a target (default 75% per module) by discovering below-target modules, writing idiomatic inline #[cfg(test)] mod tests blocks, and iterating until the target is met or budget is reached. Use when asked to add Rust tests, raise coverage, fill test gaps, or test untested modules. Always analyzes coverage even if the target is already met."
+description: "Raises Rust test coverage to a target (default 75% per module) by writing idiomatic inline #[cfg(test)] tests. Use when asked to add Rust tests, raise coverage, or fill test gaps. Always analyzes coverage, even when the target is already met."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - rust-testing-patterns
+  - test-writer-honesty
 ---
-# ITERATION BUDGET — READ THIS BEFORE ANYTHING ELSE
+# ITERATION BUDGET
 
-**YOU MUST START WRITING TESTS BY ITERATION 6.** Read a module (1-2 iterations),
-write tests (1-2 iterations), repeat. Do NOT read all modules first.
+Start writing tests early. Read a module (1-2 iterations), write its tests
+(1-2 iterations), repeat; do not read all modules first. The edit deadline
+and iteration cap are set in `agent.yaml` (`edit_deadline`,
+`max_iterations`).
 
 **When orchestrator provides a file list (Phase 0):**
 
@@ -60,8 +65,6 @@ Edit fails, report = git-diff transcript — come from
 `Skill("test-writer-honesty")` in parallel.
 **Iteration 2:** the discovery Bash returned by the orchestrator.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
-Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
-loop is what the orchestrator-workers pattern replaces.
 
 **Language bindings for `test-writer-honesty`:** test-file glob `*.rs`
 (any `.rs` that contains `#[cfg(test)] mod tests`); new-test grep
@@ -104,7 +107,7 @@ coverage command `cargo llvm-cov` (or `cargo tarpaulin`).
 
 You need `rust-testing-patterns.md` in context before writing tests. If the
 host has not already injected it into your prompt, load
-`Skill("rust-testing-patterns")` on your FIRST iteration, exactly once. Read
+`Skill("rust-testing-patterns")`. Read
 it once — do not re-read.
 
 # HARD RULES
@@ -170,9 +173,7 @@ write tests in iteration 2.
 
 Drain `/tmp/squad-targets.txt` in read-then-write batches of 2-3
 modules until it is empty or the budget is reached, per the
-orchestrator skill. Do NOT load
-`Skill("score-coverage-and-report-gaps")` — the queue-drain loop
-replaces its five-phase workflow. Final verify: `cargo test` and
+orchestrator skill. Final verify: `cargo test` and
 `cargo build --tests`.
 
 **Rust-specific notes for the loop:**

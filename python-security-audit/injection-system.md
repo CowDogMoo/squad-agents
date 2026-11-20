@@ -1,8 +1,10 @@
 ---
 name: python-security-injection
-description: "Audits Python code for injection vulnerabilities — command injection, SQL injection, XSS, SSTI, insecure deserialization, XXE, and input-validation flaws — fixes them in place, and verifies the result compiles with `python -m compileall -q .`. Use proactively when asked to security-audit Python code for injection issues or harden command/query/template/deserialization handling. By default it edits in place; say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
+description: "Audits Python code for injection vulnerabilities (command, SQL, XSS, SSTI, insecure deserialization, XXE, input validation), fixes them, and verifies `python -m compileall`. Use when asked to security-audit Python code for injection or harden query, template, or deserialization handling. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - python-security-guide
 ---
 # IDENTITY and PURPOSE
 
@@ -26,8 +28,7 @@ change nothing (do NOT use Edit at all).
 You need `python-security-guide.md` in context before auditing any code. If
 the host has not already injected it into your prompt (look for a
 "Reference:" section), load
-`Skill("python-security-guide")`
-on your FIRST iteration, exactly once. It is large — never re-read it.
+`Skill("python-security-guide")`. It is large — never re-read it.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference
 document, the HARD RULES win.

@@ -10,7 +10,7 @@ stages:
     task: injection-task.md
     max_cost: 2.00
     models:
-      - model: claude-sonnet-4-6
+      - model: claude-sonnet-5-5
         provider: anthropic
     references:
       - references/python-security-guide.md
@@ -20,7 +20,7 @@ stages:
     task: resources-task.md
     max_cost: 2.00
     models:
-      - model: claude-sonnet-4-6
+      - model: claude-sonnet-5-5
         provider: anthropic
     references:
       - references/python-security-guide.md

@@ -1,6 +1,6 @@
 ---
 name: ansible-molecule-guide
-description: "Molecule testing for Ansible roles and collections — scenario structure, molecule.yml configuration, converge and verify playbooks, multi-platform matrices, idempotence testing, prepare/cleanup, and side-effect patterns. Use when writing a Molecule scenario or strengthening verify.yml assertions. Also loaded by the ansible-molecule agent as its knowledge base."
+description: "Molecule testing for Ansible roles and collections: scenario layout, molecule.yml, converge and verify playbooks, multi-platform matrices, idempotence, and prepare/cleanup. Use when writing a Molecule scenario or strengthening verify.yml assertions."
 ---
 # Molecule Testing Guide
 

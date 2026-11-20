@@ -17,6 +17,6 @@ IMPORTANT CONSTRAINTS:
 - NEVER remove intentional panic() precondition guards
 - Every fix must be PROPORTIONAL
 - Flag inconsistent logging imports
-- Read each file ONCE; target ≤12 iterations
+- Read each file ONCE
 - After go build + go test pass, emit report IMMEDIATELY
 - Every file touched must appear in the output report

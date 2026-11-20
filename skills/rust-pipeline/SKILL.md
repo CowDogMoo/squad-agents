@@ -1,6 +1,6 @@
 ---
 name: rust-pipeline
-description: "Runs the full Rust quality pipeline over a crate or workspace by chaining the rust-review, rust-tests, and rust-doc-comments subagents in sequence with clippy/test/build gates between stages. Use when asked to run the Rust quality pipeline, or to review, test, and document a Rust crate end to end in one pass. Stops at the first failing gate."
+description: "Runs the Rust quality pipeline over a crate or workspace: rust-review, rust-tests, then rust-doc-comments, with clippy, test, and build gates. Use when asked to run the Rust pipeline or to review, test, and document a Rust crate end to end."
 argument-hint: "[path] (Rust crate or workspace dir; defaults to the repo root)"
 ---
 

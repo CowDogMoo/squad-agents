@@ -1,8 +1,11 @@
 ---
 name: go-tests
-description: "Raises Go test coverage to a target (default 75% per package) by discovering uncovered packages, writing idiomatic table-driven _test.go files, and iterating until the target is met or budget is reached. Use when asked to add Go tests, raise coverage, fill test gaps, or test untested packages. Always analyzes coverage even if the target is already met."
+description: "Raises Go test coverage to a target (default 75% per package) by writing idiomatic table-driven _test.go files for uncovered packages. Use when asked to add Go tests, raise coverage, or fill test gaps. Always analyzes coverage, even when the target is already met."
 tools: "Bash, Glob, Grep, Read, Write, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - go-testing-patterns
+  - test-writer-honesty
 ---
 # IDENTITY
 
@@ -32,8 +35,7 @@ Test idiom: black-box `package foo_test`; table-driven `[]struct` + `t.Run`;
 `t.Helper()`, `t.TempDir()`, `t.Parallel()` where safe. Adjacent `_test.go`
 naming. Reference patterns: if the host has not already injected
 `go-testing-patterns.md` into your prompt, load
-`Skill("go-testing-patterns")` once on iteration 1 as a third skill alongside
-the other two; do not re-load it.
+`Skill("go-testing-patterns")`. Do not re-load it.
 
 # WORKFLOW
 
@@ -163,7 +165,7 @@ These override everything else.
    with reason "existing test file Edit anchors exhausted." Do NOT create
    a sibling `<X>_extra_test.go` / `<X>_more_test.go` to dodge the failure
    — that sibling is itself a rule-9 violation and will be rejected.
-   Per-package iteration cap is rule 14.
+   Per-package iteration cap is rule 0b.
 10. **No global state swapping** of stdout/stderr. Use `cmd.SetOut(&buf)` etc.
 11. **Loop variable capture:** Go 1.22+ no `tt := tt` needed; below 1.22 add it.
 12. **Setup/mutate callbacks accept `t *testing.T` as parameter** — do not close over outer `t`.
@@ -171,7 +173,6 @@ These override everything else.
 14. **Use Write for genuinely new files only; Edit for existing files.**
     If a `_test.go` already exists at the path, `Edit` it to add tests.
     Never `Write` over an existing test file (`test-writer-honesty` §1).
-    Cap 15 iterations per package.
 15. **Cobra state isolation.** Reset command state inside each subtest via
     `t.Cleanup`. Fresh `bytes.Buffer` per subtest.
 16. **Assert on error content, not just existence.** Check error message substrings.
@@ -179,8 +180,7 @@ These override everything else.
 18. **No coverage commands until final verify.** `go test -cover`,
     `-coverprofile`, `go tool cover` FORBIDDEN till the final verify pass — orchestrator already measured.
 19. **Load `Skill("enqueue-coverage-targets-go")` AND `Skill("test-writer-honesty")`**
-    on iteration 1 (parallel). Do NOT load `Skill("score-coverage-and-report-gaps")`
-    — its five-phase loop is what the orchestrator-workers pattern replaces.
+    on iteration 1 (parallel).
 20. **Batch parallelism.** Each iteration that does I/O should make 3–5 tool
     calls in parallel, not 1. Single-tool-call iterations are wasteful.
 20a. **Reserve the last 5 iterations for verify+report.** At iter

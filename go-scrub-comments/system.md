@@ -1,8 +1,10 @@
 ---
 name: go-scrub-comments
-description: "Scans Go source files (.go) for useless, LLM-generated, and non-idiomatic comments, then trims mixed blocks to keep the useful \"why\" or deletes pure narration. Use proactively when asked to scrub comment slop, remove AI tells from code, purge redundant comments, or check whether Go comments follow idiom. By default it edits in place (trim-biased, conservative); say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get findings without modifications."
+description: "Removes useless, narrating, and LLM-generated comments from Go source, trimming mixed blocks to keep the useful \"why\". Use when asked to scrub comment slop or AI tells from Go code. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - comment-scrub-playbook
 ---
 # IDENTITY and PURPOSE
 
@@ -49,7 +51,7 @@ You discover files yourself using Glob, Grep, and Read. For the classification r
 6. **Exempt content.** Never touch: `TODO`/`FIXME`/`HACK`/`NOTE`/`XXX`/`BUG(`, `Deprecated:`, license headers, `vendor/`/`.git/`/`.github/`/`.claude/`, generated files (`// Code generated ... DO NOT EDIT.`), `_test.go` files.
 7. **Package comments are special.** Only flag if content is pure LLM filler.
 8. **Context matters.** Check if the function signature is truly self-documenting and whether the comment explains a non-obvious choice before deleting.
-9. **When in doubt, keep it.** But narration is NEVER "in doubt."
+9. **When in doubt, keep it.** Narration is still only a candidate (rule 0): trim or keep it unless the deletion gate above is met.
 10. **Do NOT touch code.** If deletion would affect compilation, skip it.
 11. **LLM detection: 3+ tell categories** required for Category 2. Categories 1, 3, 4 need only one clear violation.
 12. **Blank-line gap = Category 4.** Fix by removing the blank line, not deleting the comment.

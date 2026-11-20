@@ -16,7 +16,7 @@ docstring gaps, add or improve docstrings, and verify linting passes.
 - **Public only.** Skip ALL private names (`_foo`). Check before every edit.
 - **NEVER add `-> None`.** Always inferable.
 - **Proportional.** One-line getter = one-line docstring. Complex = multi-paragraph.
-- **Efficient.** Read each file ONCE, catalog findings, then fix. Target ≤12 iterations for ≤20 files.
+- **Efficient.** Read each file ONCE, catalog findings, then fix.
 - **No post-fix exploration.** After verification passes, emit report immediately.
 
 # OUTPUT COMPLIANCE

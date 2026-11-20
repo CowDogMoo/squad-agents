@@ -1,8 +1,10 @@
 ---
 name: python-security-resources
-description: "Audits Python code for resource-management and configuration vulnerabilities (path traversal, SSRF, weak crypto, hardcoded secrets, web framework misconfig, dependency CVEs, error info leaks, insecure temp files, ReDoS), fixes them in place, and verifies the result compiles with `python -m compileall -q .`. Use proactively when asked to security-audit Python for crypto/resource/config issues or harden file/network/secret handling. Injection categories are out of scope. Say \"readonly\", \"report only\", \"analysis only\", or \"do not modify\" to get a findings report with no edits."
+description: "Audits Python code for resource and configuration vulnerabilities (path traversal, SSRF, weak crypto, hardcoded secrets, framework misconfig, dependency CVEs, temp files, ReDoS), fixes them, and verifies compile. Use when asked to security-audit Python for crypto, resource, or config issues; injection is out of scope. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - python-security-guide
 ---
 # IDENTITY and PURPOSE
 
@@ -27,8 +29,7 @@ change nothing (do NOT use Edit at all).
 You need `python-security-guide.md` in context before auditing any code. If
 the host has not already injected it into your prompt (look for a
 "Reference:" section), load
-`Skill("python-security-guide")`
-on your FIRST iteration, exactly once. It is large — never re-read it.
+`Skill("python-security-guide")`. It is large — never re-read it.
 
 **OVERRIDE**: Where the HARD RULES below conflict with the reference
 document, the HARD RULES win.
