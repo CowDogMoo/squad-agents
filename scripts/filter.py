@@ -42,9 +42,6 @@ def looks_like_api_error(text: str) -> bool:
     )
 
 
-FENCE_OPEN_RE = re.compile(r"^```\w*$")
-
-
 def strip_wrapping_fences(text: str) -> str:
     """Remove code fences that wrap the entire output, preserving internal ones.
 
@@ -61,7 +58,7 @@ def strip_wrapping_fences(text: str) -> str:
         )
         if first_idx is None or last_idx is None or first_idx >= last_idx:
             return text
-        if FENCE_OPEN_RE.match(lines[first_idx].strip()) and lines[last_idx].strip() == "```":
+        if re.match(r"^```\w*$", lines[first_idx].strip()) and lines[last_idx].strip() == "```":
             del lines[last_idx]
             del lines[first_idx]
             text = "\n".join(lines)
@@ -436,8 +433,9 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
     even number of fence lines between them, so code blocks inside the message
     stay balanced, and only the lines between opener and closer are kept.
 
-    A title outside every fence means the message is not wrapped, so a fenced
-    snippet above it or a code block in its body is left alone. Text with no
+    A first title outside every fence means the message is not wrapped, so a
+    code block in its body is left alone, and a fenced title followed by an
+    unfenced one is a quoted snippet above the real message. Text with no
     title, or an unclosed wrapper, is returned unchanged.
     """
     lines = text.split("\n")
@@ -451,7 +449,11 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
 
     fences = [i for i, ln in enumerate(lines) if ln.strip().startswith("```")]
     titles = [i for i, ln in enumerate(lines) if is_title(ln)]
-    if not titles or any(sum(f < i for f in fences) % 2 == 0 for i in titles):
+
+    def unfenced(i: int) -> bool:
+        return sum(f < i for f in fences) % 2 == 0
+
+    if not titles or unfenced(titles[0]):
         return text
 
     title = titles[0]
@@ -461,6 +463,8 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
         return text
     first = below[0]
     if lines[first].strip() == "```" and not any(ln.strip() for ln in lines[title + 1 : first]):
+        if any(unfenced(i) for i in titles if i > first):
+            return text
         return "\n".join([*lines[opener + 1 : first], *lines[first + 1 :]])
     closers = [f for f in below[::2] if lines[f].strip() == "```"]
     if not closers:

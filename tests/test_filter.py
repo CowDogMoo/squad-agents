@@ -500,6 +500,14 @@ class TestUnwrapFencedMessage:
             "- Example message:\n```\nfeat: add a thing\n```"
         )
 
+    def test_wrapped_message_keeps_an_example_title_in_its_code_block(self):
+        body = (
+            "feat: document title format\n\n**Added:**\n\n- Example title:\n"
+            "```\nfix: handle empty diff\n```\n\n**Changed:**\n\n- docs"
+        )
+        text = f"I will write the commit message.\n```\n{body}\n```"
+        assert unwrap_fenced_message(text) == body
+
     def test_allowed_type_title_is_recognised(self):
         text = "I will write it.\n```\ndev: add export\n\n## Description\n\n- x\n```"
         assert unwrap_fenced_message(text) == text
@@ -1074,6 +1082,23 @@ class TestDropPreambleBeforeRequiredHeading:
 
         assert result == (
             "dev: add widget export\n\n## What this PR does / why we need it:\n\nIt adds export."
+        )
+
+    def test_filter_text_unwraps_a_message_with_an_example_title_in_its_body(self):
+        text = (
+            "I will analyze the diff and write the PR description.\n```markdown\n"
+            "feat(filter): document title format\n"
+            "## What this PR does / why we need it:\n- Example title:\n"
+            "```\nfix: handle empty diff\n```\n"
+            "## AI / LLM Assistance\n- unit tests\n```\n"
+        )
+        result = filter_text(text, required_headings=self.HEADINGS)
+
+        assert result == (
+            "feat(filter): document title format\n\n"
+            "## What this PR does / why we need it:\n- Example title:\n"
+            "```\nfix: handle empty diff\n```\n\n"
+            "## AI / LLM Assistance\n- unit tests"
         )
 
     def test_commit_prose_body_survives_filter_text(self):
