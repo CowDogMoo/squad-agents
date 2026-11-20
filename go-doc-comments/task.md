@@ -20,7 +20,7 @@ IMPORTANT CONSTRAINTS (repeat from system prompt):
 - Grep for 'returns true' in existing comments — these are format violations to fix
 - Proportional: one-line getter = one-line comment, trivial = NO comment
 - Exported declarations only — skip unexported names
-- Read each file ONCE, catalog all findings, then fix — target ≤15 iterations
+- Read each file ONCE, catalog all findings, then fix
 - Use ONE Grep/Glob on repo root, not per-directory — minimize tool calls
 - After go build passes, emit report IMMEDIATELY — no post-fix exploration
 - Every file touched must appear in the output report

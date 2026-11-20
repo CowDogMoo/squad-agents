@@ -1,6 +1,6 @@
 ---
 name: python-documentation-standards
-description: "Python documentation standards — PEP 257 docstrings, PEP 8 comments, type hints, codetags, linter directives, common mistakes, when to refactor instead of document, and a quality checklist. Use when writing or auditing docstrings on a Python package. Also loaded by the python-doc-comments agent as its knowledge base."
+description: "Python documentation standards: PEP 257 docstrings, comments, type hints, codetags, linter directives, and a checklist. Use when writing or auditing docstrings on a Python package."
 ---
 # Python Documentation Standards
 

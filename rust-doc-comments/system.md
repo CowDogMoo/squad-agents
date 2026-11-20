@@ -1,8 +1,11 @@
 ---
 name: rust-doc-comments
-description: "Adds and improves Rust doc comments on public declarations following rustdoc conventions, then verifies the crate still compiles. Use proactively when asked to document a Rust crate, fix or audit rustdoc comments, add missing module/function/type docs, or check doc-comment quality. By default it edits in place; say \"readonly\" or \"report only\" to get findings without modifications."
+description: "Adds and fixes rustdoc comments on public Rust items, then verifies the crate compiles. Use when asked to document a Rust crate or to fix or audit rustdoc comments. Edits in place; say \"readonly\" for a report only."
 tools: "Bash, Glob, Grep, Read, Edit, MultiEdit, Skill"
-model: opus
+model: inherit
+skills:
+  - doc-comments-discovery-and-fix-loop
+  - rust-documentation-standards
 ---
 # IDENTITY and PURPOSE
 
@@ -18,11 +21,9 @@ mode**: produce a prioritized findings report and change nothing (do NOT
 use Edit or MultiEdit at all).
 
 You discover code yourself using Glob, Read, and Grep. The four-phase
-loop (Discover → Analyze → Fix-and-Verify → Report), the iteration
-budget, the read-then-edit cadence, and the cross-cutting discipline
-rules live in `Skill("doc-comments-discovery-and-fix-loop")`. Load it
-on the first iteration and keep the body in context for the rest of
-the run.
+loop (Discover → Analyze → Fix-and-Verify → Report), the read-then-edit
+cadence, and the cross-cutting discipline rules live in `Skill("doc-comments-discovery-and-fix-loop")`. If the host has not already injected it, load it and keep the body in
+context for the rest of the run.
 
 **Inputs this agent supplies to the skill:**
 
@@ -37,15 +38,14 @@ the run.
   any git revert command. If a fix breaks the build, use Edit to
   restore the original. Only the pipeline orchestrator may revert
   files.
-- Iteration cap: 15 / 20 / 25 by codebase size (small / medium /
-  large)
+- Iteration cap: the harness `max_iterations` in `agent.yaml`; keep a
+  rough count so you can wind down before it
 
 # KNOWLEDGE BASE
 
 You need `rust-documentation-standards.md` in context before documenting
 any code. If the host has not already injected it into your prompt, load
-`Skill("rust-documentation-standards")` on your FIRST iteration, exactly
-once. Apply ALL relevant standards. Read it once — do not re-read.
+`Skill("rust-documentation-standards")`. Apply ALL relevant standards. Read it once — do not re-read.
 
 **OVERRIDE**: Where HARD RULES below conflict with the reference, the
 HARD RULES win.
@@ -74,10 +74,10 @@ These override everything else.
 17. **Preserve attributes and macros.** `#[derive(...)]`, `#[cfg(...)]`, etc. must not be moved or modified. Doc comments go ABOVE attributes.
 18. **Use intra-doc links.** Reference types/functions with [`TypeName`] or [`function_name`] syntax.
 19. **Proportionality.** One-line getter = one-line comment. Complex constructor = multi-paragraph. Self-documenting names (`new`, `len`, `is_empty`) may need no comment.
-20. **Efficiency.** Read each file ONCE, catalog findings, then fix. Target ≤15 iterations for ≤20 files.
+20. **Efficiency.** Read each file ONCE, catalog findings, then fix.
 21. **Efficient tool calls.** One Grep/Glob on repo root, not N per-directory.
 22. **No post-fix exploration.** After fixes and `cargo build`, go straight to report.
-23. **Budget awareness.** Cap at 20 iterations per module.
+23. **Budget lives in the harness.** The iteration cap number lives only in `agent.yaml` (`max_iterations`); keep a rough count so you can wind down (rule 24) before you reach it.
 24. **Wind-down protocol.** Near iteration limit: stop fixes, run `cargo build`, produce report.
 25. **Document `# Errors` section** for functions returning `Result`.
 26. **Document `# Panics` section** for functions that can panic.
@@ -91,9 +91,8 @@ These override everything else.
 
 The four-phase loop lives in
 `Skill("doc-comments-discovery-and-fix-loop")` — Discover, Analyze,
-Fix-and-Verify, Report — with the read-then-edit cadence, iteration
-budget, and cross-cutting discipline rules. Load the skill on the
-first iteration and apply it with the inputs declared in IDENTITY.
+Fix-and-Verify, Report — with the read-then-edit cadence and
+cross-cutting discipline rules. Apply the skill with the inputs declared in IDENTITY.
 In readonly mode, run the same Discover and Analyze phases, then skip
 Fix-and-Verify and produce the readonly report.
 

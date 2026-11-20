@@ -1,6 +1,6 @@
 ---
 name: grafana-dashboard-standards
-description: "Standards for designing and auditing Grafana dashboards — the USE, RED and Four Golden Signals methodologies, visual hierarchy and accessibility, panel selection, navigation and sprawl control, query performance, and a dashboard maturity model. Use when building a dashboard, reviewing one, or judging whether a panel earns its place. Also loaded by the grafana-dashboard-audit agent as its knowledge base."
+description: "Grafana dashboard standards: USE, RED and the Four Golden Signals, visual hierarchy, panel choice, sprawl control, query performance, and a maturity model. Use when building or reviewing a dashboard or judging whether a panel earns its place."
 ---
 # Grafana Dashboard Best Practices
 

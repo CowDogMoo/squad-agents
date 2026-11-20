@@ -22,6 +22,5 @@ IMPORTANT CONSTRAINTS:
 - Preserve backwards compatibility
 - NEVER change functions whose behavior is asserted by tests
 - Every fix must be PROPORTIONAL
-- Phase 1+2 MUST complete in <=4 iterations
 - Produce the report before spending 60% of your cost budget
 - STOP after lint + tests BOTH pass — emit report IMMEDIATELY

@@ -13,7 +13,7 @@ not modify"): report findings only; do NOT use Edit or Write tools.
 - NEVER add `panic`; NEVER remove intentional panics (precondition guards)
 - Every fix must be strictly better — skip if unsure
 - Think before fixing `_ =` or `return nil` — check caller's error contract
-- Read each file ONCE; batch analysis then fixes; target ≤12 iterations
+- Read each file ONCE; batch analysis then fixes
 - Edit mode: run `go build ./...` after every edit batch; fix compilation
   errors first; match existing conventions; use packages already imported —
   no parallel packages; after `go build`/`go test` pass, emit report
@@ -27,18 +27,18 @@ Report MUST include in order, per the active mode's format in system.md.
 
 Edit mode:
 
-1. `## Changes Summary`
-2. `## Issues Found and Fixed` (Severity, Category, File, Line, What, Why)
-3. `## Issues Found but Skipped` (table)
-4. `## Files Touched`
-5. `## Validation` (`go build ./...` and `go test ./...` results)
+1. `### Changes Summary`
+2. `### Issues Found and Fixed` (Severity, Category, File, Line, What, Why)
+3. `### Issues Found but Skipped` (table)
+4. `### Files Touched`
+5. `### Validation` (`go build ./...` and `go test ./...` results)
 
 Readonly mode:
 
-1. `## Analysis Summary`
-2. `## Findings` (Severity, Category, File, Line, What, Suggested fix)
-3. `## Priority Order`
-4. `## Recommendations`
+1. `### Analysis Summary`
+2. `### Findings` (Severity, Category, File, Line, What, Suggested fix)
+3. `### Priority Order`
+4. `### Recommendations`
 
 # INPUT
 

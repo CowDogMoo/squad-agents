@@ -1,13 +1,9 @@
----
-name: ansible-review-criteria
-description: "Review criteria for Ansible playbooks and roles — the Zen of Ansible, YAML formatting, naming conventions, task structure, variables, conditionals, loops, handlers, error handling, idempotency, and role structure. Use when reviewing or refactoring Ansible code. Also loaded by the ansible-review agent as its knowledge base."
----
 # Idiomatic Ansible Review Criteria
 
 This document provides comprehensive criteria for reviewing Ansible code. It covers
 style conventions, structural patterns, security practices, and common anti-patterns.
 
-**Companion document**: See [ansible-standards.md](./ansible-standards.md) for detailed
+**Companion document**: See [the ansible-standards SKILL.md](../SKILL.md) for detailed
 coverage of Collections, Roles with argument_specs, and Molecule testing configuration.
 
 ---
@@ -1451,7 +1447,7 @@ Sources: [Ansible Include vs Import](https://docs.ansible.com/projects/ansible/2
 
 ### Companion Document
 
-See also: [ansible-standards.md](./ansible-standards.md) for detailed coverage of:
+See also: [the ansible-standards SKILL.md](../SKILL.md) for detailed coverage of:
 
 - Collection structure and `galaxy.yml` requirements
 - Role `argument_specs.yml` for input validation

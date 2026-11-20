@@ -4,13 +4,10 @@ Maximize output quality while minimizing iteration count.
 
 ## Iteration Budget
 
-Budget allocation scales with codebase size:
-
-| Codebase Size | File Count | Max Iterations |
-|---------------|------------|----------------|
-| Small         | ≤20 files  | 12 iterations  |
-| Medium        | 21-50 files| 20 iterations  |
-| Large         | 50+ files  | 25 iterations  |
+The iteration cap and edit deadline live only in `agent.yaml`
+(`max_iterations`, `edit_deadline`), one number each. Do not restate them in
+prompt prose. Keep a rough count of iterations so you can wind down before
+the cap.
 
 ## Phase Budget Allocation
 
@@ -65,8 +62,3 @@ When approaching your iteration limit:
 4. Populate skipped-findings from notes taken during analysis
 
 A partial report with accurate results is infinitely better than no report at all.
-
-**Coverage-shortfall trigger.** On a small codebase, if fewer than 60% of globbed
-files have been Read by iteration 8, abandon further analysis on the remainder
-and emit the report immediately. Mark unread files as skipped with reason
-`budget` so coverage gaps are visible rather than hidden.

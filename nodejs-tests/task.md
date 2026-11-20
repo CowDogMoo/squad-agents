@@ -18,5 +18,5 @@ IMPORTANT CONSTRAINTS:
 - Use Write (not Edit) for new test files
 - Reset mocks in `beforeEach` — no shared state between tests
 - Mock external deps with `jest.mock`/`vi.mock` at module boundaries
-- Budget: 200 iterations max, 20 per module. Wind down early if needed
+- Wind down (measure coverage, report) before the run cap in `max_iterations`
 - Phase 1 is MANDATORY — always run gap analysis even if above target

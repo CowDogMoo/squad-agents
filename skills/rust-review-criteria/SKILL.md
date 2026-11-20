@@ -1,6 +1,6 @@
 ---
 name: rust-review-criteria
-description: "Review criteria for Rust — error handling, ownership and borrowing, concurrency, data management, trait design, code structure, API design, performance, module organization, security, and testing. Use when reviewing Rust code for correctness, safety, or best-practice violations. Also loaded by the rust-review agent as its knowledge base."
+description: "Review criteria for Rust: error handling, ownership, concurrency, trait and API design, performance, modules, security, and testing. Use when reviewing Rust code for correctness, safety, or best-practice violations."
 ---
 # Rust Review Criteria
 

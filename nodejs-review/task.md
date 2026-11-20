@@ -16,6 +16,6 @@ IMPORTANT CONSTRAINTS:
 - Preserve backwards compatibility — no API surface changes
 - NEVER swallow Promise rejections with empty handlers
 - Every fix must be PROPORTIONAL
-- Read each file ONCE; target ≤12 iterations
+- Read each file ONCE
 - After lint + tests pass, emit report IMMEDIATELY
 - Every file touched must appear in the output report

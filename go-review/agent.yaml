@@ -3,13 +3,15 @@ name: go-review
 version: 0.3.0
 description: Autonomous Go code review agent that discovers code quality issues, fixes best-practice violations, and verifies the result compiles.
 models:
-  - model: claude-sonnet-4-6
+  - model: claude-sonnet-5-5
     provider: anthropic
   - model: gemini-2.5-flash
     provider: google
   - model: gpt-4.1-mini
     provider: openai
 disable_task: true
+max_iterations: 20
+edit_deadline: 5
 entrypoint: system.md
 wrapper: agent.md
 references:

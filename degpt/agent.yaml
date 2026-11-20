@@ -3,7 +3,7 @@ name: degpt
 version: 0.2.0
 description: Autonomous agent that scans documentation and text files for indicators of LLM-generated content and rewrites flagged sections to sound human-written. Scores paragraphs against 7 tell categories and each file against 4 document-level patterns that per-paragraph scoring cannot see.
 models:
-  - model: claude-sonnet-4-6
+  - model: claude-sonnet-5-5
     provider: anthropic
   - model: gpt-4.1-mini
     provider: openai
@@ -13,6 +13,7 @@ entrypoint: system.md
 wrapper: agent.md
 task: task.md
 disable_task: true
+max_iterations: 25
 edit_deadline: 0
 # Hard gate: reject any edit that introduces non-ASCII characters (smart quotes,
 # em/en dashes, ellipsis) the original didn't have — a model cannot sneak in the

@@ -22,7 +22,7 @@ violations, apply fixes, and verify the result - all without human guidance.
 - **Do no harm.** Every fix must be strictly better than the original. If your
   fix changes task behavior, verify the new behavior is correct.
 - **Be efficient.** Read each file ONCE and catalog findings before editing.
-  Use one Glob on repo root. Target <=10 iterations per Taskfile.
+  Use one Glob on repo root.
 - **No post-fix exploration.** Once `task --list` passes, emit report
   immediately. Use Analyze-phase notes for skipped findings.
 - **Proportional fixes only.** Skip theoretical improvements that add

@@ -220,7 +220,7 @@ provider from your config:
 
 ```yaml
 models:
-  - model: claude-sonnet-4-6
+  - model: claude-sonnet-5-5
     provider: anthropic
   - model: gemini-2.5-flash
     provider: google
@@ -273,7 +273,7 @@ name: go-review
 version: 0.3.0
 description: Autonomous Go code review agent
 models:
-  - model: claude-sonnet-4-6
+  - model: claude-sonnet-5-5
     provider: anthropic
   - model: gemini-2.5-flash
     provider: google
@@ -365,8 +365,10 @@ default task instructions.
 
 ## Skills
 
-Agents load skills via `Skill("<name>")` calls in their `system.md`,
-following the open [Agent Skills standard](https://agentskills.io).
+Agents declare the skills they need in the `skills:` frontmatter of their
+`system.md`, which Claude Code preloads; on hosts that do not inject them
+(squad), the prompt falls back to a `Skill("<name>")` call. Both follow
+the open [Agent Skills standard](https://agentskills.io).
 The skills come from two collections, split by coupling:
 
 - **[`skills/`](./skills) (this repo)** — reference knowledge bases
@@ -424,7 +426,6 @@ plugin dependency and will not enable without it:
 | `detect-llm-tells` | degpt, go-scrub-comments, rust-scrub-comments |
 | `comment-scrub-playbook` | go-scrub-comments, rust-scrub-comments |
 | `doc-comments-discovery-and-fix-loop` | go-, python-, rust-, nodejs-doc-comments |
-| `score-coverage-and-report-gaps` | go-, python-, rust-, nodejs-tests |
 | `test-writer-honesty` | go-, python-, rust-, nodejs-tests |
 | `enqueue-coverage-targets-<lang>` | the matching `<lang>-tests` agent |
 
