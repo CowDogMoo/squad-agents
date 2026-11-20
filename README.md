@@ -255,7 +255,7 @@ The full shape reference is at
 
 ### Claude-Native Format (dual-host)
 
-Every `system.md` in this repo starts with a YAML frontmatter block
+Every agent `system.md` in this repo starts with a YAML frontmatter block
 (`name`, `description`, `tools`, `model`) and contains **no Go-template
 syntax**. The same file works in two hosts:
 
@@ -272,6 +272,11 @@ There is no converted copy to drift: edit the file once, both hosts pick it
 up. Authoring rules for the format (mode prose, dual-host reference
 loading, no includes) are in
 [`squad/docs/creating-agents.md`](https://github.com/cowdogmoo/squad/blob/main/docs/creating-agents.md#systemmd-main-prompt).
+
+The [git text transforms](#git-text-transforms) `commit`, `pr` and `branch`
+are the exception. They are not agents: their `system.md` frontmatter carries
+only `name` and `description`, and Claude Code does not load them as custom
+agents.
 
 ### agent.yaml Reference
 

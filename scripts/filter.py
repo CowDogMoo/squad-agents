@@ -42,6 +42,9 @@ def looks_like_api_error(text: str) -> bool:
     )
 
 
+FENCE_OPEN_RE = re.compile(r"^```\w*$")
+
+
 def strip_wrapping_fences(text: str) -> str:
     """Remove code fences that wrap the entire output, preserving internal ones.
 
@@ -58,7 +61,7 @@ def strip_wrapping_fences(text: str) -> str:
         )
         if first_idx is None or last_idx is None or first_idx >= last_idx:
             return text
-        if re.match(r"^```\w*$", lines[first_idx].strip()) and lines[last_idx].strip() == "```":
+        if FENCE_OPEN_RE.match(lines[first_idx].strip()) and lines[last_idx].strip() == "```":
             del lines[last_idx]
             del lines[first_idx]
             text = "\n".join(lines)
@@ -416,6 +419,31 @@ def select_title_index(lines: list[str], header_pattern: re.Pattern) -> int | No
     return last_conventional if last_conventional is not None else first_nonempty
 
 
+def unwrap_fenced_message(text: str) -> str:
+    """Reduce the output to the inside of a code fence that wraps the message.
+
+    A commit message or PR description opens with its conventional-commit
+    title, so a fence that opens above every title line and closes below them
+    wraps the message itself, and whatever sits outside it is narration ("I
+    will analyze the diff...", "Let me know if you want changes."). Left in
+    place, the narration becomes the title and the closing fence ends up in
+    the last section.
+
+    A fence that opens below the title is body content and is left alone, as
+    is a fenced snippet that closes before a title outside it. Text with no
+    title has nothing to anchor on and is returned unchanged.
+    """
+    lines = text.split("\n")
+    titles = [i for i, ln in enumerate(lines) if CONVENTIONAL_COMMIT_RE.match(unwrap_bold(ln))]
+    opener = next((i for i, ln in enumerate(lines) if FENCE_OPEN_RE.match(ln.strip())), None)
+    closer = next((i for i in reversed(range(len(lines))) if lines[i].strip() == "```"), None)
+    if not titles or opener is None or closer is None:
+        return text
+    if not opener < titles[0] <= titles[-1] < closer:
+        return text
+    return "\n".join(lines[opener + 1 : closer])
+
+
 def merge_sections(text: str, section_names: list[str]) -> str:
     """Parse bold section headers, merge duplicates, drop empty sections.
 
@@ -538,6 +566,10 @@ def filter_text(
     text = strip_leading_trailing_blanks(text)
     text = truncate_pattern_boilerplate(text)
     text = remove_preamble(text)
+    if required_headings or section_names:
+        # Only these outputs open with a title. Elsewhere a fenced commit
+        # message is content, such as a review suggesting one.
+        text = unwrap_fenced_message(text)
     # A preamble line above an opening fence hides the fence from the first
     # pass, so check again once the preamble is gone.
     text = strip_wrapping_fences(strip_leading_trailing_blanks(text))
