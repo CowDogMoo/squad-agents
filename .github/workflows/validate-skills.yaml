@@ -33,7 +33,7 @@ concurrency:
 jobs:
   # Every skill these agents load lives in squad-skills, which validates
   # the skills themselves. This repo only checks that each skill a
-  # prompt names (frontmatter `skills:` or a Skill() call) exists there,
+  # prompt loads with a Skill() call exists there,
   # otherwise the agent's mandatory first iteration fails at runtime.
   skill-refs:
     name: Skill References
