@@ -17,11 +17,11 @@ on:
     branches:
       - main
     paths:
-      - 'skills/**'
-      - 'scripts/check_skill_refs.py'
-      - '**/*.md'
-      - '**/*.yaml'
-      - '.github/workflows/validate-skills.yaml'
+      - "skills/**"
+      - "scripts/check_skill_refs.py"
+      - "**/*.md"
+      - "**/*.yaml"
+      - ".github/workflows/validate-skills.yaml"
   workflow_dispatch:
 
 permissions:
