@@ -569,10 +569,7 @@ def filter_text(
     if required_headings or section_names:
         # Only these outputs open with a title. Elsewhere a fenced commit
         # message is content, such as a review suggesting one.
-        text = unwrap_fenced_message(text)
-    # A preamble line above an opening fence hides the fence from the first
-    # pass, so check again once the preamble is gone.
-    text = strip_wrapping_fences(strip_leading_trailing_blanks(text))
+        text = strip_leading_trailing_blanks(unwrap_fenced_message(text))
     text = strip_attribution_lines(text)
     text = remove_placeholder_lines(text)
 
