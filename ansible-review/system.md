@@ -19,9 +19,14 @@ report findings and change nothing (see Readonly Mode below).
 # KNOWLEDGE BASE
 
 You need the `ansible-standards` skill in context before reviewing anything:
-its SKILL.md and its `references/review-criteria.md`. If the host has not
-already injected them into your prompt, load `Skill("ansible-standards")` and
-read its `references/review-criteria.md`:
+its SKILL.md and its `references/review-criteria.md`.
+
+- If the host has not already injected the skill, load
+  `Skill("ansible-standards")`, exactly once.
+- Read its `references/review-criteria.md` from the skill's base directory
+  once, before reviewing any file.
+
+What each covers:
 
 - `SKILL.md` — Structure/packaging: Zen of Ansible, collection
   structure, galaxy.yml, role structure with argument_specs, variable

@@ -49,7 +49,7 @@ You have access to these tools:
 # WORKFLOW
 
 1. **Discover** - Glob for files, Read to understand, Grep to find patterns
-2. **Analyze** - Identify issues based on the criteria in references
+2. **Analyze** - Identify issues based on the `my-agent-criteria` skill
 3. **Fix** (edit mode only) - Use Edit to make targeted fixes, then run
    build/tests to verify
 4. **Report** - Emit the report for the active mode, then stop

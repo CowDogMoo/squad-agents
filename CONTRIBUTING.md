@@ -33,16 +33,15 @@ Every agent must have:
 
 | File | Purpose |
 |------|---------|
-| `agent.yaml` | Manifest with name, version, description, file references, and budget |
+| `agent.yaml` | Manifest with name, version, description, prompt files, and budget |
 | `system.md` | Core system prompt (identity, rules, capabilities) |
 | `agent.md` | Agent-mode wrapper with execution rules |
 | `task.md` | Task instructions included in every run |
 
-Optional:
-
-| File | Purpose |
-|------|---------|
-| `references/` | Knowledge base documents (criteria, examples, patterns) |
+An agent's knowledge base (criteria, examples, patterns) is a skill in
+[squad-skills](https://github.com/CowDogMoo/squad-skills), not a file in the
+agent directory. Name it in the `skills:` frontmatter of `system.md` (see
+below) and load it with a `Skill("...")` call for hosts that do not preload.
 
 ## Agent Structure
 
@@ -54,8 +53,6 @@ version: 0.1.0
 description: Short description of what the agent does
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/my-criteria.md
 task: task.md
 max_iterations: 20   # iteration cap; keep budgets here, not in prompt prose
 edit_deadline: 5     # optional: grace period after N iterations with no Edit

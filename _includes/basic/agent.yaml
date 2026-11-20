@@ -4,7 +4,5 @@ version: 0.1.0
 description: Short description of what this agent does
 entrypoint: system.md
 wrapper: agent.md
-references:
-  - references/criteria.md
 task: task.md
 max_iterations: 20
