@@ -1,6 +1,6 @@
 ---
 name: security-audit-loop
-description: "Use when running one of the six security stage agents (go, nodejs, or python security-injection and security-resources) or a scoped fix-in-place security audit: the shared loop of discovery, read-before-analyze, edit vs readonly mode, verify and revert, budget and wind-down, severity scale, and finding and report formats, with language, file globs, build/test commands and the category list supplied by the caller. Not a vulnerability knowledge base (those are the <lang>-security-guide skills) and not a general code review."
+description: "Use when running one of the six security stage agents (go, nodejs, or python security-injection and security-resources) or a scoped fix-in-place security audit: the shared loop of discovery, read-before-analyze, edit vs readonly mode, verify and revert, budget and wind-down, severity scale, and finding and report formats, with language, file globs, build/test commands and the category list supplied by the caller. Not a vulnerability knowledge base (those are the per-language security-guide skills) and not a general code review."
 ---
 # Security Audit Loop
 

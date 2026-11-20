@@ -1,6 +1,6 @@
 ---
 name: review-loop
-description: "Shared fix-in-place review loop for the go-review, rust-review, python-review and nodejs-review agents: discovery, edit vs readonly mode, verify-after-edit, budget, severity scale and report formats, with language, globs, verify commands and categories supplied by the caller. Use when running one of those agents or a repo-scale review that fixes code in place. Not review criteria (those are the <lang>-review-criteria skills) and not security audits."
+description: "Shared fix-in-place review loop for the go-review, rust-review, python-review and nodejs-review agents: discovery, edit vs readonly mode, verify-after-edit, budget, severity scale and report formats, with language, globs, verify commands and categories supplied by the caller. Use when running one of those agents or a repo-scale review that fixes code in place. Not review criteria (those are the per-language review-criteria skills) and not security audits."
 ---
 # Review Loop
 
