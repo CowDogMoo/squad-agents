@@ -21,11 +21,11 @@ graders:
   - name: version-uses-runE
     type: regex
     target: {source: file, path: cmd/version.go}
-    pattern: 'RunE:\s*func'
+    pattern: 'RunE:\s*\S'
   - name: version-drops-run
     type: regex
     target: {source: file, path: cmd/version.go}
-    pattern: '\bRun:\s*func'
+    pattern: '\bRun:\s*\S'
     match: not_contains
   - name: init-parent-keeps-no-runE
     type: regex

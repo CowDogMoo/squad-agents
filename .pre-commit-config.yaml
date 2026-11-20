@@ -78,5 +78,5 @@ repos:
         name: Run pytest (shared output filter and golden-diff tests)
         entry: python3 -m pytest tests/ -x -q
         language: system
-        files: '^(scripts/|tests/|(commit|pr|branch)/)'
+        files: '^(scripts/|tests/|evals/|agents/|(commit|pr|branch)/|[^/]+/testdata/)'
         pass_filenames: false
