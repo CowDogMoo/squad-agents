@@ -1,0 +1,7 @@
+I'll analyze this diff to pick a name for the branch.
+
+The change adds a filter backstop, so a feature prefix fits.
+
+```
+feature/pr-allowed-title-types
+```

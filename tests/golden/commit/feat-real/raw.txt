@@ -1,0 +1,27 @@
+feat: coerce pr title types to the repo's allowed list
+
+**Added:**
+
+- Deterministic title-type coercion in `scripts/filter.py` - new
+  `coerce_title_type` rewrites a conventional-commit type that is off the
+  repo's allowed list to the nearest one that is (housekeeping types to
+  `chore`, `revert` to `fix`), preserving the scope, `!` and title wording
+  and leaving the body untouched; exposed through a repeatable
+  `--allowed-type` flag and an `allowed_types` argument on `filter_text`,
+  with a fallback to `chore` or the first allowed type when no mapping fits
+- `PR_ALLOWED_TYPES` support in the PR filter wrapper - `pr/filter.sh` reads
+  the newline-separated list and passes each entry as `--allowed-type`,
+  since prompting alone still yields `test:` for test-only diffs
+- Prompt guidance for restricted type lists - `pr/system.md` gains a section
+  telling the model that an `ALLOWED PR TITLE TYPES` block is the complete
+  set of permitted types, and that test-only or tooling changes fall under
+  `chore` when `test` or `ci` are not offered
+- `TestCoerceTitleType` coverage for allowed types, fallback mapping, scope
+  and bang preservation, untouched body, untyped titles, and the no-op path
+  when no list is given
+
+**Changed:**
+
+- Hard rule 5 of the PR prompt now allows the title type to come from the
+  `ALLOWED PR TITLE TYPES` block when one is present, instead of only the
+  standard list
