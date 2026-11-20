@@ -508,6 +508,21 @@ class TestUnwrapFencedMessage:
         text = f"I will write the commit message.\n```\n{body}\n```"
         assert unwrap_fenced_message(text) == body
 
+    def test_body_code_block_under_an_unrecognised_title_is_left_alone(self):
+        text = (
+            "deps: bump the commit prompt examples\n**Key Changes:**\n"
+            "- Updates the example message in commit/system.md to:\n"
+            "```\nfeat: add widget export\n```\n**Changed:**\n- commit/system.md example"
+        )
+        assert unwrap_fenced_message(text) == text
+
+    def test_example_message_under_a_section_header_is_left_alone(self):
+        text = (
+            "Add widget export\n**Added:**\n- export docs, example message:\n"
+            "```\nfeat: add a thing\n\n- thing\n```\n**Changed:**\n- readme"
+        )
+        assert unwrap_fenced_message(text) == text
+
     def test_allowed_type_title_is_recognised(self):
         text = "I will write it.\n```\ndev: add export\n\n## Description\n\n- x\n```"
         assert unwrap_fenced_message(text) == text

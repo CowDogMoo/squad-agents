@@ -433,6 +433,11 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
     even number of fence lines between them, so code blocks inside the message
     stay balanced, and only the lines between opener and closer are kept.
 
+    Narration above a wrapper is prose. A heading, bullet or bold section above
+    the opener means the fence is a code block inside a message whose title
+    went unrecognised, so the text is left alone; a bold label such as
+    "**Title:**" directly above the opener only names the fenced block.
+
     A first title outside every fence means the message is not wrapped, so a
     code block in its body is left alone, and a fenced title followed by an
     unfenced one is a quoted snippet above the real message. Text with no
@@ -458,6 +463,11 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
 
     title = titles[0]
     opener = max(f for f in fences if f < title)
+    above = [ln.strip() for ln in lines[:opener] if ln.strip()]
+    if above and BOLD_SECTION_RE.match(above[-1]):
+        above.pop()
+    if any(ln.startswith(("#", "- ", "* ")) or re.match(r"\*\*[^*]+:\*\*", ln) for ln in above):
+        return text
     below = [f for f in fences if f > title]
     if not below:
         return text
