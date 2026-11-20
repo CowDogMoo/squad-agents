@@ -79,4 +79,8 @@ repos:
         entry: python3 -m pytest tests/ -x -q
         language: system
         files: '^(scripts/|tests/|evals/|agents/|(commit|pr|branch)/|[^/]+/testdata/)'
+        # agents/*.md and evals/*/fixture are symlinks, which the default
+        # `types: [file]` would skip; pre-commit ANDs `types` with `types_or`.
+        types: []
+        types_or: [file, symlink]
         pass_filenames: false
