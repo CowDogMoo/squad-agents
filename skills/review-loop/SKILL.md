@@ -59,11 +59,6 @@ a valid outcome for clean code; never make a change just to show
 progress. If the cap will not cover every file, start with entry points,
 core logic and the public API, and list what you did not read.
 
-**Read-then-edit cadence (edit mode).** Read a batch of files in
-parallel, fix what you found in them, then read the next batch. Never
-hold more than one unprocessed batch. Make the final verify and the
-report in the same response.
-
 ## Phase 1: Discover
 
 1. **Explicit file list first.** If the prompt names files or injects a
