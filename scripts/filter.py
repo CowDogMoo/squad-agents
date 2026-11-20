@@ -416,6 +416,11 @@ def select_title_index(lines: list[str], header_pattern: re.Pattern) -> int | No
     return last_conventional if last_conventional is not None else first_nonempty
 
 
+_TITLE_LABEL_RE = re.compile(
+    r"^\*\*(title|pr title|commit|commit message|commit title):\*\*$", re.IGNORECASE
+)
+
+
 def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
     """Reduce the output to the message inside the code fence that wraps it.
 
@@ -435,8 +440,9 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
 
     Narration above a wrapper is prose. A heading, bullet or bold section above
     the opener means the fence is a code block inside a message whose title
-    went unrecognised, so the text is left alone; a bold label such as
-    "**Title:**" directly above the opener only names the fenced block.
+    went unrecognised, so the text is left alone; a title label such as
+    "**Title:**" or "**Commit message:**" directly above the opener only names
+    the fenced block.
 
     A first title outside every fence means the message is not wrapped, so a
     code block in its body is left alone, and a fenced title followed by an
@@ -464,7 +470,7 @@ def unwrap_fenced_message(text: str, allowed_types: Iterable[str] = ()) -> str:
     title = titles[0]
     opener = max(f for f in fences if f < title)
     above = [ln.strip() for ln in lines[:opener] if ln.strip()]
-    if above and BOLD_SECTION_RE.match(above[-1]):
+    if above and _TITLE_LABEL_RE.match(above[-1]):
         above.pop()
     if any(ln.startswith(("#", "- ", "* ")) or re.match(r"\*\*[^*]+:\*\*", ln) for ln in above):
         return text

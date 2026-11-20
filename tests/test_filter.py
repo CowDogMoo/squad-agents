@@ -523,6 +523,17 @@ class TestUnwrapFencedMessage:
         )
         assert unwrap_fenced_message(text) == text
 
+    def test_section_header_directly_above_a_body_code_block_is_left_alone(self):
+        text = (
+            "deps: bump the commit prompt examples\n\n**Key Changes:**\n\n"
+            "```\nfeat: add widget export\n```\n\n**Changed:**\n\n- commit/system.md example"
+        )
+        assert unwrap_fenced_message(text) == text
+
+    def test_commit_message_label_names_the_fenced_message(self):
+        text = "**Commit message:**\n```\nfeat: add export\n\n- export\n```\n\nLet me know."
+        assert unwrap_fenced_message(text) == "feat: add export\n\n- export"
+
     def test_allowed_type_title_is_recognised(self):
         text = "I will write it.\n```\ndev: add export\n\n## Description\n\n- x\n```"
         assert unwrap_fenced_message(text) == text
