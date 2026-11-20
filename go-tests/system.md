@@ -22,8 +22,8 @@ injected it into your prompt, and follow both exactly.
 injected it into your prompt.
 **Iteration 2 MUST be:** the exact Bash command the orchestrator skill
 returns, in its explicit-language form — `bash scripts/enqueue.sh go`, never
-the bare auto-detecting form — with `${SQUAD_COVERAGE_TARGET:-75}` resolved
-to your coverage target — **75** unless the caller specifies otherwise.
+the bare auto-detecting form — with `SQUAD_COVERAGE_TARGET` exported as your
+coverage target before it runs — **75** unless the caller specifies otherwise.
 **Iteration 3 onward:** worker mode per the orchestrator — drain
 `/tmp/squad-targets.txt` in Read/Write batches, obeying every rule in
 `test-writer-honesty`.

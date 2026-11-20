@@ -54,7 +54,9 @@ Edit fails, report = git-diff transcript — come from
 injected it into your prompt.
 **Iteration 2:** the discovery Bash returned by the orchestrator, in its
 explicit-language form — `bash scripts/enqueue.sh rust`, never the bare
-auto-detecting form (a root `go.mod` makes it queue Go).
+auto-detecting form (a root `go.mod` makes it queue Go) — with
+`SQUAD_COVERAGE_TARGET` exported as your coverage target before it runs —
+**75** unless the caller specifies otherwise.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
 
 **Language bindings for `test-writer-honesty`:** test-file glob `*.rs`

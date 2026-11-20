@@ -41,8 +41,8 @@ injected it into your prompt.
 **Iteration 2:** the discovery Bash returned by the orchestrator, in its
 explicit-language form — `bash scripts/enqueue.sh python`, never the bare
 auto-detecting form (a root `go.mod`, `Cargo.toml`, or `package.json` makes it
-queue another language) — with `${SQUAD_COVERAGE_TARGET:-75}` resolved to your coverage target — **75**
-unless the caller specifies otherwise.
+queue another language) — with `SQUAD_COVERAGE_TARGET` exported as your
+coverage target before it runs — **75** unless the caller specifies otherwise.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
 
 **Language bindings for `test-writer-honesty`:** test-file glob
