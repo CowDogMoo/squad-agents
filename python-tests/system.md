@@ -32,9 +32,12 @@ report = git-diff transcript — come from `Skill("test-writer-honesty")`.
 
 **Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")` AND
 `Skill("test-writer-honesty")` in parallel.
-**Iteration 2:** the discovery Bash returned by the orchestrator, with
-`${SQUAD_COVERAGE_TARGET:-75}` resolved to your coverage target — **75**
-unless the caller specifies otherwise.
+**Iteration 2:** the discovery Bash returned by the orchestrator, with the
+language passed explicitly — `bash scripts/enqueue.sh python`, never the
+bare auto-detecting form (a root `go.mod`, `Cargo.toml`, or `package.json`
+makes it queue another language) — and `${SQUAD_COVERAGE_TARGET:-75}`
+resolved to your coverage target — **75** unless the caller specifies
+otherwise.
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
 Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
 loop is what the orchestrator-workers pattern replaces.

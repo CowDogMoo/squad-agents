@@ -3,8 +3,8 @@
 
 Prompts load skills by name. A name that matches no skill makes the agent's
 mandatory first iteration fail at runtime, so every reference found in the
-repo's markdown and YAML must match a SKILL.md directory name (or its
-frontmatter `name`) in this repo's skills/ or in a squad-skills checkout.
+repo's markdown and YAML must match the name of a directory holding a
+SKILL.md in this repo's skills/ or in a squad-skills checkout.
 
 Usage: check_skill_refs.py [--root DIR] [--skills-dir DIR ...]
 """
@@ -17,23 +17,13 @@ import sys
 from pathlib import Path
 
 REF_RE = re.compile(r"""Skill\(\s*["']([^"']+)["']\s*\)""")
-NAME_RE = re.compile(r"^name:\s*[\"']?([^\"'\s]+)[\"']?\s*$", re.MULTILINE)
 SCAN_SUFFIXES = {".md", ".yaml", ".yml"}
 SKIP_DIRS = {".git", ".squad-skills", "node_modules", ".venv", "evals"}
 
 
 def collect_skill_names(skills_dirs: list[Path]) -> set[str]:
-    """Return every skill name found under the given directories."""
-    names: set[str] = set()
-    for base in skills_dirs:
-        for skill_md in base.rglob("SKILL.md"):
-            names.add(skill_md.parent.name)
-            head = skill_md.read_text(encoding="utf-8", errors="replace").split("---", 2)
-            if len(head) >= 3:
-                match = NAME_RE.search(head[1])
-                if match:
-                    names.add(match.group(1))
-    return names
+    """Return the directory name of every skill under the given directories."""
+    return {skill_md.parent.name for base in skills_dirs for skill_md in base.rglob("SKILL.md")}
 
 
 def is_placeholder(name: str) -> bool:

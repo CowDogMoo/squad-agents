@@ -36,7 +36,10 @@ Edit fails, report = git-diff transcript — come from
 
 **Iteration 1 MUST be:** `Skill("enqueue-coverage-targets")` AND
 `Skill("test-writer-honesty")` in parallel.
-**Iteration 2:** the discovery Bash returned by the orchestrator.
+**Iteration 2:** the discovery Bash returned by the orchestrator, with the
+language passed explicitly — `bash scripts/enqueue.sh nodejs`, never the
+bare auto-detecting form (a root `go.mod` or `Cargo.toml` makes it queue
+another language).
 **Iteration 3+:** worker mode — drain `/tmp/squad-targets.txt`.
 Do NOT load `Skill("score-coverage-and-report-gaps")` — its five-phase
 loop is what the orchestrator-workers pattern replaces.

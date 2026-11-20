@@ -38,10 +38,20 @@ Focuses exclusively on:
 
 ## Gates
 
-After each stage, the following checks run:
+Gates run from the project root after a stage that changed files. Every gate
+is skipped when the root has no `package.json`.
 
-1. TypeScript compilation: `npx tsc --noEmit`
-2. Test suite: `npm test -- --passWithNoTests`
+After each stage:
+
+- Build: `npm run build --if-present`
+- Type-check, only when `tsconfig.json` exists: `npx --no-install tsc --noEmit`
+  (the project's own TypeScript; it is never downloaded)
+
+After the resources stage:
+
+- Test suite: `npm test`, skipped when `package.json` has no `test` script or
+  only the `npm init` placeholder. `-- --passWithNoTests` is appended when the
+  script ends in a Jest or Vitest command.
 
 If a gate fails, the pipeline stops.
 

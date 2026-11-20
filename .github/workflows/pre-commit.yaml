@@ -44,7 +44,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install pre-commit
-        run: python3 -m pip install pre-commit pytest
+        run: python3 -m pip install pre-commit pytest pyyaml
 
       - name: Setup Go
         uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7

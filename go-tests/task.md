@@ -1,4 +1,4 @@
-Bring each Go package below 75% coverage (or the caller's stated target) up to that target by writing tests. Use the orchestrator-workers pattern: load `Skill("enqueue-coverage-targets")` on iter 1, run its discovery Bash on iter 2, then drain `/tmp/squad-targets.txt`.
+Bring each Go package below 75% coverage (or the caller's stated target) up to that target by writing tests. Use the orchestrator-workers pattern: load `Skill("enqueue-coverage-targets")` on iter 1, run its discovery Bash with the language explicit (`bash scripts/enqueue.sh go`) on iter 2, then drain `/tmp/squad-targets.txt`.
 
 # READ THIS FIRST — past failures (fixes are in anti-patterns 10–13)
 

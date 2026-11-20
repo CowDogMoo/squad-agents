@@ -55,7 +55,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: CowDogMoo/squad-skills
-          ref: 1ad886c654d22f80d85fa8e1f95dbd7756328f5e # main
           path: .squad-skills
           persist-credentials: false
 

@@ -27,13 +27,26 @@ stages:
 
 gates:
   - after: injection
-    command: "npm run build --if-present"
+    command: "[ ! -f package.json ] || npm run build --if-present"
+    on_failure: stop
+  - after: injection
+    command: "[ ! -f package.json ] || [ ! -f tsconfig.json ] || npx --no-install tsc --noEmit"
     on_failure: stop
   - after: resources
-    command: "npm run build --if-present"
+    command: "[ ! -f package.json ] || npm run build --if-present"
     on_failure: stop
   - after: resources
-    command: "npm run test --if-present -- --passWithNoTests"
+    command: "[ ! -f package.json ] || [ ! -f tsconfig.json ] || npx --no-install tsc --noEmit"
+    on_failure: stop
+  - after: resources
+    command: |
+      [ ! -f package.json ] || node -e '
+        const test = (require("./package.json").scripts || {}).test;
+        if (!test || test === "echo \"Error: no test specified\" && exit 1") process.exit(0);
+        const flag = /(^|\s)(jest|vitest)(\s[^&|;]*)?$/.test(test) ? ["--", "--passWithNoTests"] : [];
+        const run = require("child_process").spawnSync("npm", ["test", ...flag], { stdio: "inherit" });
+        process.exit(run.status ?? 1);
+      '
     on_failure: stop
 
 requires:

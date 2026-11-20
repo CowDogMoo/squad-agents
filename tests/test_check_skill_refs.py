@@ -5,18 +5,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
-from check_skill_refs import collect_skill_names, is_placeholder, main
+from check_skill_refs import is_placeholder, main
 
 
-def make_skill(base: Path, dirname: str, name: str | None = None) -> None:
+def make_skill(base: Path, dirname: str) -> None:
     skill = base / dirname
     skill.mkdir(parents=True)
-    (skill / "SKILL.md").write_text(f"---\nname: {name or dirname}\n---\nbody\n")
-
-
-def test_collect_names_uses_dir_and_frontmatter(tmp_path):
-    make_skill(tmp_path / "testing", "dirname", "front-name")
-    assert collect_skill_names([tmp_path]) == {"dirname", "front-name"}
+    (skill / "SKILL.md").write_text(f"---\nname: {dirname}\n---\nbody\n")
 
 
 def test_placeholder_only_bare_angle_names():
