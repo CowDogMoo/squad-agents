@@ -625,6 +625,21 @@ class TestFilterTextIntegration:
         assert "Refined Prometheus query" in result
         assert "Modified Tempo query" in result
 
+    def test_preamble_above_fence_strips_both_fences(self):
+        """A preamble line above the opening fence hid the fence from the first
+        pass; the title selection then dropped the opening fence and left the
+        closing one at the end of the last section."""
+        text = (
+            "Based on the diff, here is the commit message:\n\n"
+            "```\n"
+            "fix: a thing\n\n"
+            "**Changed:**\n\n"
+            "- x\n"
+            "```\n"
+        )
+        result = filter_text(text, section_names=["Added", "Changed", "Removed"], max_blanks=2)
+        assert result == "fix: a thing\n\n**Changed:**\n\n- x"
+
     def test_no_trailing_whitespace_in_output(self):
         text = "# Review   \n\nContent here   \n\nMore content  "
         result = filter_text(text)

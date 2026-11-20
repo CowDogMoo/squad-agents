@@ -538,6 +538,9 @@ def filter_text(
     text = strip_leading_trailing_blanks(text)
     text = truncate_pattern_boilerplate(text)
     text = remove_preamble(text)
+    # A preamble line above an opening fence hides the fence from the first
+    # pass, so check again once the preamble is gone.
+    text = strip_wrapping_fences(strip_leading_trailing_blanks(text))
     text = strip_attribution_lines(text)
     text = remove_placeholder_lines(text)
 
