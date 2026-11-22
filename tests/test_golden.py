@@ -64,7 +64,6 @@ def assert_well_formed(transform: str, text: str, env: dict[str, str]) -> None:
     """Invariants every transform output must hold, whatever the golden says."""
     lines = text.split("\n")
     for line in lines:
-        assert not line.lstrip().startswith("```"), f"code fence survived: {line!r}"
         assert not any(rx.match(line) for rx in ATTRIBUTION_LINE_RES), f"attribution: {line!r}"
         assert not is_angle_placeholder(line), f"template placeholder: {line!r}"
         assert line == line.rstrip(), f"trailing whitespace: {line!r}"

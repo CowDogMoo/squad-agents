@@ -43,27 +43,24 @@ def looks_like_api_error(text: str) -> bool:
 
 
 def strip_wrapping_fences(text: str) -> str:
-    """Remove code fences that wrap the entire output, preserving internal ones.
-
-    Loops to handle models that double-wrap (emit two opening/closing fences)
-    and tolerates blank lines between the fence and the content.
-    """
-    while True:
-        lines = text.split("\n")
-        # Find first and last non-blank lines
-        first_idx = next((i for i, ln in enumerate(lines) if ln.strip()), None)
-        last_idx = next(
-            (len(lines) - 1 - i for i, ln in enumerate(reversed(lines)) if ln.strip()),
-            None,
-        )
-        if first_idx is None or last_idx is None or first_idx >= last_idx:
-            return text
-        if re.match(r"^```\w*$", lines[first_idx].strip()) and lines[last_idx].strip() == "```":
-            del lines[last_idx]
-            del lines[first_idx]
-            text = "\n".join(lines)
-            continue
+    """Strip the two fence lines only when the whole output is one fenced block."""
+    lines = text.split("\n")
+    first_idx = next((i for i, ln in enumerate(lines) if ln.strip()), None)
+    last_idx = next(
+        (len(lines) - 1 - i for i, ln in enumerate(reversed(lines)) if ln.strip()),
+        None,
+    )
+    if first_idx is None or last_idx is None or first_idx >= last_idx:
         return text
+    if (
+        not re.fullmatch(r"```[^\s`]*", lines[first_idx].strip())
+        or lines[last_idx].strip() != "```"
+        or any(ln.lstrip().startswith("```") for ln in lines[first_idx + 1 : last_idx])
+    ):
+        return text
+    del lines[last_idx]
+    del lines[first_idx]
+    return "\n".join(lines)
 
 
 def strip_leading_trailing_blanks(text: str) -> str:

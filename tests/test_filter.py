@@ -56,10 +56,9 @@ class TestStripWrappingFences:
     def test_empty_input(self):
         assert strip_wrapping_fences("") == ""
 
-    def test_removes_doubled_fences(self):
-        """Models sometimes double-wrap output; strip both layers."""
+    def test_preserves_doubled_fences(self):
         text = "```\n```\nfeat: thing\n```\n```"
-        assert strip_wrapping_fences(text) == "feat: thing"
+        assert strip_wrapping_fences(text) == text
 
     def test_removes_fence_with_blank_padding(self):
         """Tolerate blank lines between the wrapping fences and content."""
@@ -68,7 +67,23 @@ class TestStripWrappingFences:
 
     def test_doubled_fences_with_language_tag(self):
         text = "```markdown\n```\ncontent\n```\n```"
-        assert strip_wrapping_fences(text) == "content"
+        assert strip_wrapping_fences(text) == text
+
+    def test_preserves_multiple_blocks(self):
+        text = "```\nfirst\n```\n\n```\nsecond\n```"
+        assert strip_wrapping_fences(text) == text
+
+    def test_preserves_labeled_output(self):
+        text = "Commit message:\n```\nfix: handle a timeout\n```"
+        assert strip_wrapping_fences(text) == text
+
+    def test_preserves_preamble(self):
+        text = "Here is the commit message:\n```\nfix: handle a timeout\n```"
+        assert strip_wrapping_fences(text) == text
+
+    def test_preserves_content_whitespace(self):
+        text = " \n```text\n\n  indented  \n\n```\n\t"
+        assert strip_wrapping_fences(text) == " \n\n  indented  \n\n\t"
 
 
 class TestStripLeadingTrailingBlanks:
@@ -599,9 +614,8 @@ class TestFilterTextIntegration:
         assert lines[0] == "feat: add GitHub Actions workflows"
         assert lines[1] == "**Key Changes:**"
 
-    def test_doubled_fence_with_preamble_regression(self):
-        """Regression: doubled fences + preamble before sections produced a `` ` `` title
-        and jammed preamble against the first section header (commit df9e2be)."""
+    def test_doubled_fences_are_not_unwrapped(self):
+        """Other cleanup still runs, but multiple fences are outside the wrapping rule."""
         text = (
             "```\n"
             "```\n"
@@ -617,7 +631,7 @@ class TestFilterTextIntegration:
             section_names=["Added", "Changed", "Removed"],
             max_blanks=2,
         )
-        assert "```" not in result
+        assert result.endswith("```\n```")
         lines = result.split("\n")
         assert lines[0] == "fix: update attack operation id filtering"
         assert lines[1] == ""

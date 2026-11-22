@@ -1,0 +1,7 @@
+```
+fix: handle connection timeouts
+
+**Changed:**
+
+- Retry timed out requests
+```
