@@ -42,25 +42,9 @@ def looks_like_api_error(text: str) -> bool:
     )
 
 
-def strip_wrapping_fences(text: str) -> str:
-    """Strip the two fence lines only when the whole output is one fenced block."""
-    lines = text.split("\n")
-    first_idx = next((i for i, ln in enumerate(lines) if ln.strip()), None)
-    last_idx = next(
-        (len(lines) - 1 - i for i, ln in enumerate(reversed(lines)) if ln.strip()),
-        None,
-    )
-    if first_idx is None or last_idx is None or first_idx >= last_idx:
-        return text
-    if (
-        not re.fullmatch(r"```[^\s`]*", lines[first_idx].strip())
-        or lines[last_idx].strip() != "```"
-        or any(ln.lstrip().startswith("```") for ln in lines[first_idx + 1 : last_idx])
-    ):
-        return text
-    del lines[last_idx]
-    del lines[first_idx]
-    return "\n".join(lines)
+def strip_fence_lines(text: str) -> str:
+    """Remove every fence-only line (``` plus an optional language tag)."""
+    return "\n".join(ln for ln in text.split("\n") if not re.fullmatch(r"```[^\s`]*", ln.strip()))
 
 
 def strip_leading_trailing_blanks(text: str) -> str:
@@ -531,7 +515,7 @@ def filter_text(
     allowed_types: list[str] | None = None,
 ) -> str:
     """Apply all filter steps to the input text."""
-    text = strip_wrapping_fences(text)
+    text = strip_fence_lines(text)
     text = strip_leading_trailing_blanks(text)
     text = truncate_pattern_boilerplate(text)
     text = remove_preamble(text)

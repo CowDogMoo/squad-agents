@@ -3,8 +3,6 @@ fix: document the timeout setting
 
 - Configure the timeout with:
 
-```sh
 export REQUEST_TIMEOUT=30
-```
 
 - Retry timed out requests

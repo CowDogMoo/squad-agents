@@ -21,69 +21,80 @@ from filter import (
     remove_placeholder_lines,
     remove_preamble,
     strip_attribution_lines,
+    strip_fence_lines,
     strip_leading_trailing_blanks,
     strip_trailing_whitespace,
-    strip_wrapping_fences,
     truncate_pattern_boilerplate,
 )
 
 
-class TestStripWrappingFences:
+class TestStripFenceLines:
     def test_removes_markdown_fence(self):
         text = "```markdown\n# Hello\nWorld\n```"
-        assert strip_wrapping_fences(text) == "# Hello\nWorld"
+        assert strip_fence_lines(text) == "# Hello\nWorld"
 
     def test_removes_python_fence(self):
         text = "```python\nprint('hi')\n```"
-        assert strip_wrapping_fences(text) == "print('hi')"
+        assert strip_fence_lines(text) == "print('hi')"
 
     def test_removes_bare_fence(self):
         text = "```\nsome content\n```"
-        assert strip_wrapping_fences(text) == "some content"
+        assert strip_fence_lines(text) == "some content"
 
-    def test_preserves_internal_fences(self):
+    def test_removes_internal_fences_keeps_code(self):
         text = "# Review\n\n```go\nfunc main() {}\n```\n\nDone."
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == "# Review\n\nfunc main() {}\n\nDone."
 
     def test_no_fences(self):
         text = "just plain text\nno fences here"
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == text
+
+    def test_keeps_inline_backticks(self):
+        text = "- Use ```code``` inline\n- Run `make`"
+        assert strip_fence_lines(text) == text
 
     def test_only_opening_fence(self):
         text = "```go\nfunc main() {}\nno closing fence"
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == "func main() {}\nno closing fence"
 
     def test_empty_input(self):
-        assert strip_wrapping_fences("") == ""
+        assert strip_fence_lines("") == ""
 
-    def test_preserves_doubled_fences(self):
+    def test_removes_doubled_fences(self):
         text = "```\n```\nfeat: thing\n```\n```"
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == "feat: thing"
 
-    def test_removes_fence_with_blank_padding(self):
-        """Tolerate blank lines between the wrapping fences and content."""
+    def test_keeps_blank_padding(self):
         text = "```\n\nfeat: thing\n\n```"
-        assert strip_wrapping_fences(text) == "\nfeat: thing\n"
+        assert strip_fence_lines(text) == "\nfeat: thing\n"
 
     def test_doubled_fences_with_language_tag(self):
         text = "```markdown\n```\ncontent\n```\n```"
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == "content"
 
-    def test_preserves_multiple_blocks(self):
+    def test_removes_nested_block_fences(self):
+        text = "```markdown\nfeat: doc timeout\n- Use:\n```sh\nexport X=1\n```\n```"
+        assert strip_fence_lines(text) == "feat: doc timeout\n- Use:\nexport X=1"
+
+    def test_removes_multiple_blocks(self):
         text = "```\nfirst\n```\n\n```\nsecond\n```"
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == "first\n\nsecond"
 
-    def test_preserves_labeled_output(self):
+    def test_labeled_output(self):
         text = "Commit message:\n```\nfix: handle a timeout\n```"
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == "Commit message:\nfix: handle a timeout"
 
-    def test_preserves_preamble(self):
+    def test_preamble(self):
         text = "Here is the commit message:\n```\nfix: handle a timeout\n```"
-        assert strip_wrapping_fences(text) == text
+        assert strip_fence_lines(text) == "Here is the commit message:\nfix: handle a timeout"
+
+    def test_indented_fence(self):
+        text = "- Run:\n  ```sh\n  make\n  ```"
+        assert strip_fence_lines(text) == "- Run:\n  make"
 
     def test_preserves_content_whitespace(self):
         text = " \n```text\n\n  indented  \n\n```\n\t"
-        assert strip_wrapping_fences(text) == " \n\n  indented  \n\n\t"
+        assert strip_fence_lines(text) == " \n\n  indented  \n\n\t"
 
 
 class TestStripLeadingTrailingBlanks:
@@ -561,7 +572,7 @@ class TestFilterTextIntegration:
         assert "Summary" in result
         assert "One high severity" in result
 
-    def test_preserves_internal_code_blocks(self):
+    def test_removes_internal_fences_keeps_code(self):
         text = (
             "# Review\n\n"
             "Bad code:\n\n"
@@ -574,11 +585,7 @@ class TestFilterTextIntegration:
             "```"
         )
         result = filter_text(text)
-        assert "```go" in result
-        assert "func bad()" in result
-        assert "func good()" in result
-        assert result.count("```go") == 2
-        assert result.count("```") == 4  # 2 openers + 2 closers
+        assert result == "# Review\n\nBad code:\n\nfunc bad() {}\n\nGood code:\n\nfunc good() {}"
 
     def test_empty_input(self):
         assert filter_text("") == ""
@@ -614,8 +621,9 @@ class TestFilterTextIntegration:
         assert lines[0] == "feat: add GitHub Actions workflows"
         assert lines[1] == "**Key Changes:**"
 
-    def test_doubled_fences_are_not_unwrapped(self):
-        """Other cleanup still runs, but multiple fences are outside the wrapping rule."""
+    def test_doubled_fence_with_preamble_regression(self):
+        """Regression: doubled fences + preamble before sections produced a `` ` `` title
+        and jammed preamble against the first section header (commit df9e2be)."""
         text = (
             "```\n"
             "```\n"
@@ -631,13 +639,38 @@ class TestFilterTextIntegration:
             section_names=["Added", "Changed", "Removed"],
             max_blanks=2,
         )
-        assert result.endswith("```\n```")
+        assert "```" not in result
         lines = result.split("\n")
         assert lines[0] == "fix: update attack operation id filtering"
         assert lines[1] == ""
         assert lines[2] == "**Changed:**"
         assert "Refined Prometheus query" in result
         assert "Modified Tempo query" in result
+
+    def test_nested_code_block_leaves_no_fence(self):
+        text = (
+            "```markdown\n"
+            "feat: doc timeout\n"
+            "**Key Changes:**\n\n"
+            "- Use:\n\n"
+            "```sh\n"
+            "export X=1\n"
+            "```\n"
+            "```"
+        )
+        result = filter_text(
+            text,
+            section_names=["Key Changes", "Added", "Changed", "Removed"],
+            blank_after_title=False,
+        )
+        assert "```" not in result
+        assert result.split("\n")[0] == "feat: doc timeout"
+        assert "export X=1" in result
+
+    def test_preamble_before_fenced_commit_leaves_no_fence(self):
+        text = "Here is the commit message:\n```\nfix: handle a timeout\n```"
+        result = filter_text(text, section_names=["Added", "Changed", "Removed"], max_blanks=2)
+        assert result == "fix: handle a timeout"
 
     def test_no_trailing_whitespace_in_output(self):
         text = "# Review   \n\nContent here   \n\nMore content  "
