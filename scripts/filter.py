@@ -42,28 +42,9 @@ def looks_like_api_error(text: str) -> bool:
     )
 
 
-def strip_wrapping_fences(text: str) -> str:
-    """Remove code fences that wrap the entire output, preserving internal ones.
-
-    Loops to handle models that double-wrap (emit two opening/closing fences)
-    and tolerates blank lines between the fence and the content.
-    """
-    while True:
-        lines = text.split("\n")
-        # Find first and last non-blank lines
-        first_idx = next((i for i, ln in enumerate(lines) if ln.strip()), None)
-        last_idx = next(
-            (len(lines) - 1 - i for i, ln in enumerate(reversed(lines)) if ln.strip()),
-            None,
-        )
-        if first_idx is None or last_idx is None or first_idx >= last_idx:
-            return text
-        if re.match(r"^```\w*$", lines[first_idx].strip()) and lines[last_idx].strip() == "```":
-            del lines[last_idx]
-            del lines[first_idx]
-            text = "\n".join(lines)
-            continue
-        return text
+def strip_fence_lines(text: str) -> str:
+    """Remove every fence-only line (3+ backticks plus an optional language tag)."""
+    return "\n".join(ln for ln in text.split("\n") if not re.fullmatch(r"`{3,}[^\s`]*", ln.strip()))
 
 
 def strip_leading_trailing_blanks(text: str) -> str:
@@ -534,7 +515,7 @@ def filter_text(
     allowed_types: list[str] | None = None,
 ) -> str:
     """Apply all filter steps to the input text."""
-    text = strip_wrapping_fences(text)
+    text = strip_fence_lines(text)
     text = strip_leading_trailing_blanks(text)
     text = truncate_pattern_boilerplate(text)
     text = remove_preamble(text)

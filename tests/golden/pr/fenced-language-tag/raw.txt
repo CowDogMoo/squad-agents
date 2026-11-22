@@ -1,0 +1,8 @@
+ 
+```markdown
+fix: handle connection timeouts
+**Key Changes:**
+
+- Retry timed out requests
+```
+	
