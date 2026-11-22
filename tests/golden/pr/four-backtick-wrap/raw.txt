@@ -1,0 +1,12 @@
+````markdown
+fix: document the timeout setting
+**Key Changes:**
+
+- Configure the timeout with:
+
+```sh
+export REQUEST_TIMEOUT=30
+```
+
+- Retry timed out requests
+````

@@ -43,8 +43,8 @@ def looks_like_api_error(text: str) -> bool:
 
 
 def strip_fence_lines(text: str) -> str:
-    """Remove every fence-only line (``` plus an optional language tag)."""
-    return "\n".join(ln for ln in text.split("\n") if not re.fullmatch(r"```[^\s`]*", ln.strip()))
+    """Remove every fence-only line (3+ backticks plus an optional language tag)."""
+    return "\n".join(ln for ln in text.split("\n") if not re.fullmatch(r"`{3,}[^\s`]*", ln.strip()))
 
 
 def strip_leading_trailing_blanks(text: str) -> str:

@@ -76,6 +76,10 @@ class TestStripFenceLines:
         text = "```markdown\nfeat: doc timeout\n- Use:\n```sh\nexport X=1\n```\n```"
         assert strip_fence_lines(text) == "feat: doc timeout\n- Use:\nexport X=1"
 
+    def test_removes_four_backtick_wrap_around_nested_block(self):
+        text = "````markdown\nfeat: doc timeout\n- Use:\n```sh\nexport X=1\n```\n````"
+        assert strip_fence_lines(text) == "feat: doc timeout\n- Use:\nexport X=1"
+
     def test_removes_multiple_blocks(self):
         text = "```\nfirst\n```\n\n```\nsecond\n```"
         assert strip_fence_lines(text) == "first\n\nsecond"
