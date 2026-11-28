@@ -1,6 +1,6 @@
 {
   "name": "cowdogmoo",
-  "description": "CowDogMoo marketplace: squad agents for code review, testing, documentation, and security audits, plus the shared skills they depend on.",
+  "description": "CowDogMoo marketplace: squad agents for code review, testing, documentation, and security audits, the shared skills they depend on, and the cowdogmoo-music skills.",
   "owner": {
     "name": "CowDogMoo"
   },
@@ -8,7 +8,7 @@
     {
       "name": "squad-agents",
       "source": "./",
-      "description": "Language-specific code review, testing, documentation, and security-audit agents. Requires the squad-skills plugin for the skills they load."
+      "description": "Language-specific code review, testing, documentation, and security-audit agents. Installing it also installs the squad-skills plugin they load."
     },
     {
       "name": "squad-skills",
@@ -17,6 +17,15 @@
         "repo": "CowDogMoo/squad-skills"
       },
       "description": "The skills squad agents load: language review, testing, documentation, and security knowledge bases, the shared review and security-audit loops, comment scrubbing, LLM-tell detection, coverage orchestration, doc-comment discovery loops, and test-writer discipline."
+    },
+    {
+      "name": "cowdogmoo-music",
+      "source": {
+        "source": "git-subdir",
+        "url": "CowDogMoo/squad-skills",
+        "path": "music"
+      },
+      "description": "Quad Cortex Neural Capture workflow, Guitar Pro tablature authoring, riff transcription, and Ableton Live screen control. Independent of the agents."
     }
   ]
 }

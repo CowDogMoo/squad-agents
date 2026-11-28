@@ -459,15 +459,31 @@ the shared skills are:
 
 ### Installing in Claude Code
 
-Both collections ship as plugins from the `cowdogmoo` marketplace
-defined in this repo (`.claude-plugin/marketplace.json`). Dependencies
-are not auto-installed, so install both:
+The `cowdogmoo` marketplace defined in this repo
+(`.claude-plugin/marketplace.json`) lists all three plugins: squad-agents,
+squad-skills, and cowdogmoo-music (the `music/` folder of squad-skills).
+Installing squad-agents also installs squad-skills, its declared
+dependency:
 
 ```text
 /plugin marketplace add cowdogmoo/squad-agents
-/plugin install squad-skills@cowdogmoo
 /plugin install squad-agents@cowdogmoo
 ```
+
+The agents do not need cowdogmoo-music; install it on its own with
+`/plugin install cowdogmoo-music@cowdogmoo`.
+
+The dependency carries a version range, `^0.8.20` in
+`.claude-plugin/plugin.json`: squad-skills installs at the highest
+`squad-skills--v0.8.x` tag at or above 0.8.20 and never moves to 0.9
+unseen. When squad-skills releases 0.9.0, the agents stay on the newest
+0.8 release until someone tests them against 0.9, widens the range (to
+`^0.9.0`, or `>=0.8.20 <0.10.0` to accept both), and bumps this plugin's
+version.
+
+Each merge to main that changes the version in `.claude-plugin/plugin.json`
+gets a `squad-agents--v<version>` tag from the Release Tags workflow, the
+same form squad-skills uses, so a range on squad-agents can resolve too.
 
 ## Contributing
 

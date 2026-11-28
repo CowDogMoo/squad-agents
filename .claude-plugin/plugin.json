@@ -1,7 +1,7 @@
 {
   "name": "squad-agents",
   "displayName": "Squad Agents",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Language-specific code review, testing, documentation, and security-audit agents. Their skills ship in the squad-skills plugin. Dual-host: the same prompt files drive squad and Claude Code.",
   "author": {
     "name": "Jayson Grace",
@@ -9,5 +9,5 @@
   },
   "repository": "https://github.com/CowDogMoo/squad-agents",
   "license": "MIT",
-  "dependencies": ["squad-skills"]
+  "dependencies": [{ "name": "squad-skills", "version": "^0.8.20" }]
 }

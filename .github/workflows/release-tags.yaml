@@ -1,0 +1,37 @@
+---
+name: Release Tags
+
+# Tags the plugin at its manifest version as `<plugin-name>--v<version>`,
+# the form Claude Code resolves dependency version ranges against. Existing
+# tags are never moved or deleted, so a re-run is a no-op. Mirrors the
+# workflow of the same name in CowDogMoo/squad-skills.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .claude-plugin/plugin.json
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: Tag plugin release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Credentials stay persisted (unlike the other workflows here): the
+      # script pushes the new tag with this job's token.
+      - name: Checkout git repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Create missing release tag
+        run: python3 scripts/tag_releases.py --ref "$GITHUB_SHA"
